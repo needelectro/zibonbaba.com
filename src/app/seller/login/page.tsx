@@ -30,6 +30,14 @@ export default function SellerLoginPage() {
     setLoading(true);
 
     try {
+      // Clear old session credentials first to prevent cross-account contamination
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('zibonbaba_token');
+        localStorage.removeItem('zibonbaba_user');
+        localStorage.removeItem('zibonbaba_role');
+        sessionStorage.clear();
+      }
+
       const success = await login(email, password);
       if (success) {
         let userRole = '';

@@ -94,6 +94,14 @@ export default function SellerRegisterPage() {
         tradeLicense: tradeLicense.trim() || undefined
       };
 
+      // Invalidate and clear any old session credentials first to prevent cross-account contamination
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('zibonbaba_token');
+        localStorage.removeItem('zibonbaba_user');
+        localStorage.removeItem('zibonbaba_role');
+        sessionStorage.clear();
+      }
+
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -106,10 +114,25 @@ export default function SellerRegisterPage() {
         return;
       }
 
-      // Attempt automatic sign-in
-      try {
-        await login(email.trim().toLowerCase(), password);
-      } catch (_) {}
+      // Establish fresh isolated seller session
+      if (data.accessToken && typeof window !== 'undefined') {
+        localStorage.setItem('zibonbaba_token', data.accessToken);
+        localStorage.setItem('zibonbaba_user', JSON.stringify(data.user));
+        localStorage.setItem('zibonbaba_role', 'VENDOR_ADMIN');
+        document.cookie = `zibonbaba_token=${data.accessToken}; path=/; max-age=604800; SameSite=Lax`;
+        document.cookie = `zibonbaba_role=VENDOR_ADMIN; path=/; max-age=604800; SameSite=Lax`;
+        document.cookie = `zibonbaba_user=${encodeURIComponent(JSON.stringify(data.user))}; path=/; max-age=604800; SameSite=Lax`;
+
+        useStore.setState({
+          isLoggedIn: true,
+          token: data.accessToken,
+          role: 'vendor',
+          username: data.user?.fullName || data.user?.email || 'Seller',
+          userEmail: data.user?.email || '',
+          cart: [],
+          orders: []
+        });
+      }
 
       setSuccess(true);
     } catch {

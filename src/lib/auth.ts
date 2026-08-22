@@ -22,6 +22,9 @@ export interface SellerContext {
   isPending: boolean;
 }
 
+/**
+ * Extracts and verifies the JWT token from incoming Request headers or cookies.
+ */
 export async function getAuthUser(req?: Request): Promise<AuthUser | null> {
   let token: string | null = null;
 
@@ -66,6 +69,9 @@ export async function getAuthUser(req?: Request): Promise<AuthUser | null> {
   return null;
 }
 
+/**
+ * Ensures the authenticated user has one of the allowed administrative roles.
+ */
 export async function requireAdminRole(
   req?: Request,
   allowedRoles: string[] = ['SUPER_ADMIN', 'ADMIN']
@@ -90,6 +96,10 @@ export async function requireAdminRole(
   return { user, error: null, status: 200 };
 }
 
+/**
+ * Ensures the authenticated user is a Seller (VENDOR_ADMIN or VENDOR_STAFF)
+ * and retrieves their associated store context.
+ */
 export async function requireSeller(
   req?: Request
 ): Promise<{ context: SellerContext | null; error: string | null; status: number }> {
@@ -110,10 +120,12 @@ export async function requireSeller(
     };
   }
 
+  // Find user's own store strictly by ownerId
   let store = await prisma.store.findFirst({
     where: { ownerId: user.id }
   });
 
+  // If user is seller staff, find the store they belong to
   if (!store && normalizedRole === 'VENDOR_STAFF') {
     const staffMembership = await prisma.staffMember.findFirst({
       where: { userId: user.id, isActive: true },
@@ -122,10 +134,6 @@ export async function requireSeller(
     if (staffMembership?.seller?.stores?.[0]) {
       store = staffMembership.seller.stores[0];
     }
-  }
-
-  if (!store && (normalizedRole === 'SUPER_ADMIN' || normalizedRole === 'ADMIN')) {
-    store = await prisma.store.findFirst();
   }
 
   const isPending = store ? !store.isApproved : true;
@@ -147,6 +155,9 @@ export async function requireSeller(
   };
 }
 
+/**
+ * Ensures the authenticated user is logged in (Customer, Seller, or Admin).
+ */
 export async function requireCustomer(
   req?: Request
 ): Promise<{ user: AuthUser | null; error: string | null; status: number }> {
@@ -159,6 +170,9 @@ export async function requireCustomer(
   return { user, error: null, status: 200 };
 }
 
+/**
+ * Creates an immutable audit log entry in the database.
+ */
 export async function logAdminAction(
   userId: string | null,
   action: string,

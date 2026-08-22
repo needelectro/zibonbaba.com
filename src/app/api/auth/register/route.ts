@@ -10,6 +10,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://ikocqacatdv
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_qC9hzMB61EWQLVH7flBdXA_GurkO2rd';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+// Generate unique referral code (e.g. ZB8X9K2)
 function generateReferralCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let code = 'ZB';
@@ -50,6 +51,7 @@ export async function POST(request: Request) {
     const cleanEmail = email.trim().toLowerCase();
     const cleanPhone = phone ? phone.trim() : null;
 
+    // Normalize Role
     let normalizedRole = 'CUSTOMER';
     const rUpper = String(role).toUpperCase();
     if (rUpper === 'VENDOR_ADMIN' || rUpper === 'VENDOR' || rUpper === 'SELLER') {
@@ -60,6 +62,7 @@ export async function POST(request: Request) {
       normalizedRole = 'DELIVERY_MAN';
     }
 
+    // 1. Check if user already exists in Prisma Database
     const existingUser = await prisma.user.findUnique({
       where: { email: cleanEmail }
     });
@@ -71,8 +74,10 @@ export async function POST(request: Request) {
       );
     }
 
+    // 2. Hash Password
     const passwordHash = await bcrypt.hash(password, 10);
 
+    // 3. Register user in Supabase Auth (best-effort sync)
     try {
       await supabase.auth.signUp({
         email: cleanEmail,
@@ -89,6 +94,7 @@ export async function POST(request: Request) {
       console.warn('Supabase Auth SignUp sync notice:', supaErr);
     }
 
+    // 4. Generate unique referral code
     let uniqueReferralCode = generateReferralCode();
     let isCodeTaken = await prisma.user.findUnique({ where: { referralCode: uniqueReferralCode } });
     let attempts = 0;
@@ -98,7 +104,16 @@ export async function POST(request: Request) {
       attempts++;
     }
 
+    // 5. Create Prisma User with Profile and optional Store & Verification Request
     const isSeller = normalizedRole === 'VENDOR_ADMIN';
+    let finalStoreName = storeName ? storeName.trim() : (isSeller ? `${resolvedName}'s Store` : undefined);
+    if (finalStoreName) {
+      const existingStore = await prisma.store.findUnique({ where: { name: finalStoreName } });
+      if (existingStore) {
+        finalStoreName = `${finalStoreName} (${Date.now().toString().slice(-4)})`;
+      }
+    }
+
     const newUser = await prisma.user.create({
       data: {
         email: cleanEmail,
@@ -107,18 +122,18 @@ export async function POST(request: Request) {
         role: normalizedRole,
         status: isSeller ? 'PENDING' : 'ACTIVE',
         referralCode: uniqueReferralCode,
-        loyaltyPoints: 100,
+        loyaltyPoints: 100, // Welcome signup bonus
         profile: {
           create: {
             fullName: resolvedName,
           }
         },
-        ...(isSeller && storeName ? {
+        ...(isSeller && finalStoreName ? {
           stores: {
             create: {
-              name: storeName.trim(),
+              name: finalStoreName,
               description: businessType ? `Category / Type: ${businessType}` : undefined,
-              isApproved: false,
+              isApproved: false, // Requires admin review
               commissionRate: 8.5
             }
           },
@@ -127,7 +142,7 @@ export async function POST(request: Request) {
               type: 'TRADE_LICENSE',
               status: 'PENDING',
               data: JSON.stringify({
-                storeName: storeName.trim(),
+                storeName: finalStoreName,
                 businessType: businessType || 'General Retail',
                 phone: cleanPhone
               })
@@ -138,7 +153,7 @@ export async function POST(request: Request) {
           create: {
             title: isSeller ? 'Store Application Submitted 🏪' : 'Welcome to Zibonbaba! 🎉',
             body: isSeller
-              ? `Welcome ${resolvedName}! Your store application for "${storeName || 'My Store'}" has been received and is pending admin verification.`
+              ? `Welcome ${resolvedName}! Your store application for "${finalStoreName || 'My Store'}" has been received and is pending admin verification.`
               : `Welcome ${resolvedName}! Your account has been registered successfully. You received 100 welcome bonus loyalty points!`,
             type: 'SUCCESS',
             module: 'MARKETPLACE',
@@ -152,6 +167,7 @@ export async function POST(request: Request) {
       }
     });
 
+    // 6. Handle Referral code if provided by customer
     if (referralCode && typeof referralCode === 'string' && referralCode.trim()) {
       try {
         const cleanRef = referralCode.trim().toUpperCase();
@@ -203,6 +219,7 @@ export async function POST(request: Request) {
       }
     }
 
+    // 7. Generate JWT Session Token
     const payload = {
       id: newUser.id,
       email: newUser.email,
@@ -210,6 +227,8 @@ export async function POST(request: Request) {
     };
 
     const accessToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+
+    const primaryStore = newUser.stores && newUser.stores.length > 0 ? newUser.stores[0] : null;
 
     const responseUser = {
       id: newUser.id,
@@ -229,16 +248,18 @@ export async function POST(request: Request) {
         success: true,
         message: 'Account created successfully.',
         accessToken,
-        user: responseUser
+        user: responseUser,
+        store: primaryStore
       },
       { status: 201 }
     );
 
+    // 8. Set Auth Cookies for immediate seamless login session
     response.cookies.set('zibonbaba_token', accessToken, {
       path: '/',
       httpOnly: true,
       sameSite: 'lax',
-      maxAge: 604800
+      maxAge: 604800 // 7 days
     });
     response.cookies.set('zibonbaba_role', responseUser.role, {
       path: '/',

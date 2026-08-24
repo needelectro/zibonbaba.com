@@ -789,12 +789,12 @@ export default function HomePage() {
 
                         <div className="mt-5 pt-4 border-t border-slate-200/50 flex items-center justify-between">
                           <div>
-                            <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wide">Regular Price</span>
+                            <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wide">Retail Price</span>
                             <span className="text-base font-black text-slate-800 block">৳{(p.price * 80).toFixed(0)}</span>
                           </div>
                           <button
                             onClick={() => { addToCart(p); alert(`${p.name} added to cart!`); }}
-                            className="bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs px-4 py-2.5 rounded-xl shadow-sm transition-colors active:scale-95"
+                            className="bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs px-4 py-2.5 rounded-xl shadow-sm transition-colors active:scale-95"
                           >
                             Add to Cart
                           </button>

@@ -1,31 +1,54 @@
-export function getDashboardForRole(role?: string): string {
-  if (!role) return '/';
+/**
+ * Role-Based Routing Matrix for Zibonbaba Enterprise
+ * Maps user roles to their respective primary dashboard entry points.
+ */
 
-  const normalized = role.trim().toUpperCase();
+export const ROLE_ROUTES: Record<string, string> = {
+  // Super Administrator
+  SUPER_ADMIN: '/superadmin',
+  superadmin: '/superadmin',
 
-  switch (normalized) {
-    case 'SUPER_ADMIN':
-      return '/admin';
-    case 'ADMIN':
-    case 'MANAGER':
-    case 'ACCOUNTANT':
-    case 'CUSTOMER_SUPPORT':
-    case 'MARKETING':
-    case 'WAREHOUSE_MANAGER':
-    case 'INVENTORY_MANAGER':
-    case 'DELIVERY_MANAGER':
-      return '/admin';
-    case 'VENDOR_ADMIN':
-    case 'VENDOR_STAFF':
-    case 'SELLER':
-    case 'VENDOR':
-      return '/seller';
-    case 'RESELLER':
-      return '/reseller';
-    case 'DELIVERY_MAN':
-      return '/delivery';
-    case 'CUSTOMER':
-    default:
-      return '/';
-  }
+  // Platform Administrator & Officers
+  ADMIN: '/admin',
+  admin: '/admin',
+  PLATFORM_MANAGER: '/admin',
+  manager: '/admin',
+  FINANCE_OFFICER: '/admin',
+  accountant: '/admin',
+  SUPPORT_AGENT: '/admin',
+  support: '/admin',
+  COMPLIANCE_OFFICER: '/admin',
+  CRM_MANAGER: '/admin',
+  crm_manager: '/admin',
+  HR_MANAGER: '/admin',
+  hr_manager: '/admin',
+
+  // Multi-Vendor Merchant / Seller
+  VENDOR_ADMIN: '/seller',
+  VENDOR_STAFF: '/seller',
+  vendor: '/seller',
+  staff: '/seller',
+
+  // Reseller Network
+  RESELLER: '/reseller',
+  reseller: '/reseller',
+
+  // Delivery & Logistics
+  DELIVERY_MAN: '/delivery',
+  DELIVERY_MANAGER: '/delivery',
+  deliveryman: '/delivery',
+  delivery_manager: '/delivery',
+
+  // Standard Customer / Buyer
+  CUSTOMER: '/dashboard',
+  customer: '/dashboard',
+};
+
+/**
+ * Returns the target dashboard URL for a given user role.
+ * Falls back to '/dashboard' for customer / unknown roles.
+ */
+export function getDashboardForRole(role?: string | null): string {
+  if (!role) return '/dashboard';
+  return ROLE_ROUTES[role] || ROLE_ROUTES[role.toUpperCase()] || ROLE_ROUTES[role.toLowerCase()] || '/dashboard';
 }

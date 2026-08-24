@@ -1,41 +1,29 @@
-import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { NextRequest, NextResponse } from 'next/server';
+import { createServerSupabaseClient } from '@/utils/supabase/server';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://ikocqacatdvhrameqeox.supabase.co';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_qC9hzMB61EWQLVH7flBdXA_GurkO2rd';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-export async function POST(request: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const formData = await request.formData();
+    const formData = await req.formData();
     const file = formData.get('file') as File | null;
     const bucket = (formData.get('bucket') as string) || 'products';
-    const customFolder = (formData.get('folder') as string) || 'uploads';
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    // Validate allowed buckets
-    const allowedBuckets = ['products', 'avatars', 'stores', 'documents', 'banners'];
-    const targetBucket = allowedBuckets.includes(bucket) ? bucket : 'products';
-
-    // Generate unique safe file name
-    const timestamp = Date.now();
-    const randomStr = Math.random().toString(36).substring(2, 8);
-    const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-    const filePath = `${customFolder}/${timestamp}_${randomStr}_${sanitizedName}`;
-
-    // Convert file to ArrayBuffer / Buffer for upload
+    const supabase = createServerSupabaseClient();
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Upload to Supabase Storage
+    const fileExt = file.name.split('.').pop() || 'jpg';
+    const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+    const filePath = `uploads/${fileName}`;
+
     const { data, error } = await supabase.storage
-      .from(targetBucket)
+      .from(bucket)
       .upload(filePath, buffer, {
-        contentType: file.type || 'application/octet-stream',
-        upsert: true,
+        contentType: file.type || 'image/jpeg',
+        upsert: false,
       });
 
     if (error) {
@@ -43,25 +31,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Get public URL
     const { data: publicUrlData } = supabase.storage
-      .from(targetBucket)
+      .from(bucket)
       .getPublicUrl(filePath);
 
     return NextResponse.json({
-      success: true,
       url: publicUrlData.publicUrl,
-      path: data.path,
-      bucket: targetBucket,
+      path: filePath,
       name: file.name,
       size: file.size,
-      type: file.type,
     });
   } catch (err: any) {
-    console.error('Upload API route error:', err);
-    return NextResponse.json(
-      { error: err.message || 'Internal server error during upload' },
-      { status: 500 }
-    );
+    console.error('Upload route error:', err);
+    return NextResponse.json({ error: err?.message || 'Upload processing failed' }, { status: 500 });
   }
 }

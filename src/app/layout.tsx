@@ -1,10 +1,12 @@
+import React from 'react';
 import type { Metadata } from 'next';
+import LayoutClient from '@/components/layout-client';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Zibonbaba.com — Bangladesh Multi-Vendor Marketplace',
-  description: 'Premier multi-vendor e-commerce platform in Bangladesh offering verified seller stores, electronics, apparel, home essentials, and fast nationwide delivery.',
-  keywords: 'ecommerce, bangladesh, zibonbaba, multi-vendor, online shopping, electronics, seller center',
+  title: 'Zibonbaba.com - Premium Multi-Vendor E-Commerce & SaaS ERP',
+  description: 'Enterprise business management solution combining online multi-vendor retail market, barcode scanning POS, warehouse inventory syncing, CRM logs, and AI forecasting.',
+  keywords: 'Zibonbaba, E-commerce, SaaS, POS system, Enterprise, Inventory management, CRM, Multi-vendor marketplace, Bangladesh',
 };
 
 export default function RootLayout({
@@ -13,9 +15,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
-      <body className="min-h-screen bg-slate-950 text-slate-100 antialiased">
-        {children}
+    <html lang="en" className="scroll-smooth">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#1F2937" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="Zibonbaba" />
+      </head>
+      <body className="flex flex-col min-h-screen bg-neutral-light">
+        <LayoutClient>
+          {children}
+        </LayoutClient>
       </body>
     </html>
   );

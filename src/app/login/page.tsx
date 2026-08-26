@@ -50,10 +50,12 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-neutral-dark">
+      {/* Back Button */}
       <Link href="/" className="absolute top-4 left-4 z-50 p-2.5 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors border border-white/10 backdrop-blur-sm">
         <ArrowLeft size={20} />
       </Link>
 
+      {/* Animated gradient background */}
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-950" />
         <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-primary/10 blur-[100px] animate-pulse" />
@@ -61,6 +63,7 @@ export default function LoginPage() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full bg-yellow-400/5 blur-[80px]" />
       </div>
 
+      {/* Decorative grid */}
       <div className="absolute inset-0 z-0 opacity-5"
         style={{
           backgroundImage: 'linear-gradient(rgba(255,193,7,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(255,193,7,0.3) 1px, transparent 1px)',
@@ -69,6 +72,7 @@ export default function LoginPage() {
       />
 
       <div className="relative z-10 w-full max-w-md px-4 py-10">
+        {/* Logo & Branding */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary shadow-glow mb-4">
             <span className="text-3xl font-black text-gray-900">Z</span>
@@ -77,10 +81,12 @@ export default function LoginPage() {
           <p className="text-gray-400 text-sm mt-1">Your Premier Marketplace</p>
         </div>
 
+        {/* Glass Card */}
         <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl shadow-modal p-8">
           <h2 className="text-xl font-bold text-white mb-1">Welcome back</h2>
           <p className="text-gray-400 text-sm mb-6">Sign in to your account to continue</p>
 
+          {/* Error Banner */}
           {error && (
             <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg px-4 py-3 mb-5 text-sm animate-fade-in">
               <AlertCircle size={16} className="shrink-0" />
@@ -89,6 +95,7 @@ export default function LoginPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Email */}
             <div>
               <label htmlFor="login-email" className="block text-sm font-medium text-gray-300 mb-1.5">
                 Email Address
@@ -107,6 +114,7 @@ export default function LoginPage() {
               </div>
             </div>
 
+            {/* Password */}
             <div>
               <label htmlFor="login-password" className="block text-sm font-medium text-gray-300 mb-1.5">
                 Password
@@ -133,6 +141,7 @@ export default function LoginPage() {
               </div>
             </div>
 
+            {/* Remember me + Forgot */}
             <div className="flex items-center justify-between">
               <label htmlFor="remember-me" className="flex items-center gap-2 cursor-pointer">
                 <div className="relative">
@@ -157,6 +166,7 @@ export default function LoginPage() {
               </Link>
             </div>
 
+            {/* Login Button */}
             <button
               id="login-submit-btn"
               type="submit"
@@ -174,12 +184,14 @@ export default function LoginPage() {
             </button>
           </form>
 
+          {/* Divider */}
           <div className="flex items-center gap-3 my-6">
             <div className="flex-1 h-px bg-white/10" />
             <span className="text-gray-500 text-xs uppercase tracking-widest">or continue with</span>
             <div className="flex-1 h-px bg-white/10" />
           </div>
 
+          {/* Social Login Stubs */}
           <div className="grid grid-cols-2 gap-3">
             <button
               id="google-login-btn"
@@ -206,6 +218,7 @@ export default function LoginPage() {
             </button>
           </div>
 
+          {/* Register Link */}
           <p className="text-center text-sm text-gray-500 mt-6">
             Don&apos;t have an account?{' '}
             <Link href="/register" className="text-primary hover:text-yellow-300 font-semibold transition-colors">
@@ -214,15 +227,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <div className="text-center mt-6">
-          <p className="text-xs text-gray-500">
-            Are you a merchant?{' '}
-            <Link href="/seller/login" className="text-yellow-400 hover:text-yellow-300 font-medium underline transition-colors">
-              Login to Seller Center
-            </Link>
-          </p>
-        </div>
-
+        {/* Footer note */}
         <p className="text-center text-xs text-gray-600 mt-4">
           By signing in, you agree to our{' '}
           <span className="text-gray-500 hover:text-gray-400 cursor-pointer transition-colors">Terms of Service</span>

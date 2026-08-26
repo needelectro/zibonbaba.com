@@ -58,16 +58,20 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // 3. CUSTOMER AUTH ROUTES (prevent loop if already logged in)
-  if (pathname === '/login' || pathname === '/register') {
-    // Let customer login or register normally
+  // 3. CUSTOMER AUTH ROUTES (allow public access without redirect loops)
+  if (
+    pathname === '/login' ||
+    pathname === '/register' ||
+    pathname === '/customer/login' ||
+    pathname === '/customer/register'
+  ) {
     return NextResponse.next();
   }
 
   // 4. CUSTOMER ACCOUNT AREA PROTECTION
   if (pathname.startsWith('/account')) {
     if (!token) {
-      return NextResponse.redirect(new URL('/login', request.url));
+      return NextResponse.redirect(new URL('/customer/login', request.url));
     }
   }
 

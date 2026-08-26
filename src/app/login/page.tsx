@@ -219,12 +219,20 @@ export default function LoginPage() {
           </div>
 
           {/* Register Link */}
-          <p className="text-center text-sm text-gray-500 mt-6">
-            Don&apos;t have an account?{' '}
-            <Link href="/register" className="text-primary hover:text-yellow-300 font-semibold transition-colors">
-              Create Account
-            </Link>
-          </p>
+          <div className="text-center mt-6 space-y-2">
+            <p className="text-sm text-gray-500">
+              Don&apos;t have an account?{' '}
+              <Link href="/customer/register" className="text-primary hover:text-yellow-300 font-semibold transition-colors">
+                Create Account
+              </Link>
+            </p>
+            <p className="text-xs text-gray-600">
+              Are you a merchant?{' '}
+              <Link href="/seller/login" className="text-gray-400 hover:text-primary transition-colors">
+                Seller Center Login
+              </Link>
+            </p>
+          </div>
         </div>
 
         {/* Footer note */}

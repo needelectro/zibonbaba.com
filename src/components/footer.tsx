@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Mail, Phone, MapPin, ShieldCheck, Heart, Store, Truck, RotateCcw, HelpCircle } from 'lucide-react';
 import Link from 'next/link';
 
@@ -82,6 +82,8 @@ export default function Footer() {
         <div>
           <h4 className="text-xs font-bold text-white uppercase tracking-widest mb-4">Customer Care</h4>
           <ul className="flex flex-col gap-2.5 text-xs text-neutral-muted">
+            <li><Link href="/customer/login" className="hover:text-primary transition-colors font-semibold text-yellow-400">Customer Sign In</Link></li>
+            <li><Link href="/customer/register" className="hover:text-primary transition-colors">Create Customer Account</Link></li>
             <li><Link href="/tracking" className="hover:text-primary transition-colors">Track Your Order</Link></li>
             <li><Link href="/account/profile" className="hover:text-primary transition-colors">My Customer Account</Link></li>
             <li><Link href="/cart" className="hover:text-primary transition-colors">Shopping Cart</Link></li>

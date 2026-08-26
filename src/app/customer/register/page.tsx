@@ -1,11 +1,25 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
-  User, Mail, Phone, Lock, Eye, EyeOff,
-  Loader2, AlertCircle, CheckCircle2, Tag, ArrowRight, ArrowLeft
+  User,
+  Mail,
+  Phone,
+  Lock,
+  Eye,
+  EyeOff,
+  Loader2,
+  AlertCircle,
+  CheckCircle2,
+  Tag,
+  ArrowRight,
+  ArrowLeft,
+  Store,
+  Sparkles,
+  Gift,
+  ShieldCheck
 } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 
@@ -55,7 +69,7 @@ function Field({ id, label, type = 'text', value, onChange, placeholder, icon, r
   );
 }
 
-export default function RegisterPage() {
+export default function CustomerRegisterPage() {
   const router = useRouter();
 
   // Form States
@@ -134,16 +148,16 @@ export default function RegisterPage() {
       if (data.accessToken && typeof window !== 'undefined') {
         localStorage.setItem('zibonbaba_token', data.accessToken);
         localStorage.setItem('zibonbaba_user', JSON.stringify(data.user));
-        localStorage.setItem('zibonbaba_role', data.user.role);
+        localStorage.setItem('zibonbaba_role', data.user.role || 'CUSTOMER');
         document.cookie = `zibonbaba_token=${data.accessToken}; path=/; max-age=604800; SameSite=Lax`;
-        document.cookie = `zibonbaba_role=${data.user.role}; path=/; max-age=604800; SameSite=Lax`;
+        document.cookie = `zibonbaba_role=${data.user.role || 'CUSTOMER'}; path=/; max-age=604800; SameSite=Lax`;
         document.cookie = `zibonbaba_user=${encodeURIComponent(JSON.stringify(data.user))}; path=/; max-age=604800; SameSite=Lax`;
 
         useStore.setState({
           isLoggedIn: true,
           token: data.accessToken,
           role: 'customer',
-          username: data.user?.fullName || data.user?.email || 'User',
+          username: data.user?.fullName || data.user?.email || 'Customer',
           userEmail: data.user?.email || '',
           cart: [],
           orders: []
@@ -178,9 +192,14 @@ export default function RegisterPage() {
           <h2 className="text-xl sm:text-2xl font-black text-white mb-2">
             Welcome to Zibonbaba! 🎉
           </h2>
-          <p className="text-gray-400 text-xs sm:text-sm mb-6 leading-relaxed">
-            Your customer account has been created with 100 welcome bonus loyalty points. Start shopping today!
+          <p className="text-gray-400 text-xs sm:text-sm mb-4 leading-relaxed">
+            Your customer account has been created with <strong className="text-primary font-bold">100 welcome bonus loyalty points</strong>!
           </p>
+
+          <div className="bg-white/5 border border-white/10 rounded-xl p-3.5 mb-6 text-xs text-gray-300 flex items-center gap-3">
+            <Gift size={20} className="text-amber-400 shrink-0" />
+            <span className="text-left">Use your points during checkout for exclusive discounts on your first order.</span>
+          </div>
 
           <div className="flex flex-col gap-3">
             <Link
@@ -190,10 +209,10 @@ export default function RegisterPage() {
               Start Shopping <ArrowRight size={16} />
             </Link>
             <Link
-              href="/login"
+              href="/customer/login"
               className="w-full inline-flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 font-bold px-6 py-3 rounded-xl transition-all text-sm"
             >
-              Sign In
+              Sign In to Account
             </Link>
           </div>
         </div>
@@ -222,12 +241,15 @@ export default function RegisterPage() {
       <div className="relative z-10 w-full max-w-lg">
         {/* Branding & Header */}
         <div className="text-center mb-6">
-          <Link href="/" className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary shadow-glow mb-3">
+          <Link href="/" className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary shadow-glow mb-3 hover:scale-105 transition-transform">
             <span className="text-2xl font-black text-gray-950">Z</span>
           </Link>
-          <h1 className="text-2xl sm:text-3xl font-black text-primary tracking-tight">Create Customer Account</h1>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-bold text-primary mb-2">
+            <Sparkles size={13} /> 100 Loyalty Points on Signup
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">Create Customer Account</h1>
           <p className="text-gray-400 text-xs sm:text-sm mt-1">
-            Join Zibonbaba to discover thousands of exclusive products and deals
+            Join Zibonbaba to discover thousands of deals and fast express shipping
           </p>
         </div>
 
@@ -235,7 +257,7 @@ export default function RegisterPage() {
         <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl shadow-2xl p-6 sm:p-8 space-y-6">
           {/* Error Message */}
           {error && (
-            <div className="flex items-center gap-2.5 bg-red-500/10 border border-red-500/30 text-red-400 rounded-xl p-3 text-xs sm:text-sm">
+            <div className="flex items-center gap-2.5 bg-red-500/10 border border-red-500/30 text-red-400 rounded-xl p-3 text-xs sm:text-sm animate-fade-in">
               <AlertCircle size={16} className="shrink-0" />
               <span>{error}</span>
             </div>
@@ -244,26 +266,26 @@ export default function RegisterPage() {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <Field
-              id="reg-fullname"
+              id="customer-reg-fullname"
               label="Full Name"
               value={fullName}
               onChange={setFullName}
-              placeholder="e.g. John Doe"
+              placeholder="e.g. Sarah Jenkins"
               icon={<User size={16} />}
             />
 
             <Field
-              id="reg-email"
+              id="customer-reg-email"
               label="Email Address"
               type="email"
               value={email}
               onChange={setEmail}
-              placeholder="you@example.com"
+              placeholder="sarah@example.com"
               icon={<Mail size={16} />}
             />
 
             <Field
-              id="reg-phone"
+              id="customer-reg-phone"
               label="Phone Number"
               type="tel"
               value={phone}
@@ -275,17 +297,17 @@ export default function RegisterPage() {
 
             {/* Customer Referral Code Field */}
             <Field
-              id="reg-referral"
+              id="customer-reg-referral"
               label="Referral Code"
               value={referralCode}
               onChange={setReferralCode}
-              placeholder="e.g. ZB8X9K2"
+              placeholder="e.g. ZB8X9K2 (Optional)"
               icon={<Tag size={16} />}
               required={false}
             />
 
             <Field
-              id="reg-password"
+              id="customer-reg-password"
               label="Password"
               type="password"
               value={password}
@@ -295,7 +317,7 @@ export default function RegisterPage() {
             />
 
             <Field
-              id="reg-confirm-password"
+              id="customer-reg-confirm-password"
               label="Confirm Password"
               type="password"
               value={confirmPassword}
@@ -306,10 +328,10 @@ export default function RegisterPage() {
 
             {/* Terms Checkbox */}
             <div className="pt-1">
-              <label htmlFor="terms-checkbox" className="flex items-start gap-2.5 cursor-pointer group">
+              <label htmlFor="customer-reg-terms" className="flex items-start gap-2.5 cursor-pointer group">
                 <div className="relative mt-0.5 shrink-0">
                   <input
-                    id="terms-checkbox"
+                    id="customer-reg-terms"
                     type="checkbox"
                     checked={termsAccepted}
                     onChange={(e) => setTermsAccepted(e.target.checked)}
@@ -330,7 +352,7 @@ export default function RegisterPage() {
 
             {/* Submit Button */}
             <button
-              id="register-submit-btn"
+              id="customer-register-submit-btn"
               type="submit"
               disabled={loading}
               className="w-full bg-primary hover:bg-primary-accent text-gray-950 font-black py-3.5 rounded-xl transition-all shadow-glow hover:shadow-[0_0_25px_rgba(255,193,7,0.4)] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base mt-2"
@@ -338,7 +360,7 @@ export default function RegisterPage() {
               {loading ? (
                 <>
                   <Loader2 size={18} className="animate-spin" />
-                  <span>Creating Account...</span>
+                  <span>Creating Customer Account...</span>
                 </>
               ) : (
                 <>
@@ -349,8 +371,8 @@ export default function RegisterPage() {
             </button>
           </form>
 
-          {/* Login Link */}
-          <div className="pt-2 border-t border-white/10 space-y-2">
+          {/* Login Link & Merchant Switch */}
+          <div className="pt-2 border-t border-white/10 space-y-3">
             <p className="text-center text-xs sm:text-sm text-gray-400">
               Already have an account?{' '}
               <Link
@@ -360,15 +382,16 @@ export default function RegisterPage() {
                 Sign In
               </Link>
             </p>
-            <p className="text-center text-xs text-gray-500">
-              Want to sell products?{' '}
+
+            <div className="text-center">
               <Link
                 href="/seller/register"
-                className="text-gray-400 hover:text-primary transition-colors"
+                className="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-300 transition-colors"
               >
-                Open a Seller Store
+                <Store size={14} className="text-amber-400" />
+                <span>Want to sell on Zibonbaba? <strong className="text-gray-300">Open a Seller Store</strong></span>
               </Link>
-            </p>
+            </div>
           </div>
         </div>
       </div>

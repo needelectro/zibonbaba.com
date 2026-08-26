@@ -6,7 +6,7 @@ import { ShoppingCart, Trash2, ArrowRight, ShoppingBag, Percent } from 'lucide-r
 import Link from 'next/link';
 
 export default function CartPage() {
-  const { cart, removeFromCart, updateQuantity } = useStore();
+  const { cart, removeFromCart, updateCartQty } = useStore();
 
   const [isMounted, setIsMounted] = useState(false);
   const [coupon, setCoupon] = useState('');
@@ -44,61 +44,63 @@ export default function CartPage() {
 
   return (
     <div className="max-w-[1440px] mx-auto py-10 px-4 lg:px-8 animate-slide-up space-y-8">
-      <div className="border-b border-white/10 pb-6">
-        <h1 className="text-3xl font-extrabold text-white flex items-center gap-2">
-          <ShoppingCart className="w-8 h-8 text-primary" />
+      <div className="border-b border-neutral-light pb-6">
+        <h1 className="text-3xl font-extrabold text-neutral-dark flex items-center gap-2">
+          <ShoppingCart className="w-8 h-8 text-primary-accent" />
           Shopping Cart
         </h1>
-        <p className="text-xs text-gray-400 mt-1">Review your items before proceeding to secure payment checkouts.</p>
+        <p className="text-xs text-neutral-muted mt-1">Review your items before proceeding to secure payment checkouts.</p>
       </div>
 
-      {validCart.length === 0 ? (
-        <div className="text-center py-20 bg-white/5 border border-white/10 rounded-2xl shadow-card">
-          <ShoppingBag className="w-12 h-12 text-gray-500 mx-auto mb-3 animate-bounce" />
-          <h3 className="text-base font-bold text-white">Your shopping cart is empty</h3>
-          <p className="text-xs text-gray-400 mt-1">Explore our catalog to add verified products.</p>
+      {cart.length === 0 ? (
+        <div className="text-center py-20 bg-white border border-neutral-light rounded-lg shadow-card">
+          <ShoppingBag className="w-12 h-12 text-neutral-muted mx-auto mb-3 animate-bounce" />
+          <h3 className="text-base font-bold text-neutral-dark">Your shopping cart is empty</h3>
+          <p className="text-xs text-neutral-muted mt-1">Explore our catalog to add verified products.</p>
           <Link
             href="/"
-            className="inline-block bg-primary hover:bg-primary-accent text-gray-950 text-xs font-bold px-6 py-2.5 rounded-lg mt-6 transition-colors shadow-glow"
+            className="inline-block bg-primary hover:bg-primary-dark text-neutral-dark text-xs font-bold px-6 py-2.5 rounded-md mt-6 transition-colors shadow-sm"
           >
             Continue Shopping
           </Link>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Items List */}
           <div className="lg:col-span-2 space-y-4">
-            {validCart.map((item) => (
+            {cart.map((item) => (
               <div
                 key={item.product.id}
-                className="bg-white/5 p-4 rounded-xl border border-white/10 shadow-card flex items-center justify-between gap-4"
+                className="bg-white p-4 rounded-lg border border-neutral-light shadow-card flex items-center justify-between gap-4"
               >
-                <div className="w-16 h-16 rounded-lg overflow-hidden bg-white/10 shrink-0">
+                <div className="w-16 h-16 rounded overflow-hidden bg-neutral-light shrink-0">
                   <img src={item.product.image} alt={item.product.name} className="object-cover w-full h-full" />
                 </div>
                 <div className="flex-grow">
-                  <h3 className="text-xs font-bold text-white line-clamp-1">{item.product.name}</h3>
-                  <p className="text-[10px] text-gray-400 mt-0.5">SKU: {item.product.sku} | Vendor: {item.product.vendor}</p>
-                  <p className="text-xs font-extrabold text-primary mt-1">৳{item.product.price.toFixed(2)}</p>
+                  <h3 className="text-xs font-bold text-neutral-dark line-clamp-1">{item.product.name}</h3>
+                  <p className="text-[10px] text-neutral-muted mt-0.5">SKU: {item.product.sku} | Vendor: {item.product.vendor}</p>
+                  <p className="text-xs font-extrabold text-primary-dark mt-1">৳{item.product.price.toFixed(2)}</p>
                 </div>
                 <div className="flex items-center gap-4">
-                  <div className="flex items-center border border-white/10 rounded-lg bg-white/5 overflow-hidden">
+                  {/* Quantity Controls */}
+                  <div className="flex items-center border border-neutral-light rounded bg-neutral-light overflow-hidden">
                     <button
-                      onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
-                      className="px-2.5 py-1 text-xs font-bold hover:bg-white/10 text-white"
+                      onClick={() => updateCartQty(item.product.id, item.quantity - 1)}
+                      className="px-2.5 py-1 text-xs font-bold hover:bg-neutral-muted/20"
                     >
                       -
                     </button>
-                    <span className="px-3 text-xs font-bold text-white">{item.quantity}</span>
+                    <span className="px-3 text-xs font-bold text-neutral-dark">{item.quantity}</span>
                     <button
-                      onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                      className="px-2.5 py-1 text-xs font-bold hover:bg-white/10 text-white"
+                      onClick={() => updateCartQty(item.product.id, item.quantity + 1)}
+                      className="px-2.5 py-1 text-xs font-bold hover:bg-neutral-muted/20"
                     >
                       +
                     </button>
                   </div>
                   <button
                     onClick={() => removeFromCart(item.product.id)}
-                    className="p-2 hover:bg-red-500/10 text-red-400 rounded-lg transition-colors"
+                    className="p-2 hover:bg-error/5 text-error rounded-md transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -107,52 +109,56 @@ export default function CartPage() {
             ))}
           </div>
 
+          {/* Checkout Summary panel */}
           <div className="space-y-6">
-            <div className="bg-white/5 p-6 rounded-2xl border border-white/10 shadow-card space-y-4">
-              <h2 className="text-xs font-bold text-white uppercase tracking-wider border-b border-white/10 pb-2">
+            {/* Billing totals */}
+            <div className="bg-white p-6 rounded-lg border border-neutral-light shadow-card space-y-4">
+              <h2 className="text-xs font-bold text-neutral-dark uppercase tracking-wider border-b border-neutral-light pb-2">
                 Order Summary
               </h2>
               <div className="space-y-2.5 text-xs">
-                <div className="flex justify-between text-gray-300">
+                <div className="flex justify-between text-neutral-body">
                   <span>Subtotal</span>
                   <span className="font-semibold">৳{subtotal.toFixed(2)}</span>
                 </div>
                 {discountPercent > 0 && (
-                  <div className="flex justify-between text-green-400">
+                  <div className="flex justify-between text-success">
                     <span>Discount ({discountPercent}%)</span>
                     <span className="font-bold">-৳{discountAmount.toFixed(2)}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-gray-300">
+                <div className="flex justify-between text-neutral-body">
                   <span>Estimated Tax (5%)</span>
                   <span className="font-semibold">৳{tax.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-gray-300">
+                <div className="flex justify-between text-neutral-body">
                   <span>Shipping Fee</span>
                   <span className="font-semibold">৳{shipping.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-white font-extrabold text-sm border-t border-white/10 pt-2.5">
+                <div className="flex justify-between text-neutral-dark font-extrabold text-sm border-t border-neutral-light pt-2.5">
                   <span>Total</span>
-                  <span className="text-primary">৳{grandTotal.toFixed(2)}</span>
+                  <span>৳{grandTotal.toFixed(2)}</span>
                 </div>
               </div>
 
+              {/* Checkout Link */}
               <Link
                 href="/checkout"
-                className="w-full bg-primary hover:bg-primary-accent text-gray-950 text-xs font-bold py-3 rounded-lg flex items-center justify-center gap-1.5 transition-colors shadow-glow mt-6 cursor-pointer"
+                className="w-full bg-primary hover:bg-primary-dark text-neutral-dark text-xs font-bold py-3 rounded-md flex items-center justify-center gap-1.5 transition-colors shadow-md mt-6 cursor-pointer"
               >
                 Proceed to Checkout
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
 
-            <div className="bg-white/5 p-6 rounded-2xl border border-white/10 shadow-card space-y-3">
-              <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1">
-                <Percent className="w-4 h-4 text-primary" />
+            {/* Coupon codes card */}
+            <div className="bg-white p-6 rounded-lg border border-neutral-light shadow-card space-y-3">
+              <h3 className="text-xs font-bold text-neutral-dark uppercase tracking-wider flex items-center gap-1">
+                <Percent className="w-4 h-4 text-primary-accent" />
                 Promo Coupon Code
               </h3>
               {couponMsg && (
-                <p className={`text-[10px] font-bold ${discountPercent > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                <p className={`text-[10px] font-bold ${discountPercent > 0 ? 'text-success' : 'text-error'}`}>
                   {couponMsg}
                 </p>
               )}
@@ -162,11 +168,11 @@ export default function CartPage() {
                   placeholder="e.g. SAVE10"
                   value={coupon}
                   onChange={(e) => setCoupon(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-xs text-white outline-none focus:border-primary"
+                  className="w-full bg-neutral-light border border-neutral-light rounded p-2 text-xs text-neutral-dark outline-none focus:border-primary"
                 />
                 <button
                   type="submit"
-                  className="bg-white/10 hover:bg-white/20 text-white text-xs font-bold px-4 rounded-lg transition-colors border border-white/10"
+                  className="bg-neutral-dark hover:bg-neutral-dark/95 text-white text-xs font-bold px-4 rounded transition-colors"
                 >
                   Apply
                 </button>

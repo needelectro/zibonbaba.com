@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Mail, Phone, MapPin, ShieldCheck, Heart, Store, Truck, RotateCcw, HelpCircle } from 'lucide-react';
 import Link from 'next/link';
 

@@ -458,6 +458,13 @@ function NotificationsDropdown({ onClose }: { onClose: () => void }) {
 
   const unreadList = notifications.filter((n: any) => !n.isRead);
 
+  const getNotificationColor = (type: string) => {
+    if (type === 'SUCCESS') return 'text-green-600 bg-green-50 border-green-200';
+    if (type === 'WARNING') return 'text-orange-600 bg-orange-50 border-orange-200';
+    if (type === 'ERROR') return 'text-red-600 bg-red-50 border-red-200';
+    return 'text-blue-600 bg-blue-50 border-blue-200';
+  };
+
   return (
     <div
       ref={ref}
@@ -563,6 +570,7 @@ export default function Navbar() {
   const [showCategoriesDropdown, setShowCategoriesDropdown] = useState(false);
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
+  // Poll for notifications every 10 seconds to maintain real-time sync across devices
   useEffect(() => {
     if (isLoggedIn) {
       fetchNotifications();
@@ -595,8 +603,8 @@ export default function Navbar() {
     <>
       <header className="sticky top-0 z-50 w-full border-b border-slate-200/50 bg-white/90 backdrop-blur-lg shadow-sm">
         {/* Top Utility Bar */}
-        <div className="w-full bg-[#0f172a] text-slate-300 py-2 px-4 text-xs font-semibold flex items-center justify-between border-b border-slate-800">
-          <div className="flex items-center gap-4">
+        <div className="w-full bg-[#0f172a] text-slate-300 py-1.5 px-3 sm:px-4 text-xs font-semibold flex items-center justify-between border-b border-slate-800 overflow-x-auto no-scrollbar text-nowrap">
+          <div className="flex items-center gap-3 sm:gap-4 shrink-0">
             {/* Language Dropdown */}
             <div className="relative group cursor-pointer flex items-center gap-1 hover:text-white transition-colors">
               <Globe className="w-3.5 h-3.5 text-amber-500" />
@@ -654,12 +662,12 @@ export default function Navbar() {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <span className="text-amber-500 font-extrabold">{language === 'en' ? 'Helpline: +01 112 352 566' : 'হেল্পলাইন: +০১ ১১২ ৩৫২ ৫৬৬'}</span>
-            <span className="text-slate-700">|</span>
+          <div className="flex items-center gap-3 sm:gap-4 shrink-0 pl-3">
+            <span className="text-amber-500 font-extrabold hidden sm:inline">{language === 'en' ? 'Helpline: +880 9612-ZIBONBABA' : 'হেল্পলাইন: +৮৮০ ৯৬১২-জীবনবাবা'}</span>
+            <span className="text-slate-700 hidden sm:inline">|</span>
             <Link href="/" className="hover:text-white transition-colors flex items-center gap-1">
               <RefreshCw className="w-3.5 h-3.5" />
-              <span>{language === 'en' ? 'Compare List (0)' : 'তুলনা তালিকা (০)'}</span>
+              <span>{language === 'en' ? 'Compare List' : 'তুলনা তালিকা'}</span>
             </Link>
             <span className="text-slate-700">|</span>
             <Link href="/wishlist" className="hover:text-white transition-colors flex items-center gap-1 relative">
@@ -670,7 +678,7 @@ export default function Navbar() {
         </div>
 
         {/* Main Header Brand & Search */}
-        <div className="max-w-[1440px] mx-auto px-4 lg:px-8 h-20 flex items-center justify-between gap-6 relative">
+        <div className="max-w-[1440px] mx-auto px-4 lg:px-8 h-20 flex items-center justify-between gap-4 lg:gap-6 relative">
           {/* Brand Logo */}
           <Link href="/" className="flex items-center gap-2 group shrink-0">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center font-extrabold text-white text-xl shadow-md transition-transform duration-200 group-hover:scale-105">
@@ -815,15 +823,15 @@ export default function Navbar() {
         </div>
 
         {/* Subheader Mega Menu & Links */}
-        <div className="bg-slate-50 border-t border-slate-200/50">
-          <div className="max-w-[1440px] mx-auto px-4 lg:px-8 flex items-center justify-between py-2 relative">
-            <div className="flex items-center gap-6">
+        <div className="bg-slate-50 border-t border-slate-200/50 overflow-x-auto no-scrollbar">
+          <div className="max-w-[1440px] mx-auto px-4 lg:px-8 flex items-center justify-between py-2 relative gap-4 min-w-max md:min-w-0">
+            <div className="flex items-center gap-4 lg:gap-6 overflow-x-auto no-scrollbar">
               {/* All Categories Dropdown Button */}
-              <div className="relative">
+              <div className="relative shrink-0">
                 <button
                   onClick={() => setShowCategoriesDropdown(!showCategoriesDropdown)}
                   onBlur={() => setTimeout(() => setShowCategoriesDropdown(false), 200)}
-                  className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl transition-colors shadow-sm"
+                  className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs px-4 lg:px-5 py-2.5 rounded-xl transition-colors shadow-sm cursor-pointer shrink-0"
                 >
                   <Menu className="w-4 h-4" />
                   <span>{language === 'en' ? 'All Categories' : 'সব ক্যাটাগরি'}</span>
@@ -856,18 +864,18 @@ export default function Navbar() {
               </div>
 
               {/* Horizontal Navigation Links */}
-              <nav className="flex items-center gap-6 text-xs font-bold text-slate-600 uppercase tracking-wider">
-                <Link href="/" className="hover:text-amber-500 transition-colors">
+              <nav className="flex items-center gap-4 lg:gap-6 text-xs font-bold text-slate-600 uppercase tracking-wider shrink-0">
+                <Link href="/" className="hover:text-amber-500 transition-colors whitespace-nowrap">
                   {language === 'en' ? 'Home' : 'হোম'}
                 </Link>
-                <Link href="/#shop-catalog" className="hover:text-amber-500 transition-colors">
+                <Link href="/#shop-catalog" className="hover:text-amber-500 transition-colors whitespace-nowrap">
                   {language === 'en' ? 'All Brands' : 'সব ব্র্যান্ড'}
                 </Link>
-                <Link href="/#flash-sale" className="hover:text-amber-500 transition-colors text-red-500 animate-pulse flex items-center gap-1">
+                <Link href="/#flash-sale" className="hover:text-amber-500 transition-colors text-red-500 animate-pulse flex items-center gap-1 whitespace-nowrap">
                   <Sparkles className="w-3.5 h-3.5 fill-current" />
                   <span>{language === 'en' ? 'Offers' : 'অফারসমূহ'}</span>
                 </Link>
-                <Link href="/#vendors" className="hover:text-amber-500 transition-colors">
+                <Link href="/#vendors" className="hover:text-amber-500 transition-colors whitespace-nowrap">
                   {language === 'en' ? 'All Shops' : 'সব শপ'}
                 </Link>
                 <button
@@ -876,7 +884,7 @@ export default function Navbar() {
                     const el = document.getElementById('shop-catalog');
                     el?.scrollIntoView({ behavior: 'smooth' });
                   }}
-                  className="hover:text-amber-500 transition-colors uppercase text-left"
+                  className="hover:text-amber-500 transition-colors uppercase text-left whitespace-nowrap cursor-pointer"
                 >
                   {language === 'en' ? 'Men Clothing & Fashion' : 'পুরুষের পোশাক'}
                 </button>
@@ -886,26 +894,23 @@ export default function Navbar() {
                     const el = document.getElementById('shop-catalog');
                     el?.scrollIntoView({ behavior: 'smooth' });
                   }}
-                  className="hover:text-amber-500 transition-colors uppercase text-left"
+                  className="hover:text-amber-500 transition-colors uppercase text-left whitespace-nowrap cursor-pointer"
                 >
                   {language === 'en' ? 'Computer & Accessories' : 'কম্পিউটার ও এক্সেসরিজ'}
                 </button>
-                <Link href="/" className="hover:text-amber-500 transition-colors">
-                  {language === 'en' ? 'All Blogs' : 'সব ব্লগ'}
-                </Link>
               </nav>
             </div>
 
             {/* Role Desk Links */}
             {isLoggedIn && (
-              <div className="flex gap-2">
+              <div className="flex gap-2 shrink-0">
                 {navLinks
                   .filter((link) => link.roles.includes(role))
                   .map((link, idx) => (
                     <Link
                       key={idx}
                       href={link.href}
-                      className={`text-[9.5px] font-black text-white px-3 py-1.5 rounded-lg shadow-sm tracking-wider uppercase transition-transform active:scale-95 ${link.color}`}
+                      className={`text-[9.5px] font-black text-white px-3 py-1.5 rounded-lg shadow-sm tracking-wider uppercase transition-transform active:scale-95 whitespace-nowrap ${link.color}`}
                     >
                       {link.label}
                     </Link>

@@ -2,131 +2,138 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Store, Mail, ArrowRight, ArrowLeft, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { Mail, ArrowLeft, Loader2, CheckCircle2, AlertCircle, Store } from 'lucide-react';
 
 export default function SellerForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) {
-      setError('Please enter your merchant account email.');
+      setError('Please enter your registered seller email address.');
       return;
     }
     setError('');
     setLoading(true);
 
     try {
-      // Simulate/trigger password recovery flow
-      await new Promise(r => setTimeout(r, 1200));
+      // Send reset request
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       setSubmitted(true);
-    } catch (err: any) {
-      setError(err?.message || 'Failed to send password reset request.');
+    } catch {
+      setError('Could not process password reset. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <Link href="/" className="inline-flex items-center gap-2 group mb-6">
-          <div className="w-12 h-12 rounded-2xl bg-amber-500 flex items-center justify-center font-black text-slate-950 text-2xl shadow-lg">
+    <div className="min-h-screen bg-gray-950 text-white flex flex-col justify-between relative overflow-hidden">
+      {/* Top Header */}
+      <header className="border-b border-white/10 bg-gray-900/50 backdrop-blur-md px-6 py-4 flex items-center justify-between z-20">
+        <Link href="/" className="flex items-center gap-2 group">
+          <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center font-black text-gray-900 text-lg shadow-glow">
             Z
           </div>
-          <span className="font-extrabold text-2xl text-white tracking-tight">
-            Zibon<span className="text-amber-500">baba</span>
+          <span className="font-extrabold text-xl tracking-tight text-white">
+            Zibon<span className="text-primary">baba</span>
           </span>
         </Link>
-        <h1 className="text-2xl font-black text-white">Reset Seller Password</h1>
-        <p className="mt-2 text-xs text-slate-400">
-          Enter your registered merchant email to receive password recovery instructions
-        </p>
-      </div>
+        <Link href="/seller/login" className="text-xs text-gray-400 hover:text-white flex items-center gap-1.5 transition-colors">
+          <ArrowLeft size={14} /> Back to Seller Login
+        </Link>
+      </header>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl">
-          {submitted ? (
-            <div className="text-center py-4 space-y-4">
-              <div className="w-14 h-14 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto">
-                <CheckCircle2 className="w-7 h-7" />
-              </div>
-              <h2 className="text-lg font-black text-white">Check Your Email</h2>
-              <p className="text-xs text-slate-400">
-                If an active seller account exists for <strong className="text-white">{email}</strong>, we have dispatched a password recovery link.
-              </p>
-              <div className="pt-4">
-                <Link
-                  href="/seller/login"
-                  className="inline-flex items-center gap-2 text-xs font-bold text-amber-400 hover:text-amber-300"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  <span>Back to Seller Sign In</span>
-                </Link>
-              </div>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {error && (
-                <div className="flex items-start gap-2.5 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-medium">
-                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                  <span>{error}</span>
+      {/* Main Content */}
+      <div className="flex-1 flex items-center justify-center px-4 py-12 relative z-10">
+        <div className="w-full max-w-md">
+          <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 sm:p-8 shadow-2xl">
+            {submitted ? (
+              <div className="text-center space-y-4">
+                <div className="w-16 h-16 bg-green-500/20 text-green-400 border border-green-500/30 rounded-full flex items-center justify-center mx-auto">
+                  <CheckCircle2 size={32} />
                 </div>
-              )}
-
+                <h2 className="text-xl font-bold text-white">Check Your Email</h2>
+                <p className="text-xs text-gray-400 leading-relaxed">
+                  If an active seller account is associated with <span className="text-white font-medium">{email}</span>, we have sent instructions to reset your password.
+                </p>
+                <div className="pt-4">
+                  <Link
+                    href="/seller/login"
+                    className="w-full inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-accent text-gray-950 font-bold py-2.5 rounded-lg text-xs transition-all"
+                  >
+                    Return to Seller Login
+                  </Link>
+                </div>
+              </div>
+            ) : (
               <div>
-                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
-                  Merchant Email Address
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
-                    <Mail className="w-4 h-4" />
+                <div className="mb-6">
+                  <div className="w-12 h-12 rounded-xl bg-primary/20 border border-primary/40 flex items-center justify-center text-primary mb-3">
+                    <Store size={24} />
                   </div>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="seller@example.com"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 font-medium"
-                    required
-                  />
+                  <h2 className="text-xl font-bold text-white">Reset Seller Password</h2>
+                  <p className="text-xs text-gray-400 mt-1">Enter your registered merchant email to receive a recovery link</p>
+                </div>
+
+                {error && (
+                  <div className="flex items-start gap-2 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg p-3 mb-4 text-xs">
+                    <AlertCircle size={16} className="shrink-0 mt-0.5" />
+                    <span>{error}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-300 mb-1.5">
+                      Seller Email Address
+                    </label>
+                    <div className="relative">
+                      <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500" />
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="vendor@zibonbaba.com"
+                        required
+                        className="w-full bg-white/5 border border-white/10 text-white placeholder-gray-600 rounded-lg pl-10 pr-4 py-2.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-primary hover:bg-primary-accent text-gray-950 font-extrabold py-3 rounded-lg transition-all shadow-glow disabled:opacity-60 flex items-center justify-center gap-2 text-xs sm:text-sm"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 size={16} className="animate-spin" />
+                        <span>Sending Recovery Email...</span>
+                      </>
+                    ) : (
+                      <span>Send Recovery Link</span>
+                    )}
+                  </button>
+                </form>
+
+                <div className="mt-6 pt-4 border-t border-white/10 text-center">
+                  <Link href="/seller/login" className="text-xs text-gray-400 hover:text-white transition-colors">
+                    Back to Seller Login
+                  </Link>
                 </div>
               </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-sm py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg disabled:opacity-60"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Processing…</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Send Password Reset Link</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
-              </button>
-
-              <div className="pt-2 text-center">
-                <Link
-                  href="/seller/login"
-                  className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white font-medium"
-                >
-                  <ArrowLeft className="w-3.5 h-3.5" />
-                  <span>Back to Seller Sign In</span>
-                </Link>
-              </div>
-            </form>
-          )}
+            )}
+          </div>
         </div>
       </div>
+
+      <footer className="border-t border-white/10 bg-gray-950 py-4 text-center text-xs text-gray-600 z-10">
+        © {new Date().getFullYear()} Zibonbaba Seller Center.
+      </footer>
     </div>
   );
 }

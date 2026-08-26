@@ -2,46 +2,56 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAdminRole, logAdminAction } from '@/lib/auth';
 
-export async function POST(req: Request) {
+export async function POST(request: Request) {
   try {
-    const { context, error, status } = await requireAdminRole(req);
-    if (error || !context) {
-      return NextResponse.json({ error }, { status: status || 401 });
+    const auth = await requireAdminRole(request);
+    if (auth.error) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    const body = await req.json();
-    const { id, reason } = body;
+    const body = await request.json();
+    const { id, userId, reason } = body;
 
-    if (!id) {
-      return NextResponse.json({ error: 'Verification ID required.' }, { status: 400 });
+    const reviewReason = reason || 'Documentation submitted did not meet requirements.';
+    let targetUserId = userId;
+
+    if (id && !id.startsWith('store-')) {
+      const vr = await prisma.verificationRequest.findUnique({ where: { id } });
+      if (vr) {
+        targetUserId = vr.userId;
+        await prisma.verificationRequest.update({
+          where: { id },
+          data: {
+            status: 'REJECTED',
+            reviewedAt: new Date(),
+            reviewNote: reviewReason
+          }
+        });
+      }
     }
 
-    const verification = await prisma.verificationRequest.update({
-      where: { id },
-      data: {
-        status: 'REJECTED',
-        reviewedAt: new Date(),
-        reviewNote: reason || 'Application rejected during review'
-      }
-    });
+    if (targetUserId) {
+      // Create notification for the applicant
+      await prisma.notification.create({
+        data: {
+          userId: targetUserId,
+          title: 'Store Verification Update',
+          body: `Your verification submission was not approved. Reason: ${reviewReason}. Please update your information and re-apply.`,
+          type: 'WARNING',
+          priority: 'HIGH',
+          module: 'MARKETPLACE'
+        }
+      });
+    }
 
-    // Send in-app notification to seller
-    await prisma.notification.create({
-      data: {
-        userId: verification.userId,
-        title: 'Store Application Update ⚠️',
-        body: `Your store application was not approved. Reason: ${reason || 'Missing or incorrect documentation.'}`,
-        type: 'ALERT',
-        priority: 'HIGH',
-        module: 'MARKETPLACE'
-      }
-    });
-
-    await logAdminAction(context.user.id, `REJECTED_VERIFICATION: ID=${id}`);
+    await logAdminAction(
+      auth.user?.id || null,
+      `Rejected verification request for user [${targetUserId}]. Reason: ${reviewReason}`
+    );
 
     return NextResponse.json({
       success: true,
-      message: 'Seller verification rejected.'
+      message: 'Verification request rejected.'
     });
   } catch (err: any) {
     console.error('Reject Verification Error:', err);

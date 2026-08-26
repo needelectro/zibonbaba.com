@@ -37,6 +37,7 @@ function TrackingPageContent() {
       }
     } catch (_) {}
 
+    // Fallback if not found
     setActiveOrder({
       id: cleanId.toUpperCase(),
       date: new Date().toISOString().split('T')[0],
@@ -59,12 +60,14 @@ function TrackingPageContent() {
     runTrackingSearch(trackId);
   };
 
+  // Status mapping to indices
   const statusLevels = ['PENDING', 'PROCESSING', 'DISPATCHED', 'SHIPPED', 'DELIVERED'];
   const activeIndex = activeOrder ? statusLevels.indexOf(activeOrder.status) : 0;
 
   return (
     <div className="space-y-10">
-      <div className="max-w-md mx-auto bg-white/5 p-6 rounded-2xl border border-white/10 shadow-card space-y-4">
+      {/* Tracker Lookup Input */}
+      <div className="max-w-md mx-auto bg-white p-6 rounded-lg border border-neutral-light shadow-card space-y-4">
         <form onSubmit={handleTrackSubmit} className="flex gap-2">
           <input
             type="text"
@@ -72,50 +75,55 @@ function TrackingPageContent() {
             placeholder="Enter Order / POS ID (e.g. ORD-982104)"
             value={trackId}
             onChange={(e) => setTrackId(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 text-xs text-white outline-none focus:border-primary font-mono font-bold"
+            className="w-full bg-neutral-light border border-neutral-light rounded p-2.5 text-xs text-neutral-dark outline-none focus:border-primary font-mono font-bold"
           />
           <button
             type="submit"
-            className="bg-primary hover:bg-primary-accent text-gray-950 text-xs font-bold px-5 rounded-lg flex items-center justify-center transition-colors cursor-pointer shadow-glow"
+            className="bg-primary hover:bg-primary-dark text-neutral-dark text-xs font-bold px-5 rounded flex items-center justify-center transition-colors cursor-pointer"
           >
             <Search className="w-4 h-4" />
           </button>
         </form>
-        <p className="text-[10px] text-gray-400 text-center font-semibold">
+        <p className="text-[10px] text-neutral-muted text-center font-semibold">
           💡 Pro-tip: Copy any order code from your customer orders list to track it.
         </p>
       </div>
 
       {searchError && (
-        <div className="max-w-xl mx-auto bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-xs p-3 rounded-lg text-center font-semibold">
+        <div className="max-w-xl mx-auto bg-warning/15 border border-warning text-warning text-xs p-3 rounded text-center font-semibold">
           {searchError}
         </div>
       )}
 
+      {/* Milestone roadmap */}
       {activeOrder && (
-        <div className="max-w-3xl mx-auto bg-white/5 p-8 rounded-2xl border border-white/10 shadow-card space-y-8 animate-slide-up">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-4 text-xs font-semibold">
+        <div className="max-w-3xl mx-auto bg-white p-8 rounded-lg border border-neutral-light shadow-card space-y-8 animate-slide-up">
+          {/* Summary Metadata */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-neutral-light pb-4 text-xs font-semibold">
             <div>
-              <span className="text-gray-400">Active Code:</span>{' '}
-              <span className="font-mono font-bold text-primary">{activeOrder.id}</span>
+              <span className="text-neutral-muted">Active Code:</span>{' '}
+              <span className="font-mono font-bold text-primary-dark">{activeOrder.id}</span>
             </div>
             <div>
-              <span className="text-gray-400">Courier:</span>{' '}
-              <span className="text-white">Zibonbaba Express (ZE-8120)</span>
+              <span className="text-neutral-muted">Courier:</span>{' '}
+              <span className="text-neutral-dark">Zibonbaba Express (ZE-8120)</span>
             </div>
             <div>
-              <span className="text-gray-400">Est. Arrival:</span>{' '}
-              <span className="text-green-400">2-3 Business Days</span>
+              <span className="text-neutral-muted">Est. Arrival:</span>{' '}
+              <span className="text-success">2-3 Business Days</span>
             </div>
           </div>
 
+          {/* Visual Timelines */}
           <div className="relative flex justify-between items-center w-full">
-            <div className="absolute top-1/2 left-0 w-full h-1 bg-white/10 -translate-y-1/2 -z-10"></div>
+            {/* Progress bar line */}
+            <div className="absolute top-1/2 left-0 w-full h-1 bg-neutral-light -translate-y-1/2 -z-10"></div>
             <div
               className="absolute top-1/2 left-0 h-1 bg-primary -translate-y-1/2 -z-10 transition-all duration-500"
               style={{ width: `${(activeIndex / (statusLevels.length - 1)) * 100}%` }}
             ></div>
 
+            {/* Steps */}
             {statusLevels.map((lvl, index) => {
               const isCompleted = index < activeIndex;
               const isActive = index === activeIndex;
@@ -124,10 +132,10 @@ function TrackingPageContent() {
                   <div
                     className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all ${
                       isCompleted
-                        ? 'bg-primary border-primary text-gray-950'
+                        ? 'bg-primary border-primary text-neutral-dark'
                         : isActive
-                        ? 'bg-gray-900 border-primary text-primary scale-110 shadow-glow animate-pulse'
-                        : 'bg-white/5 border-white/10 text-gray-500'
+                        ? 'bg-white border-primary-accent text-primary-dark scale-110 shadow-glow animate-pulse'
+                        : 'bg-neutral-light border-neutral-light text-neutral-muted'
                     }`}
                   >
                     {isCompleted ? (
@@ -138,7 +146,7 @@ function TrackingPageContent() {
                   </div>
                   <span
                     className={`text-[9px] font-bold uppercase tracking-wider ${
-                      isActive ? 'text-primary font-extrabold' : 'text-gray-500'
+                      isActive ? 'text-primary-dark font-extrabold' : 'text-neutral-muted'
                     }`}
                   >
                     {lvl}
@@ -148,19 +156,20 @@ function TrackingPageContent() {
             })}
           </div>
 
-          <div className="bg-white/5 p-5 rounded-xl border border-white/10 text-xs space-y-3">
+          {/* Detail card */}
+          <div className="bg-neutral-light/50 p-5 rounded-md border border-neutral-light text-xs space-y-3">
             <div className="flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-primary" />
+              <MapPin className="w-4 h-4 text-primary-accent" />
               <div>
-                <h4 className="font-bold text-white">Delivery Address</h4>
-                <p className="text-gray-400 text-[11px] mt-0.5">{activeOrder.shippingAddress || 'Customer shipping coordinate index #12, Dhaka'}</p>
+                <h4 className="font-bold text-neutral-dark">Delivery Address</h4>
+                <p className="text-neutral-body text-[11px] mt-0.5">{activeOrder.shippingAddress || 'Customer shipping coordinate index #12, Dhaka'}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 border-t border-white/10 pt-2.5">
-              <Compass className="w-4 h-4 text-green-400" />
+            <div className="flex items-center gap-2 border-t border-neutral-light/50 pt-2.5">
+              <Compass className="w-4 h-4 text-success" />
               <div>
-                <h4 className="font-bold text-white">Live Transit Logs</h4>
-                <p className="text-gray-400 text-[11px] mt-0.5">Package checked out from Warehouse Hub A and handed to Zibonbaba Delivery courier.</p>
+                <h4 className="font-bold text-neutral-dark">Live Transit Logs</h4>
+                <p className="text-neutral-body text-[11px] mt-0.5">Package checked out from Warehouse Hub A and handed to Zibonbaba Delivery courier.</p>
               </div>
             </div>
           </div>
@@ -173,18 +182,18 @@ function TrackingPageContent() {
 export default function OrderTrackingPage() {
   return (
     <div className="max-w-[1440px] mx-auto py-10 px-4 lg:px-8 animate-slide-up space-y-10">
-      <div className="border-b border-white/10 pb-6 text-center">
-        <h1 className="text-3xl font-extrabold text-white flex items-center justify-center gap-2">
-          <Truck className="w-8 h-8 text-primary" />
+      <div className="border-b border-neutral-light pb-6 text-center">
+        <h1 className="text-3xl font-extrabold text-neutral-dark flex items-center justify-center gap-2">
+          <Truck className="w-8 h-8 text-primary-accent" />
           Order Dispatch Tracker
         </h1>
-        <p className="text-xs text-gray-400 mt-1">Audit shipment dispatches, couriers, and live warehouse handshakes.</p>
+        <p className="text-xs text-neutral-muted mt-1">Audit shipment dispatches, couriers, and live warehouse handshakes.</p>
       </div>
 
       <Suspense fallback={
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="text-xs text-gray-400 mt-3">Loading tracking systems...</p>
+          <p className="text-xs text-neutral-muted mt-3">Loading tracking systems...</p>
         </div>
       }>
         <TrackingPageContent />

@@ -42,6 +42,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-neutral-dark">
+      {/* Animated background */}
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-950" />
         <div className="absolute top-[-10%] left-[20%] w-[400px] h-[400px] rounded-full bg-primary/10 blur-[100px] animate-pulse" />
@@ -55,6 +56,7 @@ export default function ForgotPasswordPage() {
       />
 
       <div className="relative z-10 w-full max-w-md px-4">
+        {/* Branding */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary shadow-glow mb-4">
             <span className="text-3xl font-black text-gray-900">Z</span>
@@ -63,8 +65,10 @@ export default function ForgotPasswordPage() {
           <p className="text-gray-400 text-sm mt-1">Account Recovery</p>
         </div>
 
+        {/* Glass Card */}
         <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl shadow-modal p-8">
           {pageState === 'success' ? (
+            /* Success State */
             <div className="text-center py-4">
               <div className="w-20 h-20 bg-green-500/20 border border-green-500/30 rounded-full flex items-center justify-center mx-auto mb-6">
                 <CheckCircle2 size={40} className="text-green-400" />
@@ -85,6 +89,7 @@ export default function ForgotPasswordPage() {
               </Link>
             </div>
           ) : (
+            /* Form State */
             <>
               <div className="mb-6">
                 <div className="w-12 h-12 bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-center mb-4">
@@ -96,6 +101,7 @@ export default function ForgotPasswordPage() {
                 </p>
               </div>
 
+              {/* Error */}
               {pageState === 'error' && errorMsg && (
                 <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg px-4 py-3 mb-5 text-sm">
                   <AlertCircle size={16} className="shrink-0" />
@@ -159,6 +165,7 @@ export default function ForgotPasswordPage() {
           )}
         </div>
 
+        {/* Help note */}
         <p className="text-center text-xs text-gray-600 mt-6">
           Need help?{' '}
           <span className="text-gray-500 hover:text-primary cursor-pointer transition-colors">Contact Support</span>

@@ -1,199 +1,224 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useStore } from '../store/useStore';
-import { 
-  Search, 
-  Package, 
-  Users, 
-  ShoppingCart, 
-  LayoutDashboard, 
-  Store, 
-  ShieldCheck, 
-  Settings, 
-  ArrowRight,
-  TrendingUp,
+import {
+  Search,
+  LayoutDashboard,
+  ShoppingBag,
   CreditCard,
-  Building,
+  Wallet,
+  Users,
+  Settings,
   HelpCircle,
-  Truck
+  Plus,
+  ArrowRight,
+  Command,
+  X,
+  Sparkles,
+  Zap
 } from 'lucide-react';
-
-interface PaletteItem {
-  id: string;
-  title: string;
-  category: 'Products' | 'Pages' | 'Actions' | 'Vendors';
-  icon: any;
-  href?: string;
-  action?: () => void;
-  badge?: string;
-}
+import { useStore } from '@/store/useStore';
 
 export default function CommandPalette() {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
-  const { products, role } = useStore();
+  const { role } = useStore();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Toggle palette on Cmd+K or Ctrl+K
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
         setIsOpen((prev) => !prev);
-      } else if (e.key === 'Escape') {
+      }
+
+      // Close on Esc
+      if (e.key === 'Escape') {
         setIsOpen(false);
       }
     };
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  useEffect(() => {
-    if (isOpen) {
-      setTimeout(() => inputRef.current?.focus(), 50);
-      setSelectedIndex(0);
-    } else {
-      setQuery('');
-    }
-  }, [isOpen]);
-
-  const baseItems: PaletteItem[] = [
-    { id: 'page-home', title: 'Home Storefront', category: 'Pages', icon: ShoppingCart, href: '/' },
-    { id: 'page-cart', title: 'Shopping Cart', category: 'Pages', icon: ShoppingCart, href: '/cart' },
-    { id: 'page-checkout', title: 'Checkout & Escrow', category: 'Pages', icon: CreditCard, href: '/checkout' },
-    { id: 'page-orders', title: 'Customer Orders', category: 'Pages', icon: Package, href: '/dashboard' },
-    { id: 'page-tracking', title: 'Live Order Tracking', category: 'Pages', icon: Truck, href: '/tracking' },
-    { id: 'page-seller', title: 'Seller Portal', category: 'Pages', icon: Store, href: '/seller' },
-    { id: 'page-erp', title: 'SaaS ERP Modules', category: 'Pages', icon: Building, href: '/erp' },
-    { id: 'page-pos', title: 'Barcode POS Terminal', category: 'Pages', icon: ShoppingCart, href: '/erp/pos' },
-    { id: 'page-admin', title: 'Admin Console', category: 'Pages', icon: LayoutDashboard, href: '/admin' },
-    { id: 'page-superadmin', title: 'Superadmin Command Center', category: 'Pages', icon: ShieldCheck, href: '/superadmin' },
-    { id: 'page-reseller', title: 'Reseller Network Hub', category: 'Pages', icon: TrendingUp, href: '/reseller' },
-    { id: 'page-delivery', title: 'Delivery Fleet Portal', category: 'Pages', icon: Truck, href: '/delivery' },
-  ];
-
-  const productItems: PaletteItem[] = products.map((p) => ({
-    id: `prod-${p.id}`,
-    title: p.name,
-    category: 'Products',
-    icon: Package,
-    href: `/product/${p.id}`,
-    badge: `৳${(p.price * 80).toFixed(0)}`
-  }));
-
-  const allItems = [...baseItems, ...productItems];
-
-  const filteredItems = query.trim() === ''
-    ? baseItems
-    : allItems.filter((item) =>
-        item.title.toLowerCase().includes(query.toLowerCase()) ||
-        item.category.toLowerCase().includes(query.toLowerCase())
-      );
-
-  const handleSelect = (item: PaletteItem) => {
-    setIsOpen(false);
-    if (item.href) {
-      router.push(item.href);
-    } else if (item.action) {
-      item.action();
-    }
-  };
-
-  const handleKeyDownList = (e: React.KeyboardEvent) => {
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      setSelectedIndex((prev) => (prev + 1) % filteredItems.length);
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      setSelectedIndex((prev) => (prev - 1 + filteredItems.length) % filteredItems.length);
-    } else if (e.key === 'Enter') {
-      e.preventDefault();
-      if (filteredItems[selectedIndex]) {
-        handleSelect(filteredItems[selectedIndex]);
-      }
-    }
-  };
-
   if (!isOpen) return null;
 
+  const getDashboardPath = () => {
+    if (['admin', 'superadmin'].includes(role)) return '/admin';
+    if (['vendor', 'seller'].includes(role)) return '/seller';
+    if (role === 'reseller') return '/reseller';
+    if (role === 'deliveryman') return '/delivery';
+    return '/account';
+  };
+
+  const actions = [
+    {
+      id: 'dash',
+      title: 'Go to Dashboard Overview',
+      category: 'Navigation',
+      icon: LayoutDashboard,
+      shortcut: 'G D',
+      perform: () => router.push(getDashboardPath())
+    },
+    {
+      id: 'products',
+      title: 'View Catalog & Inventory',
+      category: 'Navigation',
+      icon: ShoppingBag,
+      shortcut: 'G P',
+      perform: () => router.push('/seller')
+    },
+    {
+      id: 'orders',
+      title: 'View Active Orders & Processing',
+      category: 'Navigation',
+      icon: CreditCard,
+      shortcut: 'G O',
+      perform: () => router.push(getDashboardPath())
+    },
+    {
+      id: 'wallet',
+      title: 'Store Wallet & Payout Ledger',
+      category: 'Navigation',
+      icon: Wallet,
+      shortcut: 'G W',
+      perform: () => router.push('/seller')
+    },
+    {
+      id: 'staff',
+      title: 'Manage Staff Members & Roles',
+      category: 'Management',
+      icon: Users,
+      perform: () => router.push('/seller/staff')
+    },
+    {
+      id: 'add-product',
+      title: 'Upload New Product SKU',
+      category: 'Quick Actions',
+      icon: Plus,
+      perform: () => {
+        router.push('/seller');
+      }
+    },
+    {
+      id: 'ai-insights',
+      title: 'Ask AI Copilot for Sales Forecast',
+      category: 'AI Copilot',
+      icon: Sparkles,
+      perform: () => {
+        router.push(getDashboardPath());
+      }
+    }
+  ];
+
+  const filteredActions = actions.filter((action) =>
+    action.title.toLowerCase().includes(query.toLowerCase()) ||
+    action.category.toLowerCase().includes(query.toLowerCase())
+  );
+
+  const handleSelect = (action: typeof actions[0]) => {
+    action.perform();
+    setIsOpen(false);
+    setQuery('');
+  };
+
   return (
-    <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-start justify-center pt-[15vh] px-4 animate-fade-in">
-      <div 
-        className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-neutral-light overflow-hidden flex flex-col"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Search Header */}
-        <div className="flex items-center px-4 py-3.5 border-b border-neutral-light bg-neutral-light/30">
-          <Search className="w-5 h-5 text-neutral-muted mr-3 shrink-0" />
+    <div className="fixed inset-0 z-[9999] bg-slate-950/80 backdrop-blur-md flex items-start justify-center pt-20 px-4 animate-fade-in">
+      <div className="w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-2xl shadow-modal overflow-hidden animate-in-scale">
+        {/* Header Search Box */}
+        <div className="flex items-center gap-3 px-4 py-3.5 border-b border-slate-800 bg-slate-950/40">
+          <Search className="w-5 h-5 text-amber-400 shrink-0" />
           <input
-            ref={inputRef}
             type="text"
-            placeholder="Type a command, search products, or jump to page... (Esc to close)"
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);
               setSelectedIndex(0);
             }}
-            onKeyDown={handleKeyDownList}
-            className="w-full bg-transparent text-sm font-semibold text-neutral-dark placeholder:text-neutral-muted outline-none"
+            placeholder="Type a command, search products, or jump to route... (Cmd + K)"
+            className="w-full bg-transparent text-slate-100 placeholder-slate-500 text-sm focus:outline-none"
+            autoFocus
           />
-          <kbd className="hidden sm:inline-block text-[10px] font-mono bg-white border border-neutral-light px-2 py-0.5 rounded shadow-sm text-neutral-muted">
-            ESC
-          </kbd>
+          <button
+            onClick={() => setIsOpen(false)}
+            className="p-1 text-slate-500 hover:text-slate-300 rounded-lg hover:bg-slate-800/50 transition"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
-        {/* Results List */}
-        <div className="max-h-[60vh] overflow-y-auto p-2 divide-y divide-neutral-light/50">
-          {filteredItems.length === 0 ? (
-            <div className="py-8 text-center text-xs text-neutral-muted">
-              No matching pages, actions, or products found.
+        {/* Action Options List */}
+        <div className="max-h-[360px] overflow-y-auto p-2 space-y-1">
+          {filteredActions.length === 0 ? (
+            <div className="py-8 text-center text-slate-500 text-xs font-medium">
+              No command or navigation target found matching &quot;{query}&quot;
             </div>
           ) : (
-            filteredItems.map((item, idx) => {
-              const Icon = item.icon;
+            filteredActions.map((action, idx) => {
+              const Icon = action.icon;
               const isSelected = idx === selectedIndex;
               return (
-                <div
-                  key={item.id}
-                  onClick={() => handleSelect(item)}
+                <button
+                  key={action.id}
+                  onClick={() => handleSelect(action)}
                   onMouseEnter={() => setSelectedIndex(idx)}
-                  className={`flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer transition-colors ${
-                    isSelected ? 'bg-primary/10 text-primary-dark font-bold' : 'text-neutral-dark hover:bg-neutral-light/50'
+                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left transition-all ${
+                    isSelected
+                      ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                      : 'text-slate-300 hover:bg-slate-800/60'
                   }`}
                 >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className={`p-1.5 rounded-lg ${isSelected ? 'bg-primary text-neutral-dark' : 'bg-neutral-light text-neutral-muted'}`}>
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`p-2 rounded-lg ${
+                        isSelected ? 'bg-amber-500/20 text-amber-400' : 'bg-slate-800 text-slate-400'
+                      }`}
+                    >
                       <Icon className="w-4 h-4" />
                     </div>
-                    <span className="text-xs truncate">{item.title}</span>
+                    <div>
+                      <p className="text-xs font-bold">{action.title}</p>
+                      <p className="text-[10px] text-slate-500">{action.category}</p>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    {item.badge && (
-                      <span className="text-[10px] bg-primary/20 text-primary-dark font-bold px-2 py-0.5 rounded-full">
-                        {item.badge}
+                  <div className="flex items-center gap-2">
+                    {action.shortcut && (
+                      <span className="text-[10px] font-mono bg-slate-800 border border-slate-700 text-slate-400 px-2 py-0.5 rounded">
+                        {action.shortcut}
                       </span>
                     )}
-                    <span className="text-[9px] uppercase tracking-wider text-neutral-muted font-bold">
-                      {item.category}
-                    </span>
-                    <ArrowRight className="w-3.5 h-3.5 text-neutral-muted opacity-60" />
+                    <ArrowRight className="w-3.5 h-3.5 opacity-60" />
                   </div>
-                </div>
+                </button>
               );
             })
           )}
         </div>
 
-        {/* Footer shortcuts */}
-        <div className="px-4 py-2 bg-neutral-light/40 border-t border-neutral-light flex items-center justify-between text-[10px] text-neutral-muted">
-          <div className="flex gap-3">
-            <span><kbd className="font-mono bg-white px-1 rounded shadow-xs">↑</kbd> <kbd className="font-mono bg-white px-1 rounded shadow-xs">↓</kbd> Navigate</span>
-            <span><kbd className="font-mono bg-white px-1 rounded shadow-xs">↵</kbd> Select</span>
+        {/* Footer shortcuts helper */}
+        <div className="flex items-center justify-between px-4 py-2.5 bg-slate-950/60 border-t border-slate-800 text-[10px] text-slate-500 font-medium">
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1">
+              <kbd className="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-700 font-mono text-slate-400">↑↓</kbd>{' '}
+              Navigate
+            </span>
+            <span className="flex items-center gap-1">
+              <kbd className="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-700 font-mono text-slate-400">↵</kbd>{' '}
+              Select
+            </span>
+            <span className="flex items-center gap-1">
+              <kbd className="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-700 font-mono text-slate-400">Esc</kbd>{' '}
+              Close
+            </span>
           </div>
-          <span>Zibonbaba Intelligent System</span>
+          <div className="flex items-center gap-1 text-amber-400/80">
+            <Zap className="w-3 h-3" />
+            <span>Zibonbaba Enterprise Core</span>
+          </div>
         </div>
       </div>
     </div>

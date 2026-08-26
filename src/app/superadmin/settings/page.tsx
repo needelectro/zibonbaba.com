@@ -1,99 +1,223 @@
 'use client';
 
 import React, { useState } from 'react';
-import SuperadminLayout from '@/components/superadmin-layout';
-import { Settings, Save, CheckCircle2 } from 'lucide-react';
+import SuperAdminLayout from '@/components/superadmin-layout';
+import {
+  Settings,
+  Shield,
+  DollarSign,
+  Mail,
+  Lock,
+  Globe,
+  Save,
+  CheckCircle,
+  AlertTriangle,
+  Server,
+  ToggleLeft,
+  ToggleRight,
+} from 'lucide-react';
 
-export default function SuperadminSettingsPage() {
+export default function SystemSettingsPage() {
   const [platformName, setPlatformName] = useState('Zibonbaba.com');
-  const [commissionRate, setCommissionRate] = useState('8.5');
-  const [vatRate, setVatRate] = useState('8.0');
-  const [shippingFee, setShippingFee] = useState('10.00');
-  const [saved, setSaved] = useState(false);
+  const [supportEmail, setSupportEmail] = useState('support@zibonbaba.com');
+  const [supportPhone, setSupportPhone] = useState('+880 1711-000000');
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
 
-  const handleSave = (e: React.FormEvent) => {
+  // Security Policy
+  const [minPasswordLength, setMinPasswordLength] = useState(8);
+  const [maxFailedLogins, setMaxFailedLogins] = useState(5);
+  const [sessionMaxAgeDays, setSessionMaxAgeDays] = useState(7);
+  const [enforce2FaAdmins, setEnforce2FaAdmins] = useState(true);
+
+  // Financial Policy
+  const [defaultCommission, setDefaultCommission] = useState(10);
+  const [minPayoutAmount, setMinPayoutAmount] = useState(1000);
+  const [currencySymbol, setCurrencySymbol] = useState('৳');
+
+  // SMTP Settings
+  const [smtpHost, setSmtpHost] = useState('smtp.zibonbaba.com');
+  const [smtpPort, setSmtpPort] = useState(587);
+  const [smtpUser, setSmtpUser] = useState('notifications@zibonbaba.com');
+
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const handleSaveSettings = (e: React.FormEvent) => {
     e.preventDefault();
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+    setToastMessage('System Configuration and Security Policies saved successfully!');
+    setTimeout(() => setToastMessage(null), 3000);
   };
 
   return (
-    <SuperadminLayout>
-      <div className="space-y-6 max-w-3xl">
-        <div>
-          <h1 className="text-2xl font-black text-white">Global Platform Settings</h1>
-          <p className="text-xs text-slate-400 mt-1">
-            Configure system fees, tax percentages, currency defaults, and site branding.
-          </p>
-        </div>
-
-        {saved && (
-          <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400 text-xs font-bold flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4" />
-            <span>Platform settings updated successfully across all edge instances.</span>
+    <SuperAdminLayout
+      activeNav="settings"
+      title="Platform System Settings & Global Policy Configuration"
+      subtitle="Configure Platform Parameters, Security Lockouts, Financial Commissions & SMTP Parameters"
+    >
+      {toastMessage && (
+        <div className="mb-6 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 p-4 rounded-2xl text-xs font-bold flex items-center justify-between animate-fade-in shadow-xl">
+          <div className="flex items-center gap-2">
+            <CheckCircle size={16} />
+            <span>{toastMessage}</span>
           </div>
-        )}
+          <button onClick={() => setToastMessage(null)} className="text-emerald-500 hover:text-white">✕</button>
+        </div>
+      )}
 
-        <form onSubmit={handleSave} className="bg-slate-950 border border-slate-800 rounded-3xl p-8 shadow-2xl space-y-6">
-          <div className="space-y-4">
+      <form onSubmit={handleSaveSettings} className="space-y-8">
+        {/* ── General Settings ── */}
+        <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6 shadow-xl">
+          <div className="pb-4 border-b border-slate-800 mb-6 flex items-center justify-between">
             <div>
-              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
-                Marketplace Platform Name
-              </label>
+              <h2 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+                <Globe className="w-4 h-4 text-amber-400" /> General Platform Identity & Maintenance
+              </h2>
+              <p className="text-xs text-slate-400 mt-0.5">Core branding, contact parameters, and maintenance state</p>
+            </div>
+            {/* Maintenance Mode Toggle */}
+            <div className="flex items-center gap-3 bg-slate-900 border border-slate-800 px-4 py-2 rounded-2xl">
+              <span className="text-xs font-bold text-slate-300">Maintenance Mode</span>
+              <button
+                type="button"
+                onClick={() => setMaintenanceMode(!maintenanceMode)}
+                className={`text-2xl transition-colors ${maintenanceMode ? 'text-rose-500' : 'text-slate-600'}`}
+              >
+                {maintenanceMode ? <ToggleRight size={28} /> : <ToggleLeft size={28} />}
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
+            <div>
+              <label className="block font-extrabold text-slate-300 mb-2">Platform Name</label>
               <input
                 type="text"
                 value={platformName}
                 onChange={(e) => setPlatformName(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-red-500 font-bold"
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white outline-none focus:border-amber-500 font-semibold"
               />
             </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
-                  Platform Commission (%)
-                </label>
-                <input
-                  type="text"
-                  value={commissionRate}
-                  onChange={(e) => setCommissionRate(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-red-500 font-mono font-bold"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
-                  VAT / Tax Rate (%)
-                </label>
-                <input
-                  type="text"
-                  value={vatRate}
-                  onChange={(e) => setVatRate(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-red-500 font-mono font-bold"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
-                  Standard Shipping Fee (৳)
-                </label>
-                <input
-                  type="text"
-                  value={shippingFee}
-                  onChange={(e) => setShippingFee(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-red-500 font-mono font-bold"
-                />
-              </div>
+            <div>
+              <label className="block font-extrabold text-slate-300 mb-2">Support Email Address</label>
+              <input
+                type="email"
+                value={supportEmail}
+                onChange={(e) => setSupportEmail(e.target.value)}
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white outline-none focus:border-amber-500 font-semibold"
+              />
+            </div>
+            <div>
+              <label className="block font-extrabold text-slate-300 mb-2">Support Hotline Phone</label>
+              <input
+                type="text"
+                value={supportPhone}
+                onChange={(e) => setSupportPhone(e.target.value)}
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white outline-none focus:border-amber-500 font-semibold"
+              />
             </div>
           </div>
+        </div>
 
+        {/* ── Security & Authentication Policy ── */}
+        <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6 shadow-xl">
+          <div className="pb-4 border-b border-slate-800 mb-6">
+            <h2 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+              <Shield className="w-4 h-4 text-emerald-400" /> Authentication & Lockout Security Rules
+            </h2>
+            <p className="text-xs text-slate-400 mt-0.5">Password complexity, failed login lockouts, and 2FA enforcement</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-xs mb-6">
+            <div>
+              <label className="block font-extrabold text-slate-300 mb-2">Minimum Password Length</label>
+              <input
+                type="number"
+                value={minPasswordLength}
+                onChange={(e) => setMinPasswordLength(Number(e.target.value))}
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white outline-none focus:border-amber-500 font-semibold"
+              />
+            </div>
+            <div>
+              <label className="block font-extrabold text-slate-300 mb-2">Max Failed Logins Before Lock</label>
+              <input
+                type="number"
+                value={maxFailedLogins}
+                onChange={(e) => setMaxFailedLogins(Number(e.target.value))}
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white outline-none focus:border-amber-500 font-semibold"
+              />
+            </div>
+            <div>
+              <label className="block font-extrabold text-slate-300 mb-2">Session Max Age (Days)</label>
+              <input
+                type="number"
+                value={sessionMaxAgeDays}
+                onChange={(e) => setSessionMaxAgeDays(Number(e.target.value))}
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white outline-none focus:border-amber-500 font-semibold"
+              />
+            </div>
+            <div className="flex flex-col justify-end">
+              <label className="flex items-center gap-3 bg-slate-900 border border-slate-800 p-3 rounded-xl cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={enforce2FaAdmins}
+                  onChange={(e) => setEnforce2FaAdmins(e.target.checked)}
+                  className="w-4 h-4 accent-amber-500"
+                />
+                <span className="font-extrabold text-white">Enforce 2FA on Admins</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Financial & Commission Policy ── */}
+        <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6 shadow-xl">
+          <div className="pb-4 border-b border-slate-800 mb-6">
+            <h2 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+              <DollarSign className="w-4 h-4 text-amber-400" /> Financial & Commission Parameters
+            </h2>
+            <p className="text-xs text-slate-400 mt-0.5">Platform commission fees and merchant payout rules</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
+            <div>
+              <label className="block font-extrabold text-slate-300 mb-2">Default Marketplace Commission (%)</label>
+              <input
+                type="number"
+                value={defaultCommission}
+                onChange={(e) => setDefaultCommission(Number(e.target.value))}
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white outline-none focus:border-amber-500 font-semibold"
+              />
+            </div>
+            <div>
+              <label className="block font-extrabold text-slate-300 mb-2">Min Payout Threshold (৳)</label>
+              <input
+                type="number"
+                value={minPayoutAmount}
+                onChange={(e) => setMinPayoutAmount(Number(e.target.value))}
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white outline-none focus:border-amber-500 font-semibold"
+              />
+            </div>
+            <div>
+              <label className="block font-extrabold text-slate-300 mb-2">Currency Symbol</label>
+              <input
+                type="text"
+                value={currencySymbol}
+                onChange={(e) => setCurrencySymbol(e.target.value)}
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white outline-none focus:border-amber-500 font-semibold"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* ── Save Settings Button ── */}
+        <div className="flex justify-end">
           <button
             type="submit"
-            className="flex items-center justify-center gap-2 w-full bg-red-600 hover:bg-red-700 text-white font-black text-xs py-3.5 rounded-xl shadow-lg transition-all cursor-pointer"
+            className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs px-8 py-4 rounded-2xl transition-all shadow-xl flex items-center gap-2"
           >
-            <Save className="w-4 h-4" />
-            <span>Save Global Configuration</span>
+            <Save size={18} /> Save All System Settings
           </button>
-        </form>
-      </div>
-    </SuperadminLayout>
+        </div>
+      </form>
+    </SuperAdminLayout>
   );
 }

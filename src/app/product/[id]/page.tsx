@@ -142,18 +142,18 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
 
           {/* Quantity selector and Cart controls */}
           <div className="space-y-4 pt-4 border-t border-neutral-light">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center border border-neutral-light rounded-md bg-neutral-light overflow-hidden">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              <div className="flex items-center justify-between border border-neutral-light rounded-xl bg-neutral-light overflow-hidden h-12 shrink-0">
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="px-3 py-2 text-xs font-bold hover:bg-neutral-muted/20"
+                  className="px-4 py-2 text-xs font-bold hover:bg-neutral-muted/20 h-full flex items-center justify-center cursor-pointer"
                 >
                   -
                 </button>
-                <span className="px-4 py-2 text-xs font-extrabold text-neutral-dark">{quantity}</span>
+                <span className="px-4 text-xs font-extrabold text-neutral-dark">{quantity}</span>
                 <button
                   onClick={() => setQuantity(quantity + 1)}
-                  className="px-3 py-2 text-xs font-bold hover:bg-neutral-muted/20"
+                  className="px-4 py-2 text-xs font-bold hover:bg-neutral-muted/20 h-full flex items-center justify-center cursor-pointer"
                 >
                   +
                 </button>
@@ -164,11 +164,37 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                   addToCart(product, quantity);
                   alert(`${quantity} units of "${product.name}" added to cart!`);
                 }}
-                className="flex-grow bg-primary hover:bg-primary-dark text-neutral-dark text-xs font-bold py-3 rounded-md flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                className="flex-1 bg-slate-900 hover:bg-slate-800 text-white text-xs font-extrabold py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm active:scale-95"
               >
                 <ShoppingCart className="w-4 h-4" />
-                Add to Shopping Cart
+                Add to Cart
               </button>
+
+              <button
+                onClick={() => {
+                  addToCart(product, quantity);
+                  window.location.href = '/checkout';
+                }}
+                className="flex-1 bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-black py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md active:scale-95"
+              >
+                Buy Now
+              </button>
+            </div>
+
+            {/* Marketplace Guarantees Badge */}
+            <div className="grid grid-cols-3 gap-2 pt-4 border-t border-neutral-light text-center text-[10px]">
+              <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                <span className="font-extrabold text-slate-800 block">✓ Genuine Product</span>
+                <span className="text-slate-400">100% authentic warranty</span>
+              </div>
+              <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                <span className="font-extrabold text-slate-800 block">✓ Express Delivery</span>
+                <span className="text-slate-400">All 64 districts in BD</span>
+              </div>
+              <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                <span className="font-extrabold text-slate-800 block">✓ 7 Days Return</span>
+                <span className="text-slate-400">Buyer protection policy</span>
+              </div>
             </div>
           </div>
         </div>

@@ -12,19 +12,20 @@ export default function MobileCart() {
   const [discountPercent, setDiscountPercent] = useState(0);
   const [couponMsg, setCouponMsg] = useState('');
 
-  const subtotal = cart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+  const validCart = (cart || []).filter(item => item && item.product && typeof item.product.price === 'number');
+  const subtotal = validCart.reduce((sum, item) => sum + (item.product.price * (item.quantity || 1)), 0);
   const discountAmount = subtotal * (discountPercent / 100);
-  const tax = subtotal * 0.08;
-  const shipping = subtotal > 0 ? 10.00 : 0;
+  const tax = subtotal * 0.05;
+  const shipping = subtotal > 0 ? (subtotal > 2000 ? 0 : 60.00) : 0;
   const grandTotal = subtotal - discountAmount + tax + shipping;
 
   const handleApplyCoupon = (e: React.FormEvent) => {
     e.preventDefault();
     if (coupon.toUpperCase() === 'SAVE10') {
       setDiscountPercent(10);
-      setCouponMsg('Coupon applied: 10% discount!');
+      setCouponMsg('Coupon applied: 10% discount deducted!');
     } else {
-      setCouponMsg('Invalid code. Try "SAVE10".');
+      setCouponMsg('Invalid coupon code. Try "SAVE10".');
     }
   };
 
@@ -151,11 +152,11 @@ export default function MobileCart() {
         {discountPercent > 0 && (
           <div className="flex justify-between text-success">
             <span>Coupon Discount ({discountPercent}%)</span>
-            <span className="font-bold">-${discountAmount.toFixed(2)}</span>
+            <span className="font-bold">-৳{discountAmount.toFixed(2)}</span>
           </div>
         )}
         <div className="flex justify-between">
-          <span>Estimated Tax (8%)</span>
+          <span>Estimated Tax (5%)</span>
           <span className="font-extrabold text-neutral-dark">৳{tax.toFixed(2)}</span>
         </div>
         <div className="flex justify-between">

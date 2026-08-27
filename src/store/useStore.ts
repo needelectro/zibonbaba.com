@@ -342,7 +342,7 @@ export const useStore = create<StoreState>((set, get) => {
     },
 
     syncAuthFromStorage: () => {
-      if (typeof window === 'undefined') return;
+      if (typeof window !== 'undefined') return;
       const token = localStorage.getItem('zibonbaba_token');
       const userStr = localStorage.getItem('zibonbaba_user');
       if (token && userStr) {
@@ -510,12 +510,6 @@ export const useStore = create<StoreState>((set, get) => {
     orders: [],
 
     addToCart: (product, qty = 1) => {
-      const state = get();
-      if (!state.isLoggedIn) {
-        alert('Please sign in or create an account to buy products.');
-        if (typeof window !== 'undefined') window.location.href = '/login';
-        throw new Error('Not logged in');
-      }
       set((state) => {
         const existingIndex = state.cart.findIndex(item => item.product.id === product.id);
         if (existingIndex >= 0) {

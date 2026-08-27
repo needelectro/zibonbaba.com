@@ -16,6 +16,7 @@ export default function ProductDetailPage() {
   const { products, addToCart, fetchProducts } = useStore();
   const [liveProduct, setLiveProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const { isMobile, isMounted } = useIsMobile();
 
@@ -92,7 +93,13 @@ export default function ProductDetailPage() {
 
   const priceNum = Number(product.price) || 0;
   const vendorName = product.vendor || 'Verified Merchant';
-  const mainImg = product.image || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&auto=format&fit=crop&q=60';
+  const defaultImg = product.image || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&auto=format&fit=crop&q=60';
+  const mainImg = selectedImage || defaultImg;
+  const galleryImages = [
+    defaultImg,
+    'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&auto=format&fit=crop&q=60',
+    'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=500&auto=format&fit=crop&q=60'
+  ];
 
   return (
     <div className="max-w-[1440px] mx-auto py-10 px-4 lg:px-8 animate-slide-up space-y-10">
@@ -109,18 +116,21 @@ export default function ProductDetailPage() {
         {/* Left Column: Image Container */}
         <div className="space-y-4">
           <div className="relative aspect-square bg-neutral-light rounded-xl overflow-hidden border border-neutral-light">
-            <img src={mainImg} alt={product.name || 'Product'} className="object-cover w-full h-full" />
+            <img src={mainImg} alt={product.name || 'Product'} className="object-cover w-full h-full transition-all duration-300" />
           </div>
           <div className="grid grid-cols-3 gap-4">
-            <div className="aspect-square bg-neutral-light rounded-xl overflow-hidden border-2 border-amber-500 border-dashed">
-              <img src={mainImg} alt="Thumbnail 1" className="object-cover w-full h-full opacity-80" />
-            </div>
-            <div className="aspect-square bg-neutral-light rounded-xl overflow-hidden border border-neutral-light">
-              <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&auto=format&fit=crop&q=60" alt="Thumbnail 2" className="object-cover w-full h-full opacity-60 hover:opacity-100 transition-opacity" />
-            </div>
-            <div className="aspect-square bg-neutral-light rounded-xl overflow-hidden border border-neutral-light">
-              <img src="https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=500&auto=format&fit=crop&q=60" alt="Thumbnail 3" className="object-cover w-full h-full opacity-60 hover:opacity-100 transition-opacity" />
-            </div>
+            {galleryImages.map((img, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => setSelectedImage(img)}
+                className={`aspect-square bg-neutral-light rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${
+                  mainImg === img ? 'border-amber-500 shadow-sm scale-102' : 'border-neutral-light hover:border-amber-300 opacity-70 hover:opacity-100'
+                }`}
+              >
+                <img src={img} alt={`Thumbnail ${idx + 1}`} className="object-cover w-full h-full" />
+              </button>
+            ))}
           </div>
         </div>
 
@@ -166,6 +176,7 @@ export default function ProductDetailPage() {
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <div className="flex items-center justify-between border border-neutral-light rounded-xl bg-neutral-light overflow-hidden h-12 shrink-0">
                 <button
+                  type="button"
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
                   className="px-4 py-2 text-xs font-bold hover:bg-neutral-muted/20 h-full flex items-center justify-center cursor-pointer"
                 >
@@ -173,6 +184,7 @@ export default function ProductDetailPage() {
                 </button>
                 <span className="px-4 text-xs font-extrabold text-neutral-dark">{quantity}</span>
                 <button
+                  type="button"
                   onClick={() => setQuantity(quantity + 1)}
                   className="px-4 py-2 text-xs font-bold hover:bg-neutral-muted/20 h-full flex items-center justify-center cursor-pointer"
                 >
@@ -181,6 +193,7 @@ export default function ProductDetailPage() {
               </div>
 
               <button
+                type="button"
                 onClick={() => {
                   addToCart(product, quantity);
                   alert(`${quantity} units of "${product.name}" added to cart!`);
@@ -192,6 +205,7 @@ export default function ProductDetailPage() {
               </button>
 
               <button
+                type="button"
                 onClick={() => {
                   addToCart(product, quantity);
                   router.push('/checkout');

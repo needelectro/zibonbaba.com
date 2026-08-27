@@ -258,13 +258,13 @@ export default function MobileDashboard() {
         </p>
         <div className="flex flex-col w-full max-w-[240px] gap-2.5">
           <Link
-            href="/login"
+            href="/customer/login"
             className="w-full bg-primary hover:bg-primary-dark text-neutral-dark font-black text-xs py-3 rounded-lg shadow-sm text-center transition-colors"
           >
             Sign In
           </Link>
           <Link
-            href="/register"
+            href="/customer/register"
             className="w-full border border-neutral-light/30 hover:bg-white/10 text-white font-bold text-xs py-3 rounded-lg text-center transition-colors"
           >
             Register
@@ -279,11 +279,11 @@ export default function MobileDashboard() {
       {/* Profile Overview Card */}
       <div className="bg-white p-4 rounded-lg border border-neutral-light shadow-sm flex items-center justify-between gap-3 mb-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center font-black text-neutral-dark text-lg border border-primary">
-            {profileName.charAt(0)}
+          <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center font-black text-neutral-dark text-lg border border-primary uppercase">
+            {(profileName || username || 'U').charAt(0)}
           </div>
           <div>
-            <h2 className="text-xs font-black text-neutral-dark leading-tight">{profileName}</h2>
+            <h2 className="text-xs font-black text-neutral-dark leading-tight">{profileName || username || 'My Account'}</h2>
             <p className="text-[9px] text-neutral-muted mt-0.5 leading-none">Customer Account Tier: VIP Member</p>
           </div>
         </div>

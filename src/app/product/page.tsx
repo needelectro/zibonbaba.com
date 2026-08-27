@@ -107,13 +107,15 @@ export default function ProductListingPage() {
                   key={p.id}
                   className="bg-white rounded-lg border border-neutral-light hover:border-primary hover:shadow-glow transition-all overflow-hidden flex flex-col justify-between"
                 >
-                  <div className="relative aspect-video bg-neutral-light overflow-hidden">
-                    <img src={p.image} alt={p.name} className="object-cover w-full h-full" />
-                  </div>
+                  <Link href={`/product/${p.id}`} className="relative aspect-video bg-neutral-light overflow-hidden block group">
+                    <img src={p.image} alt={p.name} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300" />
+                  </Link>
                   <div className="p-4 flex-grow flex flex-col justify-between">
                     <div>
                       <p className="text-[9px] text-neutral-muted font-bold uppercase">{p.category}</p>
-                      <h3 className="text-xs font-bold text-neutral-dark mt-1 line-clamp-1">{p.name}</h3>
+                      <Link href={`/product/${p.id}`} className="hover:text-amber-600 transition-colors block">
+                        <h3 className="text-xs font-bold text-neutral-dark mt-1 line-clamp-1">{p.name}</h3>
+                      </Link>
                       <p className="text-[10px] text-neutral-muted mt-1 line-clamp-2">{p.description}</p>
                     </div>
                     <div className="mt-4 pt-4 border-t border-neutral-light flex items-center justify-between">

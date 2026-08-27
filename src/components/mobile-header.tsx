@@ -220,7 +220,7 @@ export default function MobileHeader() {
             </Link>
           ) : (
             <Link
-              href="/login"
+              href="/customer/login"
               className="p-1.5 hover:bg-neutral-light rounded-full text-neutral-dark active:scale-90 transition-transform ml-0.5"
               title="Sign In"
             >
@@ -265,15 +265,22 @@ export default function MobileHeader() {
               {/* User Greeting / Login Status */}
               <div className="bg-slate-50 border border-slate-100 rounded-2xl p-3.5 flex items-center justify-between">
                 {isLoggedIn ? (
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center text-xs font-black text-slate-950 uppercase">
-                      {(username || 'U').charAt(0)}
+                  <Link
+                    href="/dashboard"
+                    onClick={() => setShowDrawerMenu(false)}
+                    className="flex items-center justify-between w-full group"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center text-xs font-black text-slate-950 uppercase">
+                        {(username || 'U').charAt(0)}
+                      </div>
+                      <div>
+                        <p className="text-xs font-black text-slate-800 leading-tight group-hover:text-amber-600 transition-colors">{username || 'User'}</p>
+                        <p className="text-[9px] text-amber-600 font-extrabold uppercase">{role || 'CUSTOMER'}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-xs font-black text-slate-800 leading-tight">{username || 'User'}</p>
-                      <p className="text-[9px] text-amber-600 font-extrabold uppercase">{role || 'CUSTOMER'}</p>
-                    </div>
-                  </div>
+                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-amber-600 transition-colors" />
+                  </Link>
                 ) : (
                   <div className="flex items-center justify-between w-full">
                     <div>

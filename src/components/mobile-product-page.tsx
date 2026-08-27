@@ -4,8 +4,10 @@ import React, { useState, useEffect } from 'react';
 import { useStore, Product } from '../store/useStore';
 import { Star, ShieldCheck, Heart, ShoppingCart, ArrowLeft, Send, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function MobileProductPage({ product }: { product: Product }) {
+  const router = useRouter();
   const { products, addToCart, wishlist, toggleWishlist } = useStore();
 
   const [activeImgIndex, setActiveImgIndex] = useState(0);
@@ -21,7 +23,7 @@ export default function MobileProductPage({ product }: { product: Product }) {
 
   // Write to Recently Viewed list on mount
   useEffect(() => {
-    if (product) {
+    if (product && product.id) {
       try {
         const recentIds = localStorage.getItem('zibonbaba-recent');
         let ids: string[] = [];
@@ -55,15 +57,20 @@ export default function MobileProductPage({ product }: { product: Product }) {
     setTimeout(() => setReviewSuccess(false), 3000);
   };
 
-  const isWished = wishlist.includes(product.id);
-  const relatedProducts = products.filter(p => p.category === product.category && p.id !== product.id).slice(0, 3);
+  const isWished = wishlist && Array.isArray(wishlist) ? wishlist.includes(product.id) : false;
+  const relatedProducts = products && Array.isArray(products) 
+    ? products.filter(p => p.category === product.category && p.id !== product.id).slice(0, 3) 
+    : [];
 
-  // Mock secondary gallery images
+  const mainImg = product.image || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&auto=format&fit=crop&q=60';
   const galleryImages = [
-    product.image,
+    mainImg,
     'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&auto=format&fit=crop&q=60',
     'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=500&auto=format&fit=crop&q=60'
   ];
+
+  const priceNum = Number(product.price) || 0;
+  const vendorName = product.vendor || 'Verified Merchant';
 
   return (
     <div className="flex-grow bg-neutral-light pb-28 overflow-y-auto animate-slide-up md:hidden">
@@ -88,7 +95,7 @@ export default function MobileProductPage({ product }: { product: Product }) {
         <div className="w-full h-full flex transition-transform duration-300" style={{ transform: `translateX(-${activeImgIndex * 100}%)` }}>
           {galleryImages.map((img, idx) => (
             <div key={idx} className="w-full h-full shrink-0">
-              <img src={img} alt={`${product.name} - ${idx}`} className="w-full h-full object-cover" />
+              <img src={img} alt={`${product.name || 'Product'} - ${idx}`} className="w-full h-full object-cover" />
             </div>
           ))}
         </div>
@@ -109,10 +116,10 @@ export default function MobileProductPage({ product }: { product: Product }) {
       <div className="p-4 bg-white border-b border-neutral-light/70 shadow-sm space-y-3.5">
         <div className="flex items-center justify-between">
           <span className="bg-primary/20 text-neutral-dark text-[8.5px] font-black uppercase px-2 py-0.5 rounded-full">
-            {product.category}
+            {product.category || 'General'}
           </span>
           <span className="text-[10px] text-success font-bold flex items-center gap-0.5">
-            <CheckCircle className="w-3.5 h-3.5" /> In Stock ({product.stock} units)
+            <CheckCircle className="w-3.5 h-3.5" /> In Stock ({product.stock ?? 10} units)
           </span>
         </div>
 
@@ -121,25 +128,25 @@ export default function MobileProductPage({ product }: { product: Product }) {
         <div className="flex items-center gap-1.5">
           <div className="flex items-center gap-0.5 text-warning">
             <Star className="w-3.5 h-3.5 fill-current" />
-            <span className="text-xs font-black text-neutral-dark">{product.rating}</span>
+            <span className="text-xs font-black text-neutral-dark">{product.rating || '4.8'}</span>
           </div>
           <span className="text-[10px] text-neutral-muted">({reviews.length} Verified Reviews)</span>
         </div>
 
         <div className="flex items-baseline gap-2 pt-2 border-t border-neutral-light/50">
-          <span className="text-xl font-black text-neutral-dark">৳{product.price.toFixed(2)}</span>
-          <span className="text-[9px] text-neutral-muted font-bold font-mono">SKU: {product.sku}</span>
+          <span className="text-xl font-black text-neutral-dark">৳{priceNum.toFixed(2)}</span>
+          <span className="text-[9px] text-neutral-muted font-bold font-mono">SKU: {product.sku || 'SKU-NONE'}</span>
         </div>
       </div>
 
       {/* Vendor Profile Info */}
       <div className="mt-3.5 bg-white p-4 border-t border-b border-neutral-light/70 shadow-sm flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center font-black text-neutral-dark text-sm border border-primary">
-            {product.vendor.charAt(0)}
+          <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center font-black text-neutral-dark text-sm border border-primary uppercase">
+            {vendorName.charAt(0) || 'V'}
           </div>
           <div>
-            <h3 className="text-xs font-bold text-neutral-dark">{product.vendor}</h3>
+            <h3 className="text-xs font-bold text-neutral-dark">{vendorName}</h3>
             <p className="text-[9px] text-neutral-muted">Verified Marketplace Partner</p>
           </div>
         </div>
@@ -152,7 +159,7 @@ export default function MobileProductPage({ product }: { product: Product }) {
       {/* Description */}
       <div className="mt-3.5 bg-white p-4 border-t border-b border-neutral-light/70 shadow-sm space-y-2">
         <h3 className="text-[10px] font-black text-neutral-dark uppercase tracking-wider">Specifications</h3>
-        <p className="text-xs text-neutral-body leading-relaxed">{product.description}</p>
+        <p className="text-xs text-neutral-body leading-relaxed">{product.description || 'No detailed specifications provided.'}</p>
       </div>
 
       {/* Quantity Selector inside body */}
@@ -162,7 +169,7 @@ export default function MobileProductPage({ product }: { product: Product }) {
           <button
             type="button"
             onClick={() => setQuantity(Math.max(1, quantity - 1))}
-            className="px-3 font-bold text-xs hover:bg-neutral-muted/20 active:bg-neutral-muted/40 h-full flex items-center justify-center"
+            className="px-3 font-bold text-xs hover:bg-neutral-muted/20 active:bg-neutral-muted/40 h-full flex items-center justify-center cursor-pointer"
           >
             -
           </button>
@@ -170,7 +177,7 @@ export default function MobileProductPage({ product }: { product: Product }) {
           <button
             type="button"
             onClick={() => setQuantity(quantity + 1)}
-            className="px-3 font-bold text-xs hover:bg-neutral-muted/20 active:bg-neutral-muted/40 h-full flex items-center justify-center"
+            className="px-3 font-bold text-xs hover:bg-neutral-muted/20 active:bg-neutral-muted/40 h-full flex items-center justify-center cursor-pointer"
           >
             +
           </button>
@@ -243,7 +250,7 @@ export default function MobileProductPage({ product }: { product: Product }) {
               />
               <button
                 type="submit"
-                className="bg-primary text-neutral-dark p-2 rounded shadow active:scale-95 flex items-center justify-center"
+                className="bg-primary text-neutral-dark p-2 rounded shadow active:scale-95 flex items-center justify-center cursor-pointer"
               >
                 <Send className="w-3.5 h-3.5" />
               </button>
@@ -267,7 +274,7 @@ export default function MobileProductPage({ product }: { product: Product }) {
                   <img src={p.image} alt={p.name} className="object-cover w-full h-full" />
                 </div>
                 <h4 className="text-[8px] font-bold text-neutral-dark line-clamp-1 leading-tight">{p.name}</h4>
-                <span className="text-[9px] font-black text-neutral-dark mt-1 block">৳{p.price.toFixed(2)}</span>
+                <span className="text-[9px] font-black text-neutral-dark mt-1 block">৳{(Number(p.price) || 0).toFixed(2)}</span>
               </Link>
             ))}
           </div>
@@ -281,7 +288,7 @@ export default function MobileProductPage({ product }: { product: Product }) {
             addToCart(product, quantity);
             alert(`${quantity} units of "${product.name}" added to cart!`);
           }}
-          className="flex-1 border border-neutral-dark hover:bg-neutral-light text-neutral-dark text-xs font-bold py-3.5 rounded-md flex items-center justify-center gap-1.5 active:scale-95"
+          className="flex-1 border border-neutral-dark hover:bg-neutral-light text-neutral-dark text-xs font-bold py-3.5 rounded-md flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer"
         >
           <ShoppingCart className="w-4 h-4" />
           Add to Cart
@@ -289,9 +296,9 @@ export default function MobileProductPage({ product }: { product: Product }) {
         <button
           onClick={() => {
             addToCart(product, quantity);
-            window.location.href = '/checkout';
+            router.push('/checkout');
           }}
-          className="flex-1 bg-primary hover:bg-primary-dark text-neutral-dark text-xs font-black py-3.5 rounded-md flex items-center justify-center gap-1 active:scale-95"
+          className="flex-1 bg-primary hover:bg-primary-dark text-neutral-dark text-xs font-black py-3.5 rounded-md flex items-center justify-center gap-1 active:scale-95 cursor-pointer"
         >
           Buy Now
         </button>

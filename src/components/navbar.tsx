@@ -368,7 +368,7 @@ function ProfileDropdown({ onClose }: { onClose: () => void }) {
       <div className="py-2 divide-y divide-slate-50 text-xs">
         <div className="py-1">
           <Link
-            href="/dashboard"
+            href="/dashboard?tab=profile"
             onClick={onClose}
             className="flex items-center gap-3 px-5 py-2.5 hover:bg-slate-50 text-slate-700 font-bold transition-colors"
           >
@@ -376,7 +376,7 @@ function ProfileDropdown({ onClose }: { onClose: () => void }) {
             <span>{language === 'en' ? 'My Profile & Account' : 'আমার প্রোফাইল ও অ্যাকাউন্ট'}</span>
           </Link>
           <Link
-            href="/dashboard"
+            href="/dashboard?tab=orders"
             onClick={onClose}
             className="flex items-center gap-3 px-5 py-2.5 hover:bg-slate-50 text-slate-700 font-bold transition-colors"
           >
@@ -392,7 +392,7 @@ function ProfileDropdown({ onClose }: { onClose: () => void }) {
             <span>{language === 'en' ? 'Saved Wishlist' : 'সংরক্ষিত পণ্যসমূহ'}</span>
           </Link>
           <Link
-            href="/account/wallet"
+            href="/dashboard?tab=overview"
             onClick={onClose}
             className="flex items-center gap-3 px-5 py-2.5 hover:bg-slate-50 text-slate-700 font-bold transition-colors"
           >
@@ -417,7 +417,7 @@ function ProfileDropdown({ onClose }: { onClose: () => void }) {
 
         <div className="py-1">
           <Link
-            href="/account/tickets"
+            href="/dashboard?tab=profile"
             onClick={onClose}
             className="flex items-center gap-3 px-5 py-2.5 hover:bg-slate-50 text-slate-600 font-medium transition-colors"
           >

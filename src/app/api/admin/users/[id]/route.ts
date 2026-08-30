@@ -73,7 +73,7 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await request.json();
-    const { role, status, fullName, phone, password, suspendedReason } = body;
+    const { role, status, fullName, phone, password, suspendedReason, walletBalance, loyaltyPoints } = body;
 
     const existingUser = await prisma.user.findUnique({
       where: { id },
@@ -102,6 +102,12 @@ export async function PATCH(
       }
     }
     if (phone !== undefined) updateData.phone = phone;
+    if (walletBalance !== undefined && !isNaN(parseFloat(walletBalance))) {
+      updateData.walletBalance = parseFloat(walletBalance);
+    }
+    if (loyaltyPoints !== undefined && !isNaN(parseInt(loyaltyPoints, 10))) {
+      updateData.loyaltyPoints = parseInt(loyaltyPoints, 10);
+    }
     if (password) {
       updateData.passwordHash = await bcrypt.hash(password, 10);
     }

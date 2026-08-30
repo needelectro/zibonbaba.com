@@ -71,7 +71,8 @@ export default function SuperAdminLayout({
   }
 
   // Strict role check
-  if (role !== 'superadmin' && role !== 'admin') {
+  const normalizedRole = (role || '').toLowerCase();
+  if (normalizedRole !== 'superadmin' && normalizedRole !== 'super_admin' && normalizedRole !== 'admin') {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
         <div className="bg-slate-900 border border-white/10 rounded-3xl p-8 max-w-sm w-full text-center text-white">

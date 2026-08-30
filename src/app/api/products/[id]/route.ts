@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getAuthUser, logAdminAction } from '@/lib/auth';
 
 const getProductImage = (cat: string, name: string) => {
   const c = (cat || '').toLowerCase();
@@ -83,11 +84,14 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       name: product.name,
       price: product.basePrice,
       category: product.category?.name || 'Uncategorized',
+      categoryId: product.categoryId,
+      status: product.status,
       rating: 4.5 + Math.random() * 0.5,
       image: getProductImage(product.category?.name || '', product.name),
       sku,
       stock: totalStock,
       vendor: product.store?.name || 'Unknown',
+      storeId: product.storeId,
       description: product.description || 'No description provided.'
     };
 
@@ -99,45 +103,162 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const user = await getAuthUser(request);
     const { id } = await params;
     const body = await request.json();
-    const { name, price, description, status } = body;
+    const { name, price, description, status, category, categoryId, stock } = body;
 
-    const existingProduct = await prisma.product.findUnique({ where: { id } });
+    const existingProduct = await prisma.product.findUnique({
+      where: { id },
+      include: {
+        store: true,
+        variants: { include: { inventory: true } }
+      }
+    });
+
     if (!existingProduct) {
       return NextResponse.json({ error: 'Product not found.' }, { status: 404 });
     }
 
+    // Check authorization if user is logged in
+    if (user) {
+      const adminRoles = ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'INVENTORY_MANAGER'];
+      const isAdmin = adminRoles.includes(user.role.toUpperCase());
+      const isOwner = existingProduct.store?.ownerId === user.id;
+
+      if (!isAdmin && !isOwner) {
+        return NextResponse.json({ error: 'Access Denied. You are not authorized to modify this product.' }, { status: 403 });
+      }
+    }
+
+    // Resolve category if provided
+    let targetCategoryId = categoryId;
+    if (!targetCategoryId && category) {
+      const existingCat = await prisma.category.findFirst({
+        where: {
+          OR: [
+            { name: { equals: category, mode: 'insensitive' } },
+            { slug: { equals: category.toLowerCase().replace(/\s+/g, '-'), mode: 'insensitive' } }
+          ]
+        }
+      });
+      if (existingCat) {
+        targetCategoryId = existingCat.id;
+      } else {
+        const newCat = await prisma.category.create({
+          data: {
+            name: category,
+            slug: category.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now().toString().slice(-4)
+          }
+        });
+        targetCategoryId = newCat.id;
+      }
+    }
+
+    const numPrice = price !== undefined ? (typeof price === 'string' ? parseFloat(price) : price) : undefined;
+    const numStock = stock !== undefined ? (typeof stock === 'string' ? parseInt(stock, 10) : stock) : undefined;
+
     const updatedProduct = await prisma.product.update({
       where: { id },
       data: {
-        name,
-        basePrice: price ? parseFloat(price) : undefined,
-        description,
-        status
+        name: name ? name.trim() : undefined,
+        basePrice: numPrice !== undefined && !isNaN(numPrice) ? numPrice : undefined,
+        description: description !== undefined ? description.trim() : undefined,
+        status: status || undefined,
+        categoryId: targetCategoryId || undefined
+      },
+      include: {
+        category: true,
+        store: true,
+        variants: { include: { inventory: true } }
       }
     });
 
-    return NextResponse.json({ message: 'Product updated successfully.', product: updatedProduct }, { status: 200 });
+    // Update variant price / stock
+    if (existingProduct.variants[0]) {
+      const variantId = existingProduct.variants[0].id;
+      if (numPrice !== undefined && !isNaN(numPrice)) {
+        await prisma.productVariant.update({
+          where: { id: variantId },
+          data: { price: numPrice }
+        });
+      }
+      if (numStock !== undefined && !isNaN(numStock)) {
+        const inv = await prisma.inventory.findFirst({ where: { variantId } });
+        if (inv) {
+          await prisma.inventory.update({
+            where: { id: inv.id },
+            data: { quantity: numStock }
+          });
+        }
+      }
+    }
+
+    if (user) {
+      await logAdminAction(user.id, `Updated product SKU [${updatedProduct.name}] - Price: ৳${updatedProduct.basePrice}`);
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Product updated successfully.',
+      product: updatedProduct
+    }, { status: 200 });
   } catch (err: any) {
+    console.error('Product PUT Error:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const user = await getAuthUser(request);
     const { id } = await params;
-    const existingProduct = await prisma.product.findUnique({ where: { id } });
+
+    const existingProduct = await prisma.product.findUnique({
+      where: { id },
+      include: {
+        store: true,
+        variants: { include: { inventory: true } }
+      }
+    });
+
     if (!existingProduct) {
       return NextResponse.json({ error: 'Product not found.' }, { status: 404 });
+    }
+
+    // Check authorization if user is logged in
+    if (user) {
+      const adminRoles = ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'INVENTORY_MANAGER'];
+      const isAdmin = adminRoles.includes(user.role.toUpperCase());
+      const isOwner = existingProduct.store?.ownerId === user.id;
+
+      if (!isAdmin && !isOwner) {
+        return NextResponse.json({ error: 'Access Denied. You are not authorized to delete this product.' }, { status: 403 });
+      }
+    }
+
+    // Safely delete inventory, order items, and variants before deleting product
+    const variantIds = existingProduct.variants.map((v) => v.id);
+    if (variantIds.length > 0) {
+      await prisma.inventory.deleteMany({ where: { variantId: { in: variantIds } } });
+      await prisma.orderItem.deleteMany({ where: { variantId: { in: variantIds } } });
+      await prisma.productVariant.deleteMany({ where: { productId: id } });
     }
 
     await prisma.product.delete({
       where: { id }
     });
 
-    return NextResponse.json({ message: 'Product deleted successfully.' }, { status: 200 });
+    if (user) {
+      await logAdminAction(user.id, `Deleted product [${existingProduct.name}]`);
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: `Product ${existingProduct.name} deleted successfully.`
+    }, { status: 200 });
   } catch (err: any) {
+    console.error('Product DELETE Error:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

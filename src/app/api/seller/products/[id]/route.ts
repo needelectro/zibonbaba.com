@@ -31,7 +31,22 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { name, description, price, stock, status: productStatus } = body;
+    const { name, description, price, stock, status: productStatus, category, categoryId } = body;
+
+    let targetCategoryId = categoryId;
+    if (!targetCategoryId && category) {
+      const existingCat = await prisma.category.findFirst({
+        where: {
+          OR: [
+            { name: { equals: category, mode: 'insensitive' } },
+            { slug: { equals: category.toLowerCase().replace(/\s+/g, '-'), mode: 'insensitive' } }
+          ]
+        }
+      });
+      if (existingCat) {
+        targetCategoryId = existingCat.id;
+      }
+    }
 
     const numPrice = price !== undefined ? (typeof price === 'string' ? parseFloat(price) : price) : undefined;
     const numStock = stock !== undefined ? (typeof stock === 'string' ? parseInt(stock, 10) : stock) : undefined;
@@ -42,7 +57,8 @@ export async function PUT(
         ...(name ? { name: name.trim() } : {}),
         ...(description !== undefined ? { description: description.trim() } : {}),
         ...(numPrice !== undefined ? { basePrice: numPrice } : {}),
-        ...(productStatus ? { status: productStatus } : {})
+        ...(productStatus ? { status: productStatus } : {}),
+        ...(targetCategoryId ? { categoryId: targetCategoryId } : {})
       }
     });
 

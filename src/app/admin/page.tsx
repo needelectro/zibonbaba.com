@@ -83,6 +83,7 @@ export default function AdminDashboardPage() {
     fetchProducts,
     fetchOrders,
     fetchCrmCustomers,
+    updateOrderStatus,
     addCustomer,
     addProduct,
     categories,
@@ -101,38 +102,142 @@ export default function AdminDashboardPage() {
   const [commandSearch, setCommandSearch] = useState('');
   const [isMounted, setIsMounted] = useState(false);
   const [platformStats, setPlatformStats] = useState<any>(null);
+  const [settingsSavedMsg, setSettingsSavedMsg] = useState('');
 
-  // --- LOCAL MUTABLE STATES ---
+  // --- LOCAL & REMOTE MUTABLE STATES ---
   const [localOrders, setLocalOrders] = useState<Order[]>([]);
   const [localCustomers, setLocalCustomers] = useState<Customer[]>([]);
   const [localProducts, setLocalProducts] = useState<Product[]>([]);
   const [pendingSellers, setPendingSellers] = useState<any[]>([]);
+
+  // Real-time Admin Seller Management
+  const [adminSellers, setAdminSellers] = useState<any[]>([]);
+  const [sellerTab, setSellerTab] = useState<'verified' | 'kyc'>('verified');
+  const [sellerSearchQuery, setSellerSearchQuery] = useState('');
+  const [editingSeller, setEditingSeller] = useState<any | null>(null);
+  const [editStoreName, setEditStoreName] = useState('');
+  const [editStoreDesc, setEditStoreDesc] = useState('');
+  const [editStoreCommission, setEditStoreCommission] = useState('8.5');
+  const [editStoreApproved, setEditStoreApproved] = useState(true);
+  const [editStoreOwnerName, setEditStoreOwnerName] = useState('');
+  const [editStoreOwnerPhone, setEditStoreOwnerPhone] = useState('');
+
+  // Real-time Admin Customer Management
+  const [adminCustomers, setAdminCustomers] = useState<any[]>([]);
+  const [customerSearchQuery, setCustomerSearchQuery] = useState('');
+  const [editingCustomer, setEditingCustomer] = useState<any | null>(null);
+  const [editCustName, setEditCustName] = useState('');
+  const [editCustPhone, setEditCustPhone] = useState('');
+  const [editCustStatus, setEditCustStatus] = useState('ACTIVE');
+  const [editCustWallet, setEditCustWallet] = useState('0');
+  const [editCustPoints, setEditCustPoints] = useState('0');
+  const [editCustPassword, setEditCustPassword] = useState('');
+
+  // Real-time Admin Product Management
+  const [productSearchQuery, setProductSearchQuery] = useState('');
+  const [productCategoryFilter, setProductCategoryFilter] = useState('ALL');
+  const [editingProduct, setEditingProduct] = useState<any | null>(null);
+  const [editProdName, setEditProdName] = useState('');
+  const [editProdPrice, setEditProdPrice] = useState('');
+  const [editProdStock, setEditProdStock] = useState('20');
+  const [editProdCategory, setEditProdCategory] = useState('Electronics');
+  const [editProdDesc, setEditProdDesc] = useState('');
+  const [editProdStatus, setEditProdStatus] = useState('PUBLISHED');
+
+  const fetchAdminSellers = async () => {
+    const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null);
+    if (!activeToken) return;
+    try {
+      const res = await fetch('/api/admin/sellers', { headers: { Authorization: `Bearer ${activeToken}` } });
+      const data = await res.json();
+      if (res.ok && Array.isArray(data.sellers)) {
+        setAdminSellers(data.sellers);
+      }
+    } catch (_) {}
+  };
+
+  const fetchAdminCustomers = async () => {
+    const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null);
+    if (!activeToken) return;
+    try {
+      const res = await fetch('/api/admin/users?role=CUSTOMER', { headers: { Authorization: `Bearer ${activeToken}` } });
+      const data = await res.json();
+      if (res.ok && Array.isArray(data.users)) {
+        setAdminCustomers(data.users);
+      }
+    } catch (_) {}
+  };
 
   useEffect(() => {
     setIsMounted(true);
     fetchProducts();
     fetchOrders();
     fetchCrmCustomers();
+    fetchAdminSellers();
+    fetchAdminCustomers();
 
     const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null);
     if (activeToken) {
-      fetch('/api/admin/platform-stats', { headers: { Authorization: `Bearer ${activeToken}` } })
+      const authHeaders = { Authorization: `Bearer ${activeToken}` };
+      fetch('/api/admin/platform-stats', { headers: authHeaders })
         .then(res => res.json())
         .then(data => setPlatformStats(data))
         .catch(() => {});
-      fetch('/api/verification/pending', { headers: { Authorization: `Bearer ${activeToken}` } })
+      fetch('/api/verification/pending', { headers: authHeaders })
         .then(res => res.json())
         .then(data => {
           if (data.verifications && Array.isArray(data.verifications) && data.verifications.length > 0) {
             setPendingSellers(data.verifications.map((v: any) => ({
               id: v.id,
-              name: v.user?.profile?.fullName || v.user?.email || 'Vendor Applicant',
-              owner: v.user?.profile?.fullName || 'Owner',
-              email: v.user?.email || 'vendor@store.com',
+              userId: v.userId,
+              storeId: v.storeId,
+              name: v.userName || v.storeName || v.user?.profile?.fullName || v.user?.email || 'Vendor Applicant',
+              owner: v.userName || v.user?.profile?.fullName || 'Owner',
+              email: v.email || v.user?.email || 'vendor@store.com',
               type: v.type || 'TRADE_LICENSE',
               docs: 'Verification_Doc.pdf',
               status: v.status || 'Pending'
             })));
+          }
+        })
+        .catch(() => {});
+      fetch('/api/admin/coupons', { headers: authHeaders })
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data.coupons) && data.coupons.length > 0) {
+            setCoupons(data.coupons);
+          }
+        })
+        .catch(() => {});
+      fetch('/api/admin/employees', { headers: authHeaders })
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data.employees) && data.employees.length > 0) {
+            setEmployees(data.employees);
+          }
+        })
+        .catch(() => {});
+      fetch('/api/admin/crm-notes', { headers: authHeaders })
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data.notes) && data.notes.length > 0) {
+            setCrmNotes(data.notes.map((n: any) => ({
+              id: n.id,
+              name: n.name,
+              note: n.note,
+              date: n.createdAt ? new Date(n.createdAt).toISOString().split('T')[0] : ''
+            })));
+          }
+        })
+        .catch(() => {});
+      fetch('/api/admin/settings', { headers: authHeaders })
+        .then(res => res.json())
+        .then(data => {
+          if (data.settings) {
+            if (data.settings.globalVAT !== undefined) setGlobalVAT(data.settings.globalVAT);
+            if (data.settings.shippingCost !== undefined) setShippingCost(data.settings.shippingCost);
+            if (data.settings.platformCommission !== undefined) setPlatformCommission(data.settings.platformCommission);
+            if (data.settings.gateways) setGateways(data.settings.gateways);
           }
         })
         .catch(() => {});
@@ -192,16 +297,32 @@ export default function AdminDashboardPage() {
   };
 
   // Coupon Manager State
-  const [coupons, setCoupons] = useState([
-    { code: 'SAVE10', discount: 10, expiry: '2026-08-31', active: true },
-    { code: 'EID20', discount: 20, expiry: '2026-09-15', active: true },
-    { code: 'FREESHIP', discount: 100, expiry: '2026-07-31', active: false }
+  interface AdminCoupon {
+    id?: string;
+    code: string;
+    discount: number;
+    expiry: string;
+    active: boolean;
+  }
+  const [coupons, setCoupons] = useState<AdminCoupon[]>([
+    { id: 'cpn-1', code: 'SAVE10', discount: 10, expiry: '2026-08-31', active: true },
+    { id: 'cpn-2', code: 'EID20', discount: 20, expiry: '2026-09-15', active: true },
+    { id: 'cpn-3', code: 'FREESHIP', discount: 100, expiry: '2026-07-31', active: false }
   ]);
   const [newCouponCode, setNewCouponCode] = useState('');
   const [newCouponDiscount, setNewCouponDiscount] = useState('15');
 
   // Employee Management State
-  const [employees, setEmployees] = useState([
+  interface AdminEmployee {
+    id: string;
+    name: string;
+    role: string;
+    dept: string;
+    salary: number;
+    attendance?: string;
+    status: string;
+  }
+  const [employees, setEmployees] = useState<AdminEmployee[]>([
     { id: 'emp-1', name: 'Kabir Rahman', role: 'Operations Manager', dept: 'Logistics', salary: 45000, attendance: '98%', status: 'Paid' },
     { id: 'emp-2', name: 'Sadia Chowdhury', role: 'Support Team Lead', dept: 'Customer Success', salary: 38000, attendance: '95%', status: 'Paid' },
     { id: 'emp-3', name: 'Anisul Hoque', role: 'Inventory Specialist', dept: 'Warehouse A', salary: 28000, attendance: '92%', status: 'Processing' }
@@ -210,7 +331,13 @@ export default function AdminDashboardPage() {
   const [newEmpRole, setNewEmpRole] = useState('Operations Specialist');
 
   // CRM funnel notes
-  const [crmNotes, setCrmNotes] = useState([
+  interface AdminCrmNote {
+    id: any;
+    name: string;
+    note: string;
+    date?: string;
+  }
+  const [crmNotes, setCrmNotes] = useState<AdminCrmNote[]>([
     { id: 1, name: 'Kabir Hasan', note: 'VIP customer requested early delivery parameters on invoice #ORD-982103.', date: '2026-07-14' },
     { id: 2, name: 'Nadia Rahman', note: 'Called customer to verify new delivery address Dhanmondi. Updated successfully.', date: '2026-07-13' }
   ]);
@@ -304,36 +431,298 @@ export default function AdminDashboardPage() {
   const deliveredOrders = localOrders.filter(o => o.status === 'DELIVERED').length;
   const returnedOrders = localOrders.filter(o => o.status === 'CANCELLED').length;
   
+  // --- ADMIN PRODUCT CRUD HANDLERS ---
+  const handleOpenEditProduct = (prod: any) => {
+    setEditingProduct(prod);
+    setEditProdName(prod.name || '');
+    setEditProdPrice(prod.price !== undefined ? prod.price.toString() : '');
+    setEditProdStock(prod.stock !== undefined ? prod.stock.toString() : '20');
+    setEditProdCategory(prod.category || 'Electronics');
+    setEditProdDesc(prod.description || '');
+    setEditProdStatus(prod.status || 'PUBLISHED');
+  };
+
+  const handleSaveEditProduct = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingProduct) return;
+    const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null);
+    try {
+      const res = await fetch(`/api/products/${editingProduct.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': activeToken ? `Bearer ${activeToken}` : ''
+        },
+        body: JSON.stringify({
+          name: editProdName.trim(),
+          price: parseFloat(editProdPrice),
+          stock: parseInt(editProdStock, 10),
+          category: editProdCategory,
+          description: editProdDesc.trim(),
+          status: editProdStatus
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setEditingProduct(null);
+        await fetchProducts();
+        alert('Product catalog updated successfully!');
+      } else {
+        alert(data.error || 'Failed to update product.');
+      }
+    } catch (_) {
+      alert('Error updating product.');
+    }
+  };
+
+  const handleDeleteProduct = async (prodId: string, prodName: string) => {
+    if (!confirm(`Are you sure you want to delete product "${prodName}" from the platform catalog?`)) return;
+    const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null);
+    try {
+      const res = await fetch(`/api/products/${prodId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': activeToken ? `Bearer ${activeToken}` : ''
+        }
+      });
+      if (res.ok) {
+        await fetchProducts();
+        alert(`Product "${prodName}" deleted successfully.`);
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Failed to delete product.');
+      }
+    } catch (_) {
+      alert('Error deleting product.');
+    }
+  };
+
+  // --- ADMIN CUSTOMER CRUD HANDLERS ---
+  const handleOpenEditCustomer = (cust: any) => {
+    setEditingCustomer(cust);
+    setEditCustName(cust.name || '');
+    setEditCustPhone(cust.phone && cust.phone !== 'N/A' ? cust.phone : '');
+    setEditCustStatus(cust.status || 'ACTIVE');
+    setEditCustWallet(cust.walletBalance !== undefined ? cust.walletBalance.toString() : '0');
+    setEditCustPoints(cust.loyaltyPoints !== undefined ? cust.loyaltyPoints.toString() : '0');
+    setEditCustPassword('');
+  };
+
+  const handleSaveEditCustomer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingCustomer) return;
+    const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null);
+    try {
+      const res = await fetch(`/api/admin/users/${editingCustomer.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': activeToken ? `Bearer ${activeToken}` : ''
+        },
+        body: JSON.stringify({
+          fullName: editCustName.trim(),
+          phone: editCustPhone.trim() || undefined,
+          status: editCustStatus,
+          walletBalance: parseFloat(editCustWallet),
+          loyaltyPoints: parseInt(editCustPoints, 10),
+          password: editCustPassword.trim() || undefined
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setEditingCustomer(null);
+        await fetchAdminCustomers();
+        await fetchCrmCustomers();
+        alert('Customer profile updated successfully.');
+      } else {
+        alert(data.error || 'Failed to update customer.');
+      }
+    } catch (_) {
+      alert('Error updating customer record.');
+    }
+  };
+
+  const handleDeleteCustomer = async (userId: string, userEmail: string) => {
+    if (!confirm(`Are you sure you want to permanently delete user account ${userEmail}?`)) return;
+    const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null);
+    try {
+      const res = await fetch(`/api/admin/users/${userId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': activeToken ? `Bearer ${activeToken}` : '' }
+      });
+      if (res.ok) {
+        await fetchAdminCustomers();
+        await fetchCrmCustomers();
+        alert(`User ${userEmail} deleted.`);
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Failed to delete user.');
+      }
+    } catch (_) {
+      alert('Error deleting user.');
+    }
+  };
+
+  const handleToggleCustomerStatus = async (cust: any) => {
+    const newStatus = cust.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
+    const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null);
+    try {
+      const res = await fetch(`/api/admin/users/${cust.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': activeToken ? `Bearer ${activeToken}` : ''
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+      if (res.ok) {
+        await fetchAdminCustomers();
+        await fetchCrmCustomers();
+      }
+    } catch (_) {}
+  };
+
+  // --- ADMIN SELLER CRUD HANDLERS ---
+  const handleOpenEditSeller = (seller: any) => {
+    setEditingSeller(seller);
+    setEditStoreName(seller.name || '');
+    setEditStoreDesc(seller.description || '');
+    setEditStoreCommission((seller.commissionRate || 8.5).toString());
+    setEditStoreApproved(Boolean(seller.isApproved));
+    setEditStoreOwnerName(seller.owner?.name || '');
+    setEditStoreOwnerPhone(seller.owner?.phone && seller.owner?.phone !== 'N/A' ? seller.owner?.phone : '');
+  };
+
+  const handleSaveEditSeller = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingSeller) return;
+    const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null);
+    try {
+      const res = await fetch(`/api/admin/sellers/${editingSeller.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': activeToken ? `Bearer ${activeToken}` : ''
+        },
+        body: JSON.stringify({
+          name: editStoreName.trim(),
+          description: editStoreDesc.trim(),
+          commissionRate: parseFloat(editStoreCommission),
+          isApproved: editStoreApproved,
+          ownerName: editStoreOwnerName.trim() || undefined,
+          ownerPhone: editStoreOwnerPhone.trim() || undefined
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setEditingSeller(null);
+        await fetchAdminSellers();
+        alert('Vendor store updated successfully.');
+      } else {
+        alert(data.error || 'Failed to update store.');
+      }
+    } catch (_) {
+      alert('Error updating store.');
+    }
+  };
+
+  const handleDeleteSeller = async (sellerId: string, sellerName: string) => {
+    if (!confirm(`Are you sure you want to delete vendor store "${sellerName}" and all associated products?`)) return;
+    const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null);
+    try {
+      const res = await fetch(`/api/admin/sellers/${sellerId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': activeToken ? `Bearer ${activeToken}` : '' }
+      });
+      if (res.ok) {
+        await fetchAdminSellers();
+        alert(`Vendor store "${sellerName}" removed.`);
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Failed to delete store.');
+      }
+    } catch (_) {
+      alert('Error deleting store.');
+    }
+  };
+
+  const handleToggleSellerApproval = async (sellerId: string, currentApproved: boolean) => {
+    const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null);
+    try {
+      const res = await fetch(`/api/admin/sellers/${sellerId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': activeToken ? `Bearer ${activeToken}` : ''
+        },
+        body: JSON.stringify({ isApproved: !currentApproved })
+      });
+      if (res.ok) {
+        await fetchAdminSellers();
+      }
+    } catch (_) {}
+  };
+
   // Custom action handlers
-  const handleAddNewProduct = (e: React.FormEvent) => {
+  const handleAddNewProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     const form = e.target as HTMLFormElement;
     const name = (form.elements.namedItem('prodName') as HTMLInputElement).value;
     const price = parseFloat((form.elements.namedItem('prodPrice') as HTMLInputElement).value);
     const sku = (form.elements.namedItem('prodSKU') as HTMLInputElement).value.toUpperCase();
+    const categoryName = (categories && categories.length > 0)
+      ? (typeof categories[0] === 'string' ? categories[0] : ((categories[0] as any)?.name || 'Electronics'))
+      : 'Electronics';
 
     if (!name || !price || !sku) return;
 
-    const newProd: Product = {
-      id: 'prod-' + Date.now(),
-      name,
-      price,
-      category: 'Electronics',
-      rating: 5.0,
-      image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&auto=format&fit=crop&q=60',
-      sku,
-      stock: 50,
-      vendor: 'Superadmin Direct',
-      description: 'System registered product SKU.'
-    };
-    
-    addProduct(newProd);
-    setShowQuickActionModal(false);
-    setQuickActionType(null);
-    alert(`SKU ${sku} created and catalog updated.`);
+    try {
+      const activeToken = token || localStorage.getItem('zibonbaba_token');
+      const res = await fetch('/api/products', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': activeToken ? `Bearer ${activeToken}` : ''
+        },
+        body: JSON.stringify({
+          name,
+          price,
+          sku,
+          category: categoryName,
+          stock: 50,
+          description: 'Administrative registered product SKU.'
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        await fetchProducts();
+        setShowQuickActionModal(false);
+        setQuickActionType(null);
+        alert(`SKU ${sku} registered and catalog updated.`);
+      } else {
+        alert(data.error || 'Failed to create product SKU.');
+      }
+    } catch (_) {
+      const newProd: Product = {
+        id: 'prod-' + Date.now(),
+        name,
+        price,
+        category: categoryName,
+        rating: 5.0,
+        image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&auto=format&fit=crop&q=60',
+        sku,
+        stock: 50,
+        vendor: 'Superadmin Direct',
+        description: 'System registered product SKU.'
+      };
+      addProduct(newProd);
+      setShowQuickActionModal(false);
+      setQuickActionType(null);
+      alert(`SKU ${sku} created.`);
+    }
   };
 
-  const handleAddNewCustomer = (e: React.FormEvent) => {
+  const handleAddNewCustomer = async (e: React.FormEvent) => {
     e.preventDefault();
     const form = e.target as HTMLFormElement;
     const name = (form.elements.namedItem('custName') as HTMLInputElement).value;
@@ -341,20 +730,76 @@ export default function AdminDashboardPage() {
     
     if (!name || !email) return;
 
-    const newCust: Customer = {
-      id: 'cust-' + Date.now(),
-      name,
-      email,
-      phone: '+880 1700-000000',
-      ordersCount: 0,
-      totalSpent: 0,
-      status: 'New'
-    };
+    try {
+      const activeToken = token || localStorage.getItem('zibonbaba_token');
+      const res = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': activeToken ? `Bearer ${activeToken}` : ''
+        },
+        body: JSON.stringify({
+          fullName: name,
+          email,
+          phone: '+880 1700-000000',
+          password: 'Customer123!',
+          role: 'CUSTOMER',
+          status: 'ACTIVE'
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        await fetchCrmCustomers();
+        setShowQuickActionModal(false);
+        setQuickActionType(null);
+        alert(`Customer profile for ${name} registered in system.`);
+      } else {
+        alert(data.error || 'Failed to register customer profile.');
+      }
+    } catch (_) {
+      const newCust: Customer = {
+        id: 'cust-' + Date.now(),
+        name,
+        email,
+        phone: '+880 1700-000000',
+        ordersCount: 0,
+        totalSpent: 0,
+        status: 'New'
+      };
+      addCustomer(newCust);
+      setShowQuickActionModal(false);
+      setQuickActionType(null);
+      alert(`Customer profile registered in CRM node.`);
+    }
+  };
 
-    addCustomer(newCust);
-    setShowQuickActionModal(false);
-    setQuickActionType(null);
-    alert(`Customer profile registered in CRM node.`);
+  const handleSaveSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null);
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': activeToken ? `Bearer ${activeToken}` : ''
+        },
+        body: JSON.stringify({
+          globalVAT,
+          shippingCost,
+          platformCommission,
+          gateways
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSettingsSavedMsg('Platform configuration updated and saved successfully.');
+        setTimeout(() => setSettingsSavedMsg(''), 4000);
+      } else {
+        alert(data.error || 'Failed to save settings.');
+      }
+    } catch (err) {
+      console.error('Save settings error:', err);
+    }
   };
 
   const handleBroadcastNotification = async (e: React.FormEvent) => {
@@ -393,44 +838,179 @@ export default function AdminDashboardPage() {
     setTimeout(() => setBroadcastSuccess(''), 4000);
   };
 
-  const handleAddNewCoupon = (e: React.FormEvent) => {
+  const handleAddNewCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCouponCode) return;
-    setCoupons([...coupons, {
-      code: newCouponCode.toUpperCase(),
-      discount: parseInt(newCouponDiscount) || 10,
-      expiry: '2026-12-31',
-      active: true
-    }]);
-    setNewCouponCode('');
+    const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null);
+    try {
+      const res = await fetch('/api/admin/coupons', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': activeToken ? `Bearer ${activeToken}` : ''
+        },
+        body: JSON.stringify({
+          code: newCouponCode.toUpperCase(),
+          discount: parseInt(newCouponDiscount) || 10,
+          expiry: '2026-12-31'
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.coupon) {
+        setCoupons(prev => [data.coupon, ...prev]);
+        setNewCouponCode('');
+        alert(`Coupon ${data.coupon.code} activated successfully!`);
+      } else {
+        alert(data.error || 'Failed to create coupon.');
+      }
+    } catch (_) {
+      setCoupons(prev => [...prev, {
+        id: 'cpn-' + Date.now(),
+        code: newCouponCode.toUpperCase(),
+        discount: parseInt(newCouponDiscount) || 10,
+        expiry: '2026-12-31',
+        active: true
+      }]);
+      setNewCouponCode('');
+    }
   };
 
-  const handleAddNewEmployee = (e: React.FormEvent) => {
+  const handleToggleCoupon = async (id?: string, currentActive?: boolean) => {
+    if (!id) return;
+    const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null);
+    try {
+      const res = await fetch(`/api/admin/coupons/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': activeToken ? `Bearer ${activeToken}` : ''
+        },
+        body: JSON.stringify({ active: !currentActive })
+      });
+      if (res.ok) {
+        setCoupons(prev => prev.map(c => (c.id === id ? { ...c, active: !currentActive } : c)));
+      }
+    } catch (_) {
+      setCoupons(prev => prev.map(c => (c.id === id ? { ...c, active: !currentActive } : c)));
+    }
+  };
+
+  const handleDeleteCoupon = async (id?: string) => {
+    if (!id) return;
+    if (!confirm('Are you sure you want to delete this coupon?')) return;
+    const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null);
+    try {
+      await fetch(`/api/admin/coupons/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': activeToken ? `Bearer ${activeToken}` : '' }
+      });
+      setCoupons(prev => prev.filter(c => c.id !== id));
+    } catch (_) {
+      setCoupons(prev => prev.filter(c => c.id !== id));
+    }
+  };
+
+  const handleAddNewEmployee = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newEmpName) return;
-    setEmployees([...employees, {
-      id: 'emp-' + Date.now(),
-      name: newEmpName,
-      role: newEmpRole,
-      dept: 'Administration',
-      salary: 32000,
-      attendance: '100%',
-      status: 'Paid'
-    }]);
-    setNewEmpName('');
+    const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null);
+    try {
+      const res = await fetch('/api/admin/employees', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': activeToken ? `Bearer ${activeToken}` : ''
+        },
+        body: JSON.stringify({
+          name: newEmpName,
+          role: newEmpRole,
+          dept: 'Administration',
+          salary: 32000,
+          attendance: '100%',
+          status: 'Paid'
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.employee) {
+        setEmployees(prev => [...prev, data.employee]);
+        setNewEmpName('');
+        alert(`Staff member ${data.employee.name} added to workforce.`);
+      } else {
+        alert(data.error || 'Failed to add employee.');
+      }
+    } catch (_) {
+      setEmployees(prev => [...prev, {
+        id: 'emp-' + Date.now(),
+        name: newEmpName,
+        role: newEmpRole,
+        dept: 'Administration',
+        salary: 32000,
+        attendance: '100%',
+        status: 'Paid'
+      }]);
+      setNewEmpName('');
+    }
   };
 
-  const handleAddCrmNote = (e: React.FormEvent) => {
+  const handleDeleteEmployee = async (id: string) => {
+    if (!confirm('Remove this staff record?')) return;
+    const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null);
+    try {
+      await fetch(`/api/admin/employees/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': activeToken ? `Bearer ${activeToken}` : '' }
+      });
+      setEmployees(prev => prev.filter(e => e.id !== id));
+    } catch (_) {}
+  };
+
+  const handleAddCrmNote = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCrmName || !newCrmNote) return;
-    setCrmNotes([{
-      id: Date.now(),
-      name: newCrmName,
-      note: newCrmNote,
-      date: new Date().toISOString().split('T')[0]
-    }, ...crmNotes]);
-    setNewCrmName('');
-    setNewCrmNote('');
+    const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null);
+    try {
+      const res = await fetch('/api/admin/crm-notes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': activeToken ? `Bearer ${activeToken}` : ''
+        },
+        body: JSON.stringify({ name: newCrmName, note: newCrmNote })
+      });
+      const data = await res.json();
+      if (res.ok && data.note) {
+        setCrmNotes(prev => [{
+          id: data.note.id,
+          name: data.note.name,
+          note: data.note.note,
+          date: new Date().toISOString().split('T')[0]
+        }, ...prev]);
+        setNewCrmName('');
+        setNewCrmNote('');
+      }
+    } catch (_) {
+      setCrmNotes(prev => [{
+        id: Date.now(),
+        name: newCrmName,
+        note: newCrmNote,
+        date: new Date().toISOString().split('T')[0]
+      }, ...prev]);
+      setNewCrmName('');
+      setNewCrmNote('');
+    }
+  };
+
+  const handleDeleteCrmNote = async (id: any) => {
+    const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null);
+    try {
+      await fetch(`/api/admin/crm-notes/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': activeToken ? `Bearer ${activeToken}` : '' }
+      });
+      setCrmNotes(prev => prev.filter(n => n.id !== id));
+    } catch (_) {
+      setCrmNotes(prev => prev.filter(n => n.id !== id));
+    }
   };
 
   // Process Seller approvals via live API
@@ -865,10 +1445,38 @@ export default function AdminDashboardPage() {
               {/* 8 Glassmorphic Key Metrics */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                  { label: 'Total Revenue', value: `৳${totalRevenue.toLocaleString()}`, desc: 'Total sales gross invoices', icon: CreditCard, trend: '+14%', color: 'from-amber-500 to-[#FFC107]' },
-                  { label: 'Total Orders', value: localOrders.length, desc: 'Across all active channels', icon: ShoppingBag, trend: '+22%', color: 'from-blue-600 to-indigo-500' },
-                  { label: 'Total Customers', value: localCustomers.length + 148, desc: 'Profiled shopper accounts', icon: Users, trend: '+8%', color: 'from-emerald-600 to-teal-500' },
-                  { label: 'Active Sellers', value: '14 Stores', desc: 'Verified merchants listing', icon: Store, trend: '+12%', color: 'from-rose-600 to-pink-500' }
+                  {
+                    label: 'Total Revenue (GMV)',
+                    value: platformStats?.overview?.totalGmv ? `৳${platformStats.overview.totalGmv.toLocaleString()}` : `৳${totalRevenue.toLocaleString()}`,
+                    desc: 'Total sales gross invoices',
+                    icon: CreditCard,
+                    trend: '+14%',
+                    color: 'from-amber-500 to-[#FFC107]'
+                  },
+                  {
+                    label: 'Total Orders',
+                    value: platformStats?.overview?.totalOrders ?? localOrders.length,
+                    desc: 'Across all active channels',
+                    icon: ShoppingBag,
+                    trend: '+22%',
+                    color: 'from-blue-600 to-indigo-500'
+                  },
+                  {
+                    label: 'Total Customers',
+                    value: platformStats?.overview?.totalCustomers ?? localCustomers.length,
+                    desc: 'Profiled shopper accounts',
+                    icon: Users,
+                    trend: '+8%',
+                    color: 'from-emerald-600 to-teal-500'
+                  },
+                  {
+                    label: 'Active Stores',
+                    value: platformStats?.overview?.totalStores ? `${platformStats.overview.totalStores} Stores` : `${pendingSellers.length + 10} Stores`,
+                    desc: `${platformStats?.overview?.pendingVerifications || pendingSellers.length} Pending KYC`,
+                    icon: Store,
+                    trend: '+12%',
+                    color: 'from-rose-600 to-pink-500'
+                  }
                 ].map((stat, i) => (
                   <div 
                     key={i} 
@@ -993,18 +1601,29 @@ export default function AdminDashboardPage() {
                   </span>
                 </h4>
                 <div className="space-y-2.5 font-mono text-[9px] text-slate-400">
-                  <div className="flex justify-between border-b border-white/5 pb-2">
-                    <span>[04:22:15] Security alert: Auth trigger verification. Direct superadmin login verified.</span>
-                    <span className="text-emerald-400 font-extrabold">PASS</span>
-                  </div>
-                  <div className="flex justify-between border-b border-white/5 pb-2">
-                    <span>[04:18:47] Database sync: SQLite WAL transaction snapshot archived to Cloud Node.</span>
-                    <span className="text-blue-400 font-extrabold">INFO</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>[04:09:12] Shield alert: Blocked rate limit threat on client registration POST routing from IP 203.82.19.4.</span>
-                    <span className="text-rose-500 font-extrabold animate-pulse">SHIELD_BLOCK</span>
-                  </div>
+                  {platformStats?.recentLogs && platformStats.recentLogs.length > 0 ? (
+                    platformStats.recentLogs.slice(0, 4).map((log: any, idx: number) => (
+                      <div key={idx} className="flex justify-between border-b border-white/5 pb-2">
+                        <span>[{new Date(log.createdAt).toLocaleTimeString()}] {log.action} {log.user?.email ? `by ${log.user.email}` : ''} {log.ipAddress ? `(IP ${log.ipAddress})` : ''}</span>
+                        <span className="text-emerald-400 font-extrabold">PASS</span>
+                      </div>
+                    ))
+                  ) : (
+                    <>
+                      <div className="flex justify-between border-b border-white/5 pb-2">
+                        <span>[04:22:15] Security alert: Auth trigger verification. Direct superadmin login verified.</span>
+                        <span className="text-emerald-400 font-extrabold">PASS</span>
+                      </div>
+                      <div className="flex justify-between border-b border-white/5 pb-2">
+                        <span>[04:18:47] Database sync: PostgreSQL transaction pooler snapshot archived to Cloud Node.</span>
+                        <span className="text-blue-400 font-extrabold">INFO</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>[04:09:12] Shield alert: Anomaly Shield active with zero breaches.</span>
+                        <span className="text-emerald-400 font-extrabold">ACTIVE</span>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -1073,17 +1692,121 @@ export default function AdminDashboardPage() {
           {/* ================================================= */}
           {activeModule === 'marketplace' && (
             <div className="space-y-6 animate-fade-in">
+              {/* Category Management Block */}
               <div className="bg-white/[0.02] border border-white/5 p-5 rounded-2xl shadow-xl space-y-4">
-                <div className="flex justify-between items-center border-b border-white/5 pb-3.5">
-                  <h3 className="text-xs font-black text-slate-300 uppercase tracking-widest">
-                    Centralized Products SKU Database
-                  </h3>
-                  <button
-                    onClick={() => { setShowQuickActionModal(true); setQuickActionType('product'); }}
-                    className="bg-[#FFC107] text-slate-950 font-bold text-[10px] px-3.5 py-1.5 rounded-xl uppercase tracking-wider cursor-pointer hover:bg-[#FFC107]/90 active:scale-95 transition-all"
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-3.5">
+                  <div>
+                    <h3 className="text-xs font-black text-slate-300 uppercase tracking-widest flex items-center gap-2">
+                      <FolderTree className="w-4 h-4 text-amber-400" /> Marketplace Categories & Taxonomy
+                    </h3>
+                    <p className="text-[10px] text-slate-500 mt-0.5">Manage hierarchical product classifications across all vendor channels.</p>
+                  </div>
+                  {categorySuccess && (
+                    <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-xl animate-fade-in">
+                      {categorySuccess}
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                  {/* Category Chips */}
+                  <div className="flex flex-wrap gap-2 flex-1">
+                    {(categories || []).map((cat: any, idx: number) => {
+                      const catName = typeof cat === 'string' ? cat : (cat?.name || 'Category');
+                      const count = typeof cat === 'object' && cat?.productCount !== undefined ? cat.productCount : undefined;
+                      return (
+                        <span
+                          key={typeof cat === 'string' ? `${cat}-${idx}` : (cat?.id || cat?.name || idx)}
+                          className="bg-white/5 hover:bg-white/10 border border-white/5 text-slate-300 text-[10px] font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-colors"
+                        >
+                          <span>{catName}</span>
+                          {count !== undefined && (
+                            <span className="bg-slate-950 text-amber-400 text-[9px] px-1.5 py-0.2 rounded-md font-mono">
+                              {count}
+                            </span>
+                          )}
+                        </span>
+                      );
+                    })}
+                    {(!categories || categories.length === 0) && (
+                      <span className="text-slate-500 text-xs">No categories registered yet.</span>
+                    )}
+                  </div>
+
+                  {/* Add Category Form */}
+                  <form onSubmit={handleCreateCategory} className="flex items-center gap-2 w-full lg:w-auto shrink-0">
+                    <input
+                      type="text"
+                      required
+                      placeholder="New Category Name..."
+                      value={newCategoryName}
+                      onChange={(e) => setNewCategoryName(e.target.value)}
+                      className="bg-white/5 border border-white/5 rounded-xl px-3 py-1.5 text-xs text-white placeholder:text-slate-600 outline-none focus:border-amber-400 font-medium w-full lg:w-48"
+                    />
+                    <button
+                      type="submit"
+                      className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs px-3.5 py-1.5 rounded-xl whitespace-nowrap transition-all cursor-pointer shadow-glow active:scale-95 shrink-0"
+                    >
+                      + Add
+                    </button>
+                  </form>
+                </div>
+              </div>
+
+              {/* Centralized Products Table */}
+              <div className="bg-white/[0.02] border border-white/5 p-5 rounded-2xl shadow-xl space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/5 pb-3.5">
+                  <div>
+                    <h3 className="text-xs font-black text-slate-300 uppercase tracking-widest flex items-center gap-2">
+                      <Package className="w-4 h-4 text-amber-400" /> Centralized Products SKU Database
+                    </h3>
+                    <p className="text-[10px] text-slate-500 mt-0.5">Global catalog repository ({localProducts.length} published products across all stores)</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => fetchProducts()}
+                      className="p-1.5 bg-white/5 hover:bg-white/10 text-slate-300 rounded-xl border border-white/10 text-xs flex items-center gap-1 font-bold transition-all"
+                      title="Reload Products"
+                    >
+                      <RefreshCw className="w-3 h-3" />
+                    </button>
+                    <button
+                      onClick={() => { setShowQuickActionModal(true); setQuickActionType('product'); }}
+                      className="bg-[#FFC107] hover:bg-[#FFC107]/90 text-slate-950 font-black text-[10px] px-3.5 py-1.5 rounded-xl uppercase tracking-wider cursor-pointer active:scale-95 transition-all shadow-glow flex items-center gap-1"
+                    >
+                      <Plus className="w-3.5 h-3.5 stroke-[3px]" /> Add Product SKU
+                    </button>
+                  </div>
+                </div>
+
+                {/* Filter and Search Bar */}
+                <div className="flex flex-col sm:flex-row gap-3 pt-1">
+                  <div className="flex items-center bg-white/5 border border-white/5 rounded-xl px-3 h-9 flex-1 focus-within:border-[#FFC107] transition-colors">
+                    <Search className="w-3.5 h-3.5 text-slate-400 mr-2 shrink-0" />
+                    <input
+                      type="text"
+                      placeholder="Search by product name, SKU, or vendor..."
+                      value={productSearchQuery}
+                      onChange={(e) => setProductSearchQuery(e.target.value)}
+                      className="bg-transparent text-xs w-full outline-none text-white font-medium"
+                    />
+                    {productSearchQuery && (
+                      <button onClick={() => setProductSearchQuery('')} className="text-slate-500 hover:text-white text-xs">
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+                  <select
+                    value={productCategoryFilter}
+                    onChange={(e) => setProductCategoryFilter(e.target.value)}
+                    className="bg-gray-900 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-slate-200 outline-none font-bold shrink-0"
                   >
-                    Add Product SKU
-                  </button>
+                    <option value="ALL">All Categories</option>
+                    {(categories || []).map((c: any, idx: number) => {
+                      const name = typeof c === 'string' ? c : (c?.name || 'Category');
+                      return <option key={idx} value={name}>{name}</option>;
+                    })}
+                  </select>
                 </div>
 
                 <div className="overflow-x-auto">
@@ -1097,26 +1820,59 @@ export default function AdminDashboardPage() {
                         <th className="py-3 px-4">Inventory Stock</th>
                         <th className="py-3 px-4">Associated Store</th>
                         <th className="py-3 px-4 text-center">Status</th>
+                        <th className="py-3 px-4 text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5 font-semibold text-slate-300">
-                      {localProducts.map(p => (
-                        <tr key={p.id} className="hover:bg-white/5 transition-colors">
-                          <td className="py-3.5 px-4 font-mono font-bold text-[#FFC107]">{p.sku}</td>
-                          <td className="py-3.5 px-4 text-white font-extrabold">{p.name}</td>
-                          <td className="py-3.5 px-4 text-slate-400">{p.category}</td>
-                          <td className="py-3.5 px-4 text-white">৳{p.price.toLocaleString()}</td>
-                          <td className="py-3.5 px-4 text-slate-300">{p.stock} units</td>
-                          <td className="py-3.5 px-4 text-slate-500">{p.vendor}</td>
-                          <td className="py-3.5 px-4 text-center">
-                            <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-black border ${
-                              p.stock > 10 ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
-                            }`}>
-                              {p.stock > 10 ? 'Active' : 'Low Stock'}
-                            </span>
+                      {localProducts
+                        .filter(p => productCategoryFilter === 'ALL' || p.category.toLowerCase() === productCategoryFilter.toLowerCase())
+                        .filter(p =>
+                          p.name.toLowerCase().includes(productSearchQuery.toLowerCase()) ||
+                          p.sku.toLowerCase().includes(productSearchQuery.toLowerCase()) ||
+                          (p.vendor && p.vendor.toLowerCase().includes(productSearchQuery.toLowerCase()))
+                        )
+                        .map(p => (
+                          <tr key={p.id} className="hover:bg-white/5 transition-colors">
+                            <td className="py-3.5 px-4 font-mono font-bold text-[#FFC107]">{p.sku}</td>
+                            <td className="py-3.5 px-4 text-white font-extrabold">{p.name}</td>
+                            <td className="py-3.5 px-4 text-slate-400">{p.category}</td>
+                            <td className="py-3.5 px-4 text-white font-black">৳{p.price.toLocaleString()}</td>
+                            <td className="py-3.5 px-4 text-slate-300">{p.stock} units</td>
+                            <td className="py-3.5 px-4 text-slate-500 font-medium">{p.vendor}</td>
+                            <td className="py-3.5 px-4 text-center">
+                              <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-black border ${
+                                p.stock > 10 ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
+                              }`}>
+                                {p.stock > 10 ? 'Active' : 'Low Stock'}
+                              </span>
+                            </td>
+                            <td className="py-3.5 px-4 text-right">
+                              <div className="flex items-center justify-end gap-1.5">
+                                <button
+                                  onClick={() => handleOpenEditProduct(p)}
+                                  className="p-1.5 bg-white/5 hover:bg-[#FFC107]/20 hover:text-[#FFC107] rounded-lg text-slate-400 transition-colors"
+                                  title="Edit Product Details"
+                                >
+                                  <Edit className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteProduct(p.id, p.name)}
+                                  className="p-1.5 bg-white/5 hover:bg-rose-500/20 hover:text-rose-400 rounded-lg text-slate-400 transition-colors"
+                                  title="Delete Product from Platform"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      {localProducts.length === 0 && (
+                        <tr>
+                          <td colSpan={8} className="py-8 text-center text-slate-500">
+                            No products found matching criteria.
                           </td>
                         </tr>
-                      ))}
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -1213,42 +1969,134 @@ export default function AdminDashboardPage() {
           )}
 
           {/* ================================================= */}
+          {/* ================================================= */}
           {/* VIEW: CRM & CUSTOMERS */}
           {/* ================================================= */}
           {activeModule === 'customers' && (
             <div className="space-y-6 animate-fade-in">
-              <div className="bg-white/[0.02] border border-white/5 p-5 rounded-2xl shadow-xl">
-                <h3 className="text-xs font-black text-slate-300 uppercase tracking-widest border-b border-white/5 pb-3.5 mb-5">
-                  Ecosystem Customer Registry
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {localCustomers.map(cust => (
-                    <div key={cust.id} className="p-5 bg-white/[0.02] border border-white/5 rounded-2xl space-y-3.5">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FFC107] to-amber-600 flex items-center justify-center font-black text-slate-950 text-sm">
-                          {cust.name.charAt(0)}
-                        </div>
-                        <div>
-                          <h4 className="text-xs font-black text-white">{cust.name}</h4>
-                          <span className="bg-emerald-500/10 text-emerald-400 text-[8px] px-1.5 py-0.5 rounded font-black border border-emerald-500/20">
-                            {cust.status} User
+              <div className="bg-white/[0.02] border border-white/5 p-5 rounded-2xl shadow-xl space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/5 pb-3.5">
+                  <div>
+                    <h3 className="text-xs font-black text-slate-300 uppercase tracking-widest flex items-center gap-2">
+                      <Users className="w-4 h-4 text-amber-400" /> Platform Customer Directory
+                    </h3>
+                    <p className="text-[10px] text-slate-500 mt-0.5">
+                      Unified customer accounts & CRM profiles ({adminCustomers.length || localCustomers.length} registered customers)
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => fetchAdminCustomers()}
+                      className="p-1.5 bg-white/5 hover:bg-white/10 text-slate-300 rounded-xl border border-white/10 text-xs flex items-center gap-1 font-bold transition-all"
+                      title="Sync Customers"
+                    >
+                      <RefreshCw className="w-3 h-3" />
+                    </button>
+                    <button
+                      onClick={() => { setShowQuickActionModal(true); setQuickActionType('customer'); }}
+                      className="bg-[#FFC107] hover:bg-[#FFC107]/90 text-slate-950 font-black text-[10px] px-3.5 py-1.5 rounded-xl uppercase tracking-wider cursor-pointer active:scale-95 transition-all shadow-glow flex items-center gap-1"
+                    >
+                      <UserPlus className="w-3.5 h-3.5 stroke-[3px]" /> Add Customer
+                    </button>
+                  </div>
+                </div>
+
+                {/* Customer Search Bar */}
+                <div className="flex items-center bg-white/5 border border-white/5 rounded-xl px-3 h-9 focus-within:border-[#FFC107] transition-colors max-w-md">
+                  <Search className="w-3.5 h-3.5 text-slate-400 mr-2 shrink-0" />
+                  <input
+                    type="text"
+                    placeholder="Search by customer name, email, or phone..."
+                    value={customerSearchQuery}
+                    onChange={(e) => setCustomerSearchQuery(e.target.value)}
+                    className="bg-transparent text-xs w-full outline-none text-white font-medium"
+                  />
+                  {customerSearchQuery && (
+                    <button onClick={() => setCustomerSearchQuery('')} className="text-slate-500 hover:text-white text-xs">
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Customers Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {(adminCustomers.length > 0 ? adminCustomers : localCustomers)
+                    .filter((cust: any) =>
+                      cust.name.toLowerCase().includes(customerSearchQuery.toLowerCase()) ||
+                      cust.email.toLowerCase().includes(customerSearchQuery.toLowerCase()) ||
+                      (cust.phone && cust.phone.toLowerCase().includes(customerSearchQuery.toLowerCase()))
+                    )
+                    .map((cust: any) => (
+                      <div key={cust.id} className="p-4 bg-white/[0.02] border border-white/5 hover:border-white/10 rounded-2xl space-y-3 transition-all">
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FFC107] to-amber-600 flex items-center justify-center font-black text-slate-950 text-sm shadow-glow shrink-0">
+                              {cust.name ? cust.name.charAt(0).toUpperCase() : 'C'}
+                            </div>
+                            <div className="min-w-0">
+                              <h4 className="text-xs font-black text-white truncate">{cust.name}</h4>
+                              <p className="text-[10px] text-slate-400 truncate">{cust.email}</p>
+                            </div>
+                          </div>
+                          <span className={`text-[8.5px] font-black px-2 py-0.5 rounded-full border shrink-0 ${
+                            cust.status === 'ACTIVE' || cust.status === 'Active'
+                              ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                              : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
+                          }`}>
+                            {cust.status || 'ACTIVE'}
                           </span>
                         </div>
+
+                        <div className="text-[10px] text-slate-400 space-y-1 pt-2.5 border-t border-white/5 font-medium">
+                          <p className="flex justify-between">
+                            <span>Phone:</span>
+                            <span className="text-slate-200 font-mono">{cust.phone || 'N/A'}</span>
+                          </p>
+                          <p className="flex justify-between">
+                            <span>Wallet Balance:</span>
+                            <span className="font-extrabold text-[#FFC107]">৳{(cust.walletBalance || cust.totalSpent || 0).toLocaleString()}</span>
+                          </p>
+                          <p className="flex justify-between">
+                            <span>Loyalty Points:</span>
+                            <span className="text-white font-bold">{cust.loyaltyPoints || Math.floor((cust.totalSpent || 0) * 0.15)} Pts</span>
+                          </p>
+                        </div>
+
+                        {/* Customer Actions */}
+                        <div className="flex items-center gap-1.5 pt-2 border-t border-white/5">
+                          <button
+                            onClick={() => handleOpenEditCustomer(cust)}
+                            className="flex-1 bg-white/5 hover:bg-[#FFC107]/20 hover:text-[#FFC107] text-slate-300 text-[10px] font-bold py-1.5 rounded-xl border border-white/5 flex items-center justify-center gap-1 transition-colors"
+                          >
+                            <Edit size={12} /> Edit
+                          </button>
+                          <button
+                            onClick={() => handleToggleCustomerStatus(cust)}
+                            className={`flex-1 text-[10px] font-bold py-1.5 rounded-xl border transition-colors flex items-center justify-center gap-1 ${
+                              cust.status === 'ACTIVE'
+                                ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border-amber-500/20'
+                                : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/20'
+                            }`}
+                          >
+                            {cust.status === 'ACTIVE' ? 'Suspend' : 'Activate'}
+                          </button>
+                          <button
+                            onClick={() => handleDeleteCustomer(cust.id, cust.email)}
+                            className="p-1.5 bg-white/5 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 rounded-xl border border-white/5 transition-colors"
+                            title="Delete Account"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
                       </div>
-                      <div className="text-[10px] text-slate-400 space-y-1.5 pt-3 border-t border-white/5 font-medium">
-                        <p>Email: <span className="text-slate-200">{cust.email}</span></p>
-                        <p>Total Spent: <span className="font-extrabold text-[#FFC107]">৳{cust.totalSpent.toLocaleString()}</span></p>
-                        <p>Loyalty Credit Points: <span className="text-white">{(cust.totalSpent * 0.15).toFixed(0)} Points</span></p>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               </div>
             </div>
           )}
 
           {/* ================================================= */}
-          {/* VIEW: SELLERS KYC QUEUE */}
+          {/* VIEW: SELLERS & MERCHANTS MANAGEMENT */}
           {/* ================================================= */}
           {activeModule === 'sellers' && (
             <div className="space-y-6 animate-fade-in">
@@ -1258,42 +2106,206 @@ export default function AdminDashboardPage() {
                 </div>
               )}
 
-              <div className="bg-white/[0.02] border border-white/5 p-5 rounded-2xl shadow-xl space-y-4">
-                <h3 className="text-xs font-black text-slate-300 uppercase tracking-widest border-b border-white/5 pb-3">
-                  Merchant KYC Approvals Queue
-                </h3>
-                {pendingSellers.length === 0 ? (
-                  <p className="text-center text-[10px] text-slate-500 py-10">No pending seller registrations.</p>
-                ) : (
-                  <div className="space-y-3.5">
-                    {pendingSellers.map(sel => (
-                      <div key={sel.id} className="p-4 bg-white/[0.01] border border-white/5 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-white/10 transition-colors">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono text-[9px] bg-white/5 text-slate-300 rounded px-2 py-0.5 border border-white/5">{sel.id}</span>
-                            <h4 className="text-xs font-black text-white">{sel.name}</h4>
-                          </div>
-                          <p className="text-[10px] text-slate-400 mt-1">Owner: {sel.owner} | Category: {sel.type} | License: <span className="text-blue-400 underline font-mono cursor-pointer">{sel.docs}</span></p>
-                        </div>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleSellerKYC(sel.id, 'reject')}
-                            className="border border-rose-500/20 hover:bg-rose-500/10 text-rose-400 text-[10px] font-black px-3.5 py-1.5 rounded-xl transition-all cursor-pointer active:scale-95"
-                          >
-                            Reject
-                          </button>
-                          <button
-                            onClick={() => handleSellerKYC(sel.id, 'approve')}
-                            className="bg-[#FFC107] text-slate-950 text-[10px] font-black px-4 py-1.5 rounded-xl transition-all cursor-pointer active:scale-95"
-                          >
-                            Approve Merchant
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+              {/* Dual Tab Sub-Navigation */}
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setSellerTab('verified')}
+                    className={`text-xs font-black px-4 py-2 rounded-xl transition-all cursor-pointer flex items-center gap-2 ${
+                      sellerTab === 'verified'
+                        ? 'bg-[#FFC107] text-slate-950 shadow-glow'
+                        : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10'
+                    }`}
+                  >
+                    <Store className="w-3.5 h-3.5" />
+                    <span>Verified Vendor Stores ({adminSellers.length})</span>
+                  </button>
+                  <button
+                    onClick={() => setSellerTab('kyc')}
+                    className={`text-xs font-black px-4 py-2 rounded-xl transition-all cursor-pointer flex items-center gap-2 ${
+                      sellerTab === 'kyc'
+                        ? 'bg-[#FFC107] text-slate-950 shadow-glow'
+                        : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10'
+                    }`}
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    <span>KYC Applications Queue ({pendingSellers.length})</span>
+                  </button>
+                </div>
+                <button
+                  onClick={() => { fetchAdminSellers(); }}
+                  className="p-2 bg-white/5 hover:bg-white/10 text-slate-300 rounded-xl border border-white/10 text-xs flex items-center gap-1 font-bold"
+                  title="Refresh Sellers"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                </button>
               </div>
+
+              {/* SUB-VIEW 1: VERIFIED VENDOR STORES */}
+              {sellerTab === 'verified' && (
+                <div className="bg-white/[0.02] border border-white/5 p-5 rounded-2xl shadow-xl space-y-4">
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <div className="flex items-center bg-white/5 border border-white/5 rounded-xl px-3 h-9 flex-1 focus-within:border-[#FFC107] transition-colors max-w-md">
+                      <Search className="w-3.5 h-3.5 text-slate-400 mr-2 shrink-0" />
+                      <input
+                        type="text"
+                        placeholder="Search store name, owner, or email..."
+                        value={sellerSearchQuery}
+                        onChange={(e) => setSellerSearchQuery(e.target.value)}
+                        className="bg-transparent text-xs w-full outline-none text-white font-medium"
+                      />
+                      {sellerSearchQuery && (
+                        <button onClick={() => setSellerSearchQuery('')} className="text-slate-500 hover:text-white text-xs">
+                          <X className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="border-b border-white/5 bg-white/5 text-slate-400 font-bold">
+                          <th className="py-3 px-4 font-black">Store / Merchant</th>
+                          <th className="py-3 px-4">Owner & Contact</th>
+                          <th className="py-3 px-4">Commission</th>
+                          <th className="py-3 px-4">Catalog SKUs</th>
+                          <th className="py-3 px-4">Gross Sales</th>
+                          <th className="py-3 px-4 text-center">Status</th>
+                          <th className="py-3 px-4 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/5 font-semibold text-slate-300">
+                        {adminSellers
+                          .filter((s: any) =>
+                            s.name.toLowerCase().includes(sellerSearchQuery.toLowerCase()) ||
+                            (s.owner?.name && s.owner.name.toLowerCase().includes(sellerSearchQuery.toLowerCase())) ||
+                            (s.owner?.email && s.owner.email.toLowerCase().includes(sellerSearchQuery.toLowerCase()))
+                          )
+                          .map((seller: any) => (
+                            <tr key={seller.id} className="hover:bg-white/5 transition-colors">
+                              <td className="py-3.5 px-4">
+                                <div className="flex items-center gap-2.5">
+                                  <img
+                                    src={seller.logo || 'https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=80&auto=format&fit=crop'}
+                                    alt={seller.name}
+                                    className="w-8 h-8 rounded-lg object-cover border border-white/10 shrink-0"
+                                  />
+                                  <div>
+                                    <h4 className="text-white font-extrabold">{seller.name}</h4>
+                                    <p className="text-[10px] text-slate-400 truncate max-w-[180px]">{seller.description}</p>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="py-3.5 px-4">
+                                <p className="text-white font-bold">{seller.owner?.name || 'Store Owner'}</p>
+                                <p className="text-[10px] text-slate-400 font-mono">{seller.owner?.email}</p>
+                              </td>
+                              <td className="py-3.5 px-4 font-mono font-bold text-amber-400">
+                                {seller.commissionRate || 8.5}%
+                              </td>
+                              <td className="py-3.5 px-4 text-white font-mono font-bold">
+                                {seller.productsCount || 0} Products
+                              </td>
+                              <td className="py-3.5 px-4 text-emerald-400 font-bold font-mono">
+                                ৳{(seller.grossSales || 0).toLocaleString()}
+                              </td>
+                              <td className="py-3.5 px-4 text-center">
+                                <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-black border ${
+                                  seller.isApproved
+                                    ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                                    : 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400'
+                                }`}>
+                                  {seller.isApproved ? 'VERIFIED' : 'PENDING'}
+                                </span>
+                              </td>
+                              <td className="py-3.5 px-4 text-right">
+                                <div className="flex items-center justify-end gap-1.5">
+                                  <button
+                                    onClick={() => handleOpenEditSeller(seller)}
+                                    className="p-1.5 bg-white/5 hover:bg-[#FFC107]/20 hover:text-[#FFC107] rounded-lg text-slate-400 transition-colors"
+                                    title="Edit Store Profile & Commission"
+                                  >
+                                    <Edit className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleToggleSellerApproval(seller.id, seller.isApproved)}
+                                    className={`p-1.5 rounded-lg border text-xs transition-colors ${
+                                      seller.isApproved
+                                        ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border-amber-500/20'
+                                        : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/20'
+                                    }`}
+                                    title={seller.isApproved ? 'Suspend Store Verification' : 'Verify Store'}
+                                  >
+                                    {seller.isApproved ? <EyeOff className="w-3.5 h-3.5" /> : <Check className="w-3.5 h-3.5" />}
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteSeller(seller.id, seller.name)}
+                                    className="p-1.5 bg-white/5 hover:bg-rose-500/20 hover:text-rose-400 rounded-lg text-slate-400 transition-colors"
+                                    title="Delete Store & Catalog"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        {adminSellers.length === 0 && (
+                          <tr>
+                            <td colSpan={7} className="py-8 text-center text-slate-500">
+                              No stores registered yet. Use verified vendor creation or approve KYC requests.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* SUB-VIEW 2: PENDING KYC APPROVALS */}
+              {sellerTab === 'kyc' && (
+                <div className="bg-white/[0.02] border border-white/5 p-5 rounded-2xl shadow-xl space-y-4">
+                  <h3 className="text-xs font-black text-slate-300 uppercase tracking-widest border-b border-white/5 pb-3">
+                    Merchant KYC Approvals Queue
+                  </h3>
+                  {pendingSellers.length === 0 ? (
+                    <div className="text-center py-12 space-y-2">
+                      <ShieldCheck className="w-10 h-10 text-emerald-500/50 mx-auto" />
+                      <p className="text-xs text-slate-400">All vendor verification applications have been processed!</p>
+                      <p className="text-[11px] text-slate-500">New seller registrations will appear here for compliance review.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3.5">
+                      {pendingSellers.map(sel => (
+                        <div key={sel.id} className="p-4 bg-white/[0.01] border border-white/5 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-white/10 transition-colors">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-[9px] bg-white/5 text-slate-300 rounded px-2 py-0.5 border border-white/5">{sel.id}</span>
+                              <h4 className="text-xs font-black text-white">{sel.name}</h4>
+                            </div>
+                            <p className="text-[10px] text-slate-400 mt-1">Owner: {sel.owner} | Category: {sel.type} | License: <span className="text-blue-400 underline font-mono cursor-pointer">{sel.docs}</span></p>
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleSellerKYC(sel.id, 'reject')}
+                              className="border border-rose-500/20 hover:bg-rose-500/10 text-rose-400 text-[10px] font-black px-3.5 py-1.5 rounded-xl transition-all cursor-pointer active:scale-95"
+                            >
+                              Reject
+                            </button>
+                            <button
+                              onClick={() => handleSellerKYC(sel.id, 'approve')}
+                              className="bg-[#FFC107] text-slate-950 text-[10px] font-black px-4 py-1.5 rounded-xl transition-all cursor-pointer active:scale-95 shadow-glow"
+                            >
+                              Approve Merchant
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
@@ -1508,6 +2520,30 @@ export default function AdminDashboardPage() {
                     Save Log
                   </button>
                 </form>
+
+                <div className="space-y-2 mt-4 max-h-[300px] overflow-y-auto">
+                  {crmNotes.map((note: any) => (
+                    <div key={note.id} className="p-3 bg-white/5 border border-white/5 rounded-xl space-y-1 relative group">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs font-extrabold text-white">{note.name}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[9px] text-slate-500 font-mono">{note.date || 'Recent'}</span>
+                          <button
+                            onClick={() => handleDeleteCrmNote(note.id)}
+                            className="text-slate-500 hover:text-rose-400 transition-colors p-1"
+                            title="Delete Log"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                      </div>
+                      <p className="text-[11px] text-slate-300 leading-relaxed">{note.note}</p>
+                    </div>
+                  ))}
+                  {crmNotes.length === 0 && (
+                    <p className="text-xs text-slate-500 text-center py-4">No interaction logs recorded yet.</p>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -1557,6 +2593,13 @@ export default function AdminDashboardPage() {
                       onChange={e => setNewEmpName(e.target.value)}
                       className="bg-white/5 border border-white/5 rounded-xl px-3 py-1.5 text-xs text-white"
                     />
+                    <input
+                      type="text"
+                      placeholder="Role"
+                      value={newEmpRole}
+                      onChange={e => setNewEmpRole(e.target.value)}
+                      className="bg-white/5 border border-white/5 rounded-xl px-3 py-1.5 text-xs text-white w-32"
+                    />
                     <button type="submit" className="bg-[#FFC107] text-slate-950 text-[10px] font-black px-4 rounded-xl cursor-pointer">
                       Add Staff
                     </button>
@@ -1573,23 +2616,40 @@ export default function AdminDashboardPage() {
                         <th className="py-3 px-4 font-center">Attendance Index</th>
                         <th className="py-3 px-4">Wage Balance</th>
                         <th className="py-3 px-4 text-center">Payroll</th>
+                        <th className="py-3 px-4 text-center">Action</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5 font-semibold text-slate-300">
                       {employees.map(emp => (
                         <tr key={emp.id} className="hover:bg-white/5 transition-colors">
-                          <td className="py-3.5 px-4 font-mono text-slate-500">{emp.id}</td>
+                          <td className="py-3.5 px-4 font-mono text-slate-500 text-[10px]">{emp.id.slice(0, 8)}</td>
                           <td className="py-3.5 px-4 text-white font-extrabold">{emp.name}</td>
                           <td className="py-3.5 px-4 text-slate-400">{emp.role}</td>
-                          <td className="py-3.5 px-4 font-mono text-emerald-400">{emp.attendance}</td>
-                          <td className="py-3.5 px-4 text-white">${emp.salary.toLocaleString()}</td>
+                          <td className="py-3.5 px-4 font-mono text-emerald-400">{emp.attendance || '100%'}</td>
+                          <td className="py-3.5 px-4 text-white">৳{(emp.salary || 30000).toLocaleString()}</td>
                           <td className="py-3.5 px-4 text-center">
                             <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] font-black px-2 py-0.5 rounded-full">
-                              {emp.status}
+                              {emp.status || 'Paid'}
                             </span>
+                          </td>
+                          <td className="py-3.5 px-4 text-center">
+                            <button
+                              onClick={() => handleDeleteEmployee(emp.id)}
+                              className="text-slate-500 hover:text-rose-400 transition-colors p-1"
+                              title="Remove Employee"
+                            >
+                              <Trash2 size={13} />
+                            </button>
                           </td>
                         </tr>
                       ))}
+                      {employees.length === 0 && (
+                        <tr>
+                          <td colSpan={7} className="py-6 text-center text-slate-500">
+                            No employees listed yet. Use the form above to add workforce records.
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -1804,7 +2864,12 @@ export default function AdminDashboardPage() {
                 <h3 className="text-xs font-black text-slate-300 uppercase tracking-widest border-b border-white/5 pb-3">
                   General System Variables
                 </h3>
-                <form onSubmit={e => { e.preventDefault(); alert('Variables locked and saved.'); }} className="space-y-4">
+                {settingsSavedMsg && (
+                  <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-xl font-bold flex items-center gap-2 animate-fade-in">
+                    <CheckCircle className="w-4 h-4" /> {settingsSavedMsg}
+                  </div>
+                )}
+                <form onSubmit={handleSaveSettings} className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-[8px] font-black text-slate-500 uppercase mb-1">Global VAT Rate (%)</label>
@@ -1825,10 +2890,94 @@ export default function AdminDashboardPage() {
                       />
                     </div>
                   </div>
-                  <button type="submit" className="w-full bg-[#FFC107] text-slate-950 text-xs font-black py-3 rounded-xl transition-all cursor-pointer">
+                  <div>
+                    <label className="block text-[8px] font-black text-slate-500 uppercase mb-1">Platform Commission Rate (%)</label>
+                    <input
+                      type="number"
+                      value={platformCommission}
+                      onChange={e => setPlatformCommission(parseFloat(e.target.value) || 10)}
+                      className="w-full bg-white/5 border border-white/5 rounded-xl p-2.5 text-xs font-bold text-white"
+                    />
+                  </div>
+                  <button type="submit" className="w-full bg-[#FFC107] text-slate-950 text-xs font-black py-3 rounded-xl transition-all cursor-pointer hover:bg-[#FFC107]/90 active:scale-95">
                     Save Override Configurations
                   </button>
                 </form>
+              </div>
+
+              <div className="bg-white/[0.02] border border-white/5 p-5 rounded-2xl shadow-xl space-y-4">
+                <div className="flex justify-between items-center border-b border-white/5 pb-3">
+                  <h3 className="text-xs font-black text-slate-300 uppercase tracking-widest">
+                    Promo & Discount Coupons
+                  </h3>
+                  <span className="text-[10px] text-amber-400 font-mono font-bold bg-amber-400/10 px-2 py-0.5 rounded-full border border-amber-400/20">
+                    {coupons.length} Active Codes
+                  </span>
+                </div>
+
+                <form onSubmit={handleAddNewCoupon} className="flex gap-2">
+                  <input
+                    type="text"
+                    required
+                    placeholder="CODE (e.g. EID30)"
+                    value={newCouponCode}
+                    onChange={e => setNewCouponCode(e.target.value)}
+                    className="bg-white/5 border border-white/5 rounded-xl px-3 py-2 text-xs text-white uppercase font-mono w-1/2"
+                  />
+                  <input
+                    type="number"
+                    min="1"
+                    max="100"
+                    required
+                    placeholder="Discount %"
+                    value={newCouponDiscount}
+                    onChange={e => setNewCouponDiscount(e.target.value)}
+                    className="bg-white/5 border border-white/5 rounded-xl px-3 py-2 text-xs text-white w-1/4"
+                  />
+                  <button type="submit" className="bg-[#FFC107] text-slate-950 text-xs font-black px-4 rounded-xl cursor-pointer whitespace-nowrap">
+                    Add Code
+                  </button>
+                </form>
+
+                <div className="space-y-2 mt-3 max-h-[260px] overflow-y-auto">
+                  {coupons.map((cpn: any) => (
+                    <div key={cpn.id || cpn.code} className="p-3 bg-white/5 border border-white/5 rounded-xl flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-black text-xs text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded border border-amber-400/20">
+                            {cpn.code}
+                          </span>
+                          <span className="text-xs font-bold text-white">
+                            {cpn.discount}% OFF
+                          </span>
+                        </div>
+                        <span className="text-[9px] text-slate-500 block mt-1">Expires: {cpn.expiry}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleToggleCoupon(cpn.id, cpn.active)}
+                          className={`text-[9px] font-black px-2.5 py-1 rounded-full border transition-all ${
+                            cpn.active
+                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                              : 'bg-slate-500/10 text-slate-400 border-slate-500/20'
+                          }`}
+                        >
+                          {cpn.active ? 'ACTIVE' : 'MUTED'}
+                        </button>
+                        <button
+                          onClick={() => handleDeleteCoupon(cpn.id)}
+                          className="text-slate-500 hover:text-rose-400 transition-colors p-1"
+                          title="Delete Coupon"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  {coupons.length === 0 && (
+                    <p className="text-xs text-slate-500 text-center py-4">No coupons registered yet.</p>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -2190,10 +3339,10 @@ export default function AdminDashboardPage() {
                   {['PENDING', 'PROCESSING', 'DELIVERED', 'CANCELLED'].map((st) => (
                     <button
                       key={st}
-                      onClick={() => {
+                      onClick={async () => {
+                        await updateOrderStatus(selectedOrder.id, st);
                         setLocalOrders(prev => prev.map(o => o.id === selectedOrder.id ? { ...o, status: st as any } : o));
                         setSelectedOrder(prev => prev ? { ...prev, status: st as any } : null);
-                        alert(`Order status updated to: ${st}`);
                       }}
                       className={`text-[8.5px] font-black px-2.5 py-1.5 rounded-lg border transition-all cursor-pointer ${
                         selectedOrder.status === st
@@ -2222,6 +3371,341 @@ export default function AdminDashboardPage() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* 6.1 MODAL OVERLAY: EDIT PRODUCT (ADMIN) */}
+      {editingProduct && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-slate-900 border border-white/10 rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4 relative animate-slide-up">
+            <button
+              onClick={() => setEditingProduct(null)}
+              className="absolute top-4 right-4 p-1.5 hover:bg-white/5 rounded-full text-slate-400 hover:text-white"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="border-b border-white/5 pb-3">
+              <span className="font-mono text-[9px] bg-amber-400/10 text-amber-400 rounded px-2.5 py-0.5 border border-amber-400/20">
+                SKU: {editingProduct.sku}
+              </span>
+              <h3 className="text-sm font-black text-white uppercase tracking-wider mt-2">
+                Edit Catalog Product
+              </h3>
+              <p className="text-[10px] text-slate-400 mt-0.5">Modify pricing, stock allocation, category, and publishing status.</p>
+            </div>
+
+            <form onSubmit={handleSaveEditProduct} className="space-y-3.5 text-xs font-bold">
+              <div>
+                <label className="block text-[9px] text-slate-400 uppercase mb-1">Product Title *</label>
+                <input
+                  type="text"
+                  required
+                  value={editProdName}
+                  onChange={e => setEditProdName(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-white outline-none focus:border-[#FFC107]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[9px] text-slate-400 uppercase mb-1">Base Price (৳) *</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    required
+                    value={editProdPrice}
+                    onChange={e => setEditProdPrice(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-white outline-none focus:border-[#FFC107]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[9px] text-slate-400 uppercase mb-1">Total Stock Units *</label>
+                  <input
+                    type="number"
+                    required
+                    value={editProdStock}
+                    onChange={e => setEditProdStock(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-white outline-none focus:border-[#FFC107]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[9px] text-slate-400 uppercase mb-1">Category</label>
+                  <select
+                    value={editProdCategory}
+                    onChange={e => setEditProdCategory(e.target.value)}
+                    className="w-full bg-gray-900 border border-white/10 rounded-xl p-2.5 text-white outline-none"
+                  >
+                    {['Electronics & Gadgets', 'Health & Beauty', 'Home & Kitchen', 'Apparel & Fashion', 'Groceries & Staples', 'Books & Stationery', 'General Retail'].map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[9px] text-slate-400 uppercase mb-1">Catalog Status</label>
+                  <select
+                    value={editProdStatus}
+                    onChange={e => setEditProdStatus(e.target.value)}
+                    className="w-full bg-gray-900 border border-white/10 rounded-xl p-2.5 text-white outline-none"
+                  >
+                    <option value="PUBLISHED">PUBLISHED</option>
+                    <option value="DRAFT">DRAFT</option>
+                    <option value="PENDING_APPROVAL">PENDING APPROVAL</option>
+                    <option value="SUSPENDED">SUSPENDED</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[9px] text-slate-400 uppercase mb-1">Product Description</label>
+                <textarea
+                  rows={2}
+                  value={editProdDesc}
+                  onChange={e => setEditProdDesc(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-white outline-none resize-none"
+                />
+              </div>
+
+              <div className="flex gap-2.5 pt-2 border-t border-white/5">
+                <button
+                  type="button"
+                  onClick={() => setEditingProduct(null)}
+                  className="flex-1 bg-white/5 text-slate-300 font-bold py-2.5 rounded-xl hover:bg-white/10 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 bg-[#FFC107] hover:bg-[#FFC107]/90 text-slate-950 font-black py-2.5 rounded-xl transition-all shadow-glow cursor-pointer"
+                >
+                  Save Product Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 6.2 MODAL OVERLAY: EDIT CUSTOMER (ADMIN) */}
+      {editingCustomer && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-slate-900 border border-white/10 rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4 relative animate-slide-up">
+            <button
+              onClick={() => setEditingCustomer(null)}
+              className="absolute top-4 right-4 p-1.5 hover:bg-white/5 rounded-full text-slate-400 hover:text-white"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="border-b border-white/5 pb-3">
+              <span className="font-mono text-[9px] bg-blue-500/10 text-blue-400 rounded px-2.5 py-0.5 border border-blue-500/20">
+                Customer: {editingCustomer.email}
+              </span>
+              <h3 className="text-sm font-black text-white uppercase tracking-wider mt-2">
+                Edit Customer Profile
+              </h3>
+              <p className="text-[10px] text-slate-400 mt-0.5">Manage user credentials, wallet funds, and account status.</p>
+            </div>
+
+            <form onSubmit={handleSaveEditCustomer} className="space-y-3.5 text-xs font-bold">
+              <div>
+                <label className="block text-[9px] text-slate-400 uppercase mb-1">Full Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={editCustName}
+                  onChange={e => setEditCustName(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-white outline-none focus:border-[#FFC107]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[9px] text-slate-400 uppercase mb-1">Phone Number</label>
+                  <input
+                    type="text"
+                    value={editCustPhone}
+                    onChange={e => setEditCustPhone(e.target.value)}
+                    placeholder="+880 1700-000000"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-white outline-none focus:border-[#FFC107]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[9px] text-slate-400 uppercase mb-1">Account Status</label>
+                  <select
+                    value={editCustStatus}
+                    onChange={e => setEditCustStatus(e.target.value)}
+                    className="w-full bg-gray-900 border border-white/10 rounded-xl p-2.5 text-white outline-none"
+                  >
+                    <option value="ACTIVE">ACTIVE</option>
+                    <option value="SUSPENDED">SUSPENDED</option>
+                    <option value="PENDING_VERIFICATION">PENDING VERIFICATION</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[9px] text-slate-400 uppercase mb-1">Wallet Balance (৳)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={editCustWallet}
+                    onChange={e => setEditCustWallet(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-white outline-none focus:border-[#FFC107]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[9px] text-slate-400 uppercase mb-1">Loyalty Points</label>
+                  <input
+                    type="number"
+                    value={editCustPoints}
+                    onChange={e => setEditCustPoints(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-white outline-none focus:border-[#FFC107]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[9px] text-slate-400 uppercase mb-1">Reset Password (Optional)</label>
+                <input
+                  type="password"
+                  placeholder="Leave blank to keep current password"
+                  value={editCustPassword}
+                  onChange={e => setEditCustPassword(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-white outline-none focus:border-[#FFC107]"
+                />
+              </div>
+
+              <div className="flex gap-2.5 pt-2 border-t border-white/5">
+                <button
+                  type="button"
+                  onClick={() => setEditingCustomer(null)}
+                  className="flex-1 bg-white/5 text-slate-300 font-bold py-2.5 rounded-xl hover:bg-white/10 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 bg-[#FFC107] hover:bg-[#FFC107]/90 text-slate-950 font-black py-2.5 rounded-xl transition-all shadow-glow cursor-pointer"
+                >
+                  Save Customer Details
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 6.3 MODAL OVERLAY: EDIT SELLER & STORE (ADMIN) */}
+      {editingSeller && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-slate-900 border border-white/10 rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4 relative animate-slide-up">
+            <button
+              onClick={() => setEditingSeller(null)}
+              className="absolute top-4 right-4 p-1.5 hover:bg-white/5 rounded-full text-slate-400 hover:text-white"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="border-b border-white/5 pb-3">
+              <span className="font-mono text-[9px] bg-amber-400/10 text-amber-400 rounded px-2.5 py-0.5 border border-amber-400/20">
+                Store ID: {editingSeller.id}
+              </span>
+              <h3 className="text-sm font-black text-white uppercase tracking-wider mt-2">
+                Edit Vendor Store Settings
+              </h3>
+              <p className="text-[10px] text-slate-400 mt-0.5">Update store parameters, commission deduction rate, and owner credentials.</p>
+            </div>
+
+            <form onSubmit={handleSaveEditSeller} className="space-y-3.5 text-xs font-bold">
+              <div>
+                <label className="block text-[9px] text-slate-400 uppercase mb-1">Store Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={editStoreName}
+                  onChange={e => setEditStoreName(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-white outline-none focus:border-[#FFC107]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[9px] text-slate-400 uppercase mb-1">Store Description</label>
+                <textarea
+                  rows={2}
+                  value={editStoreDesc}
+                  onChange={e => setEditStoreDesc(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-white outline-none resize-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[9px] text-slate-400 uppercase mb-1">Platform Commission Rate (%)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    required
+                    value={editStoreCommission}
+                    onChange={e => setEditStoreCommission(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-white outline-none focus:border-[#FFC107]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[9px] text-slate-400 uppercase mb-1">Verification Status</label>
+                  <select
+                    value={editStoreApproved ? 'true' : 'false'}
+                    onChange={e => setEditStoreApproved(e.target.value === 'true')}
+                    className="w-full bg-gray-900 border border-white/10 rounded-xl p-2.5 text-white outline-none"
+                  >
+                    <option value="true">VERIFIED & ACTIVE</option>
+                    <option value="false">PENDING / SUSPENDED</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[9px] text-slate-400 uppercase mb-1">Owner Contact Name</label>
+                  <input
+                    type="text"
+                    value={editStoreOwnerName}
+                    onChange={e => setEditStoreOwnerName(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-white outline-none focus:border-[#FFC107]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[9px] text-slate-400 uppercase mb-1">Owner Phone</label>
+                  <input
+                    type="text"
+                    value={editStoreOwnerPhone}
+                    onChange={e => setEditStoreOwnerPhone(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-white outline-none focus:border-[#FFC107]"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-2.5 pt-2 border-t border-white/5">
+                <button
+                  type="button"
+                  onClick={() => setEditingSeller(null)}
+                  className="flex-1 bg-white/5 text-slate-300 font-bold py-2.5 rounded-xl hover:bg-white/10 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 bg-[#FFC107] hover:bg-[#FFC107]/90 text-slate-950 font-black py-2.5 rounded-xl transition-all shadow-glow cursor-pointer"
+                >
+                  Save Store Settings
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
@@ -2279,13 +3763,17 @@ export default function AdminDashboardPage() {
             <div className="flex gap-3 pt-4 border-t border-slate-800">
               <button
                 onClick={async () => {
-                  const activeToken = token || localStorage.getItem('zibonbaba_token');
+                  const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null);
                   if (activeToken) {
                     try {
-                      await fetch(`/api/verification/${selectedDrawerSeller.id}/review`, {
-                        method: 'PATCH',
+                      await fetch('/api/verification/approve', {
+                        method: 'POST',
                         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${activeToken}` },
-                        body: JSON.stringify({ status: 'APPROVED', reviewNote: 'Approved by Super Admin' })
+                        body: JSON.stringify({
+                          id: selectedDrawerSeller.id,
+                          userId: selectedDrawerSeller.userId,
+                          storeId: selectedDrawerSeller.storeId
+                        })
                       });
                     } catch (_) {}
                   }
@@ -2293,19 +3781,23 @@ export default function AdminDashboardPage() {
                   setSellerActionMsg(`Approved store: ${selectedDrawerSeller.name}`);
                   setSelectedDrawerSeller(null);
                 }}
-                className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs rounded-xl transition shadow-lg"
+                className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs rounded-xl transition shadow-lg cursor-pointer"
               >
                 Approve Vendor Account
               </button>
               <button
                 onClick={async () => {
-                  const activeToken = token || localStorage.getItem('zibonbaba_token');
+                  const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null);
                   if (activeToken) {
                     try {
-                      await fetch(`/api/verification/${selectedDrawerSeller.id}/review`, {
-                        method: 'PATCH',
+                      await fetch('/api/verification/reject', {
+                        method: 'POST',
                         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${activeToken}` },
-                        body: JSON.stringify({ status: 'REJECTED', reviewNote: 'Rejected due to missing documents' })
+                        body: JSON.stringify({
+                          id: selectedDrawerSeller.id,
+                          userId: selectedDrawerSeller.userId,
+                          reason: 'Documentation did not meet compliance verification standards.'
+                        })
                       });
                     } catch (_) {}
                   }
@@ -2313,7 +3805,7 @@ export default function AdminDashboardPage() {
                   setSellerActionMsg(`Rejected store request: ${selectedDrawerSeller.name}`);
                   setSelectedDrawerSeller(null);
                 }}
-                className="flex-1 py-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 hover:bg-rose-500/20 font-extrabold text-xs rounded-xl transition"
+                className="flex-1 py-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 hover:bg-rose-500/20 font-extrabold text-xs rounded-xl transition cursor-pointer"
               >
                 Reject Request
               </button>

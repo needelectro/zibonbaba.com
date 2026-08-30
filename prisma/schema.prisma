@@ -61,6 +61,7 @@ model User {
   walletBalance       Float     @default(0.0)
   loyaltyPoints       Int       @default(0)
   referralCode        String?   @unique
+  passwordResetTokens PasswordResetToken[]
 }
 
 model Session {
@@ -494,6 +495,59 @@ model AuditLog {
   createdAt DateTime @default(now())
 
   @@index([createdAt])
+}
+
+// =============================================================================
+// COUPON MANAGER
+// =============================================================================
+
+model Coupon {
+  id        String   @id @default(uuid())
+  code      String   @unique
+  discount  Float    // percentage e.g. 10 = 10%
+  expiry    String   // ISO date string
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+// =============================================================================
+// HRM — EMPLOYEES
+// =============================================================================
+
+model Employee {
+  id         String   @id @default(uuid())
+  name       String
+  role       String   // Operations Manager | Sales Staff etc.
+  dept       String   @default("Administration")
+  salary     Float    @default(30000)
+  attendance String   @default("100%")
+  status     String   @default("Processing") // Paid | Processing | Pending
+  createdAt  DateTime @default(now())
+}
+
+// =============================================================================
+// CRM NOTES
+// =============================================================================
+
+model CRMNote {
+  id        String   @id @default(uuid())
+  name      String
+  note      String
+  createdAt DateTime @default(now())
+}
+
+// =============================================================================
+// PASSWORD RESET TOKENS
+// =============================================================================
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
 }
 
 // =============================================================================

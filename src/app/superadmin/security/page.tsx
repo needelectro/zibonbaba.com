@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import SuperAdminLayout from '@/components/superadmin-layout';
 import {
   Lock,
@@ -66,6 +66,29 @@ export default function SecurityLogsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [riskFilter, setRiskFilter] = useState<string>('ALL');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null;
+    if (token) {
+      fetch('/api/admin/audit-logs', { headers: { Authorization: `Bearer ${token}` } })
+        .then(res => res.json())
+        .then(data => {
+          if (data.logs && Array.isArray(data.logs) && data.logs.length > 0) {
+            setLogs(data.logs.map((l: any) => ({
+              id: l.id,
+              timestamp: new Date(l.createdAt).toLocaleString(),
+              user: l.user?.email || 'System / Anonymous',
+              action: l.action,
+              ip: l.ipAddress || '127.0.0.1',
+              device: l.userAgent || 'Web Browser',
+              risk: (l.action.includes('FAIL') || l.action.includes('ERROR') || l.action.includes('BLOCK')) ? 'HIGH' : 'LOW',
+              status: l.action.includes('BLOCK') ? 'BLOCKED' : 'ALLOWED'
+            })));
+          }
+        })
+        .catch(() => {});
+    }
+  }, []);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);

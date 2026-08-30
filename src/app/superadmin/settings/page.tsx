@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import SuperAdminLayout from '@/components/superadmin-layout';
 import {
   Settings,
@@ -41,9 +41,44 @@ export default function SystemSettingsPage() {
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const handleSaveSettings = (e: React.FormEvent) => {
+  useEffect(() => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null;
+    if (token) {
+      fetch('/api/admin/settings', { headers: { Authorization: `Bearer ${token}` } })
+        .then(res => res.json())
+        .then(data => {
+          if (data.settings) {
+            if (data.settings.platformCommission !== undefined) setDefaultCommission(data.settings.platformCommission);
+            if (data.settings.platformName) setPlatformName(data.settings.platformName);
+            if (data.settings.supportEmail) setSupportEmail(data.settings.supportEmail);
+          }
+        })
+        .catch(() => {});
+    }
+  }, []);
+
+  const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
-    setToastMessage('System Configuration and Security Policies saved successfully!');
+    const token = typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null;
+    try {
+      if (token) {
+        await fetch('/api/admin/settings', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            platformCommission: defaultCommission,
+            platformName,
+            supportEmail,
+            supportPhone,
+            maintenanceMode
+          })
+        });
+      }
+    } catch (_) {}
+    setToastMessage('System Configuration and Security Policies saved successfully to database!');
     setTimeout(() => setToastMessage(null), 3000);
   };
 

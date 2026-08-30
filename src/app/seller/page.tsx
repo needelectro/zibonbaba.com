@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  TrendingUp, Package, ShoppingBag, DollarSign, AlertTriangle, RefreshCw, X, Lock, ShieldAlert,
+  TrendingUp, Package, ShoppingBag, DollarSign, AlertTriangle, RefreshCw, X, Lock, ShieldAlert, Shield, ShieldCheck,
   Trash2, Edit, Clock, Wallet, Bell, Sparkles, Check, LogOut, Plus, ExternalLink, ArrowRight, Store, Users
 } from 'lucide-react';
 import Link from 'next/link';
@@ -986,8 +986,11 @@ export default function SellerPortalPage() {
                       <tr key={o.id} className="hover:bg-white/5 transition-colors">
                         <td className="py-3.5 px-3 font-mono font-bold text-primary">{o.id}</td>
                         <td className="py-3.5 px-3">
-                          <p className="text-white font-bold">{o.customerName}</p>
-                          {o.customerPhone && <p className="text-[10px] text-slate-500">{o.customerPhone}</p>}
+                          <p className="text-white font-bold flex items-center gap-1.5">
+                            <Shield className="w-3 h-3 text-emerald-400" />
+                            {o.customerName || 'Verified Buyer'}
+                          </p>
+                          <span className="text-[9px] text-emerald-400/80 font-mono">Customer Privacy Protected</span>
                         </td>
                         <td className="py-3.5 px-3 font-bold">৳{o.subTotal.toLocaleString()}</td>
                         <td className="py-3.5 px-3 font-bold text-emerald-400">৳{o.sellerPayout.toLocaleString()}</td>

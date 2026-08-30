@@ -1,17 +1,39 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { Mail, Loader2, AlertCircle, CheckCircle2, ArrowLeft, Send } from 'lucide-react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { Mail, Lock, Eye, EyeOff, Loader2, AlertCircle, CheckCircle2, ArrowLeft, Send, KeyRound } from 'lucide-react';
 
 type PageState = 'idle' | 'loading' | 'success' | 'error';
 
-export default function ForgotPasswordPage() {
+function ForgotPasswordContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const tokenParam = searchParams.get('token');
+  const emailParam = searchParams.get('email');
+
+  const [isResetMode, setIsResetMode] = useState(false);
   const [email, setEmail] = useState('');
+  const [token, setToken] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [pageState, setPageState] = useState<PageState>('idle');
   const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  useEffect(() => {
+    if (tokenParam) {
+      setIsResetMode(true);
+      setToken(tokenParam);
+    }
+    if (emailParam) {
+      setEmail(emailParam);
+    }
+  }, [tokenParam, emailParam]);
+
+  const handleRequestReset = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) {
       setPageState('error');
@@ -33,9 +55,55 @@ export default function ForgotPasswordPage() {
         setPageState('error');
         return;
       }
+      setSuccessMsg(data.message || 'If this email is registered, a password reset link has been dispatched.');
       setPageState('success');
     } catch {
       setErrorMsg('Could not connect to the server. Please try again later.');
+      setPageState('error');
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPassword || !confirmPassword) {
+      setErrorMsg('Please enter and confirm your new password.');
+      setPageState('error');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setErrorMsg('Passwords do not match.');
+      setPageState('error');
+      return;
+    }
+    if (newPassword.length < 6) {
+      setErrorMsg('Password must be at least 6 characters long.');
+      setPageState('error');
+      return;
+    }
+
+    setErrorMsg('');
+    setPageState('loading');
+
+    try {
+      const res = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, email, newPassword }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setErrorMsg(data.error || 'Failed to reset password. The link may have expired.');
+        setPageState('error');
+        return;
+      }
+
+      setSuccessMsg('Your password has been reset successfully. Redirecting to login...');
+      setPageState('success');
+      setTimeout(() => {
+        router.push('/login');
+      }, 2500);
+    } catch {
+      setErrorMsg('Network error. Please try again later.');
       setPageState('error');
     }
   };
@@ -48,7 +116,8 @@ export default function ForgotPasswordPage() {
         <div className="absolute top-[-10%] left-[20%] w-[400px] h-[400px] rounded-full bg-primary/10 blur-[100px] animate-pulse" />
         <div className="absolute bottom-[-5%] right-[10%] w-[350px] h-[350px] rounded-full bg-primary/5 blur-[80px] animate-pulse" style={{ animationDelay: '1s' }} />
       </div>
-      <div className="absolute inset-0 z-0 opacity-5"
+      <div
+        className="absolute inset-0 z-0 opacity-5"
         style={{
           backgroundImage: 'linear-gradient(rgba(255,193,7,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(255,193,7,0.3) 1px, transparent 1px)',
           backgroundSize: '40px 40px'
@@ -62,7 +131,7 @@ export default function ForgotPasswordPage() {
             <span className="text-3xl font-black text-gray-900">Z</span>
           </div>
           <h1 className="text-3xl font-black text-primary tracking-tight">Zibonbaba</h1>
-          <p className="text-gray-400 text-sm mt-1">Account Recovery</p>
+          <p className="text-gray-400 text-sm mt-1">{isResetMode ? 'Set New Password' : 'Account Recovery'}</p>
         </div>
 
         {/* Glass Card */}
@@ -73,14 +142,11 @@ export default function ForgotPasswordPage() {
               <div className="w-20 h-20 bg-green-500/20 border border-green-500/30 rounded-full flex items-center justify-center mx-auto mb-6">
                 <CheckCircle2 size={40} className="text-green-400" />
               </div>
-              <h2 className="text-xl font-bold text-white mb-2">Check Your Email</h2>
-              <p className="text-gray-400 text-sm mb-2">
-                Password reset link sent to your email
+              <h2 className="text-xl font-bold text-white mb-2">{isResetMode ? 'Password Reset Complete' : 'Check Your Email'}</h2>
+              <p className="text-gray-400 text-sm mb-4 leading-relaxed">
+                {successMsg}
               </p>
-              <p className="text-primary font-medium text-sm mb-8 break-all">{email}</p>
-              <p className="text-gray-500 text-xs mb-8">
-                If you don&apos;t see it, please check your spam folder. The link expires in 30 minutes.
-              </p>
+              {!isResetMode && <p className="text-primary font-medium text-sm mb-6 break-all">{email}</p>}
               <Link
                 href="/login"
                 className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-accent text-gray-900 font-bold px-8 py-3 rounded-lg transition-all shadow-glow"
@@ -88,20 +154,19 @@ export default function ForgotPasswordPage() {
                 <ArrowLeft size={16} /> Back to Sign In
               </Link>
             </div>
-          ) : (
-            /* Form State */
+          ) : isResetMode ? (
+            /* Reset Password Form */
             <>
               <div className="mb-6">
                 <div className="w-12 h-12 bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-center mb-4">
-                  <Mail size={24} className="text-primary" />
+                  <KeyRound size={24} className="text-primary" />
                 </div>
-                <h2 className="text-xl font-bold text-white mb-1">Forgot Password?</h2>
+                <h2 className="text-xl font-bold text-white mb-1">Create New Password</h2>
                 <p className="text-gray-400 text-sm leading-relaxed">
-                  No worries! Enter your email address and we&apos;ll send you a secure link to reset your password.
+                  Enter a new strong password for your account <strong className="text-white">{email}</strong>.
                 </p>
               </div>
 
-              {/* Error */}
               {pageState === 'error' && errorMsg && (
                 <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg px-4 py-3 mb-5 text-sm">
                   <AlertCircle size={16} className="shrink-0" />
@@ -109,7 +174,89 @@ export default function ForgotPasswordPage() {
                 </div>
               )}
 
-              <form onSubmit={handleSubmit} className="space-y-5">
+              <form onSubmit={handleResetPassword} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1.5">New Password</label>
+                  <div className="relative">
+                    <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={newPassword}
+                      onChange={(e) => {
+                        setNewPassword(e.target.value);
+                        if (pageState === 'error') setPageState('idle');
+                      }}
+                      placeholder="Minimum 6 characters"
+                      required
+                      minLength={6}
+                      className="w-full bg-white/5 border border-white/10 text-white placeholder-gray-600 rounded-lg pl-10 pr-10 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 p-1"
+                    >
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1.5">Confirm New Password</label>
+                  <div className="relative">
+                    <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={confirmPassword}
+                      onChange={(e) => {
+                        setConfirmPassword(e.target.value);
+                        if (pageState === 'error') setPageState('idle');
+                      }}
+                      placeholder="Re-enter password"
+                      required
+                      minLength={6}
+                      className="w-full bg-white/5 border border-white/10 text-white placeholder-gray-600 rounded-lg pl-10 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={pageState === 'loading'}
+                  className="w-full bg-primary hover:bg-primary-accent text-gray-900 font-bold py-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-glow disabled:opacity-60"
+                >
+                  {pageState === 'loading' ? (
+                    <>
+                      <Loader2 size={18} className="animate-spin" />
+                      <span>Updating Password...</span>
+                    </>
+                  ) : (
+                    <span>Set New Password</span>
+                  )}
+                </button>
+              </form>
+            </>
+          ) : (
+            /* Forgot Password Request Form */
+            <>
+              <div className="mb-6">
+                <div className="w-12 h-12 bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-center mb-4">
+                  <Mail size={24} className="text-primary" />
+                </div>
+                <h2 className="text-xl font-bold text-white mb-1">Forgot Password?</h2>
+                <p className="text-gray-400 text-sm leading-relaxed">
+                  Enter your email address and we&apos;ll send you a secure link to reset your password.
+                </p>
+              </div>
+
+              {pageState === 'error' && errorMsg && (
+                <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg px-4 py-3 mb-5 text-sm">
+                  <AlertCircle size={16} className="shrink-0" />
+                  <span>{errorMsg}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleRequestReset} className="space-y-5">
                 <div>
                   <label htmlFor="forgot-email" className="block text-sm font-medium text-gray-300 mb-1.5">
                     Email Address
@@ -136,7 +283,7 @@ export default function ForgotPasswordPage() {
                   id="forgot-submit-btn"
                   type="submit"
                   disabled={pageState === 'loading'}
-                  className="w-full bg-primary hover:bg-primary-accent active:bg-primary-dark text-gray-900 font-bold py-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-glow hover:shadow-[0_0_20px_rgba(255,193,7,0.4)] disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-full bg-primary hover:bg-primary-accent text-gray-900 font-bold py-3 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-glow disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {pageState === 'loading' ? (
                     <>
@@ -164,13 +311,15 @@ export default function ForgotPasswordPage() {
             </>
           )}
         </div>
-
-        {/* Help note */}
-        <p className="text-center text-xs text-gray-600 mt-6">
-          Need help?{' '}
-          <span className="text-gray-500 hover:text-primary cursor-pointer transition-colors">Contact Support</span>
-        </p>
       </div>
     </div>
+  );
+}
+
+export default function ForgotPasswordPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-neutral-dark flex items-center justify-center text-white"><Loader2 className="animate-spin" size={32} /></div>}>
+      <ForgotPasswordContent />
+    </Suspense>
   );
 }

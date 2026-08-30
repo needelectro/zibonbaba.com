@@ -34,8 +34,8 @@ export async function GET(request: Request) {
       return {
         id: o.id,
         date: o.createdAt.toISOString(),
-        customerName: o.customer?.profile?.fullName || o.customer?.email || 'Customer',
-        customerPhone: o.customer?.phone || '',
+        customerName: `Verified Buyer (#${o.id.slice(-6).toUpperCase()})`,
+        customerPhone: null,
         subTotal: o.subTotal,
         total: o.total,
         platformFee,

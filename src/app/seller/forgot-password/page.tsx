@@ -20,8 +20,16 @@ export default function SellerForgotPasswordPage() {
     setLoading(true);
 
     try {
-      // Send reset request
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim().toLowerCase() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || 'Failed to dispatch password recovery link.');
+        return;
+      }
       setSubmitted(true);
     } catch {
       setError('Could not process password reset. Please try again.');

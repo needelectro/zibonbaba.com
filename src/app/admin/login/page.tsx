@@ -7,6 +7,7 @@ import {
   KeyRound, ShieldCheck, ArrowRight
 } from 'lucide-react';
 import { useStore } from '@/store/useStore';
+import { getDashboardForRole, isNonCustomerRole } from '@/utils/roleRoutes';
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -37,14 +38,14 @@ export default function AdminLoginPage() {
             try { userRole = JSON.parse(uStr).role; } catch (_) {}
           }
         }
-        const normalized = userRole ? userRole.toUpperCase() : '';
-        if (normalized !== 'ADMIN' && normalized !== 'SUPER_ADMIN') {
+        if (!isNonCustomerRole(userRole)) {
           setError('Access Denied. You do not have platform administrator privileges.');
           useStore.getState().logout();
           return;
         }
 
-        router.push('/admin');
+        const targetDashboard = getDashboardForRole(userRole);
+        router.push(targetDashboard === '/' ? '/admin' : targetDashboard);
       } else {
         setError('Invalid administrative credentials or account locked.');
       }

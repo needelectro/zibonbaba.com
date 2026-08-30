@@ -69,12 +69,24 @@ export async function getAuthUser(req?: Request): Promise<AuthUser | null> {
   return null;
 }
 
+export const ALL_ADMIN_ROLES = [
+  'SUPER_ADMIN',
+  'ADMIN',
+  'MANAGER',
+  'ACCOUNTANT',
+  'CUSTOMER_SUPPORT',
+  'MARKETING',
+  'WAREHOUSE_MANAGER',
+  'INVENTORY_MANAGER',
+  'DELIVERY_MANAGER'
+];
+
 /**
  * Ensures the authenticated user has one of the allowed administrative roles.
  */
 export async function requireAdminRole(
   req?: Request,
-  allowedRoles: string[] = ['SUPER_ADMIN', 'ADMIN']
+  allowedRoles: string[] = ALL_ADMIN_ROLES
 ): Promise<{ user: AuthUser | null; error: string | null; status: number }> {
   const user = await getAuthUser(req);
 

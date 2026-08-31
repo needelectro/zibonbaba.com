@@ -43,10 +43,10 @@ export async function sendNotification(options: DispatchNotificationOptions): Pr
 export async function dispatchOrderStatusEvents(params: {
   orderId: string;
   newStatus: string;
-  customerId?: string;
-  sellerOwnerId?: string;
-  resellerId?: string;
-  deliveryManId?: string;
+  customerId?: string | null;
+  sellerOwnerId?: string | null;
+  resellerId?: string | null;
+  deliveryManId?: string | null;
   orderNumber?: string;
   tx?: any;
 }): Promise<void> {

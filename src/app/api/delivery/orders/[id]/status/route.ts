@@ -196,9 +196,9 @@ export async function POST(
     await dispatchOrderStatusEvents({
       orderId: assignment.orderId,
       newStatus: normalizedTarget,
-      customerId: assignment.order?.customerId,
-      sellerOwnerId: assignment.order?.store?.ownerId,
-      resellerId: assignment.order?.resellerOrder?.resellerId,
+      customerId: assignment.order?.customerId || undefined,
+      sellerOwnerId: assignment.order?.store?.ownerId || undefined,
+      resellerId: assignment.order?.resellerOrder?.resellerId || undefined,
       deliveryManId: userId
     });
 

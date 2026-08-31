@@ -31,6 +31,16 @@ export async function GET(request: Request) {
       });
 
       const firstVariant = p.variants[0];
+      let variantAttrs: any = {};
+      try {
+        if (firstVariant?.attributes) {
+          variantAttrs = typeof firstVariant.attributes === 'string' ? JSON.parse(firstVariant.attributes) : firstVariant.attributes;
+        }
+      } catch (_) {}
+
+      const mainImage = variantAttrs.image || (Array.isArray(variantAttrs.images) && variantAttrs.images[0]) || null;
+      const galleryImages = Array.isArray(variantAttrs.images) ? variantAttrs.images : (mainImage ? [mainImage] : []);
+
       return {
         id: p.id,
         name: p.name,
@@ -41,6 +51,8 @@ export async function GET(request: Request) {
         status: p.status,
         sku: firstVariant?.sku || p.id.substring(0, 8).toUpperCase(),
         stock: totalStock || 10,
+        image: mainImage,
+        images: galleryImages,
         createdAt: p.createdAt
       };
     });
@@ -60,7 +72,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { name, description, price, categoryId, category, sku, stock = 20 } = body;
+    const { name, description, price, categoryId, category, sku, stock = 20, image, images } = body;
 
     if (!name || !price) {
       return NextResponse.json({ error: 'Product name and price are required.' }, { status: 400 });
@@ -103,6 +115,15 @@ export async function POST(request: Request) {
     const numPrice = typeof price === 'string' ? parseFloat(price) : price;
     const numStock = typeof stock === 'string' ? parseInt(stock, 10) : stock;
 
+    const primaryImage = image ? image.trim() : (Array.isArray(images) && images.length > 0 ? images[0] : null);
+    const gallery = Array.isArray(images) && images.length > 0 ? images : (primaryImage ? [primaryImage] : []);
+
+    const variantAttributes = JSON.stringify({
+      variant: 'Standard',
+      image: primaryImage,
+      images: gallery
+    });
+
     // Create product, variant, and inventory
     const newProduct = await prisma.product.create({
       data: {
@@ -116,7 +137,7 @@ export async function POST(request: Request) {
           create: {
             sku: generatedSku,
             price: numPrice,
-            attributes: JSON.stringify({ variant: 'Standard' }),
+            attributes: variantAttributes,
             inventory: {
               create: {
                 quantity: isNaN(numStock) ? 20 : numStock,
@@ -136,8 +157,12 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: 'Product SKU created successfully.',
-      product: newProduct
+      message: 'Product SKU created successfully with image.',
+      product: {
+        ...newProduct,
+        image: primaryImage,
+        images: gallery
+      }
     }, { status: 201 });
   } catch (err: any) {
     console.error('Seller Product Create API Error:', err);

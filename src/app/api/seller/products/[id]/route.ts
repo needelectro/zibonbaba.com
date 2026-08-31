@@ -31,7 +31,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { name, description, price, stock, status: productStatus, category, categoryId } = body;
+    const { name, description, price, stock, status: productStatus, category, categoryId, image, images } = body;
 
     let targetCategoryId = categoryId;
     if (!targetCategoryId && category) {
@@ -62,15 +62,32 @@ export async function PUT(
       }
     });
 
-    // Update variant price / stock if provided
+    // Update variant price / stock / image attributes if provided
     if (product.variants[0]) {
-      const variantId = product.variants[0].id;
-      if (numPrice !== undefined) {
-        await prisma.productVariant.update({
-          where: { id: variantId },
-          data: { price: numPrice }
-        });
+      const primaryVariant = product.variants[0];
+      const variantId = primaryVariant.id;
+      
+      let existingAttrs: any = {};
+      try {
+        if (primaryVariant.attributes) {
+          existingAttrs = typeof primaryVariant.attributes === 'string' ? JSON.parse(primaryVariant.attributes) : primaryVariant.attributes;
+        }
+      } catch (_) {}
+
+      if (image !== undefined || images !== undefined) {
+        if (image !== undefined) existingAttrs.image = image;
+        if (images !== undefined) existingAttrs.images = images;
+        else if (image && !existingAttrs.images) existingAttrs.images = [image];
       }
+
+      await prisma.productVariant.update({
+        where: { id: variantId },
+        data: {
+          ...(numPrice !== undefined ? { price: numPrice } : {}),
+          attributes: JSON.stringify(existingAttrs)
+        }
+      });
+
       if (numStock !== undefined) {
         const inv = await prisma.inventory.findFirst({ where: { variantId } });
         if (inv) {

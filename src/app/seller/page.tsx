@@ -1,9 +1,8 @@
-'use client';
-
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   TrendingUp, Package, ShoppingBag, DollarSign, AlertTriangle, RefreshCw, X, Lock, ShieldAlert, Shield, ShieldCheck,
-  Trash2, Edit, Clock, Wallet, Bell, Sparkles, Check, LogOut, Plus, ExternalLink, ArrowRight, Store, Users
+  Trash2, Edit, Clock, Wallet, Bell, Sparkles, Check, LogOut, Plus, ExternalLink, ArrowRight, Store, Users,
+  Upload, Image as ImageIcon, Link as LinkIcon, Camera, CheckCircle2, Loader2
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -21,6 +20,8 @@ interface SellerProduct {
   sku: string;
   stock: number;
   status: string;
+  image?: string | null;
+  images?: string[];
   createdAt: string;
 }
 
@@ -83,6 +84,10 @@ export default function SellerPortalPage() {
   const [newProdStock, setNewProdStock] = useState('20');
   const [newProdCategory, setNewProdCategory] = useState('Electronics & Gadgets');
   const [newProdDesc, setNewProdDesc] = useState('');
+  const [newProdImage, setNewProdImage] = useState('');
+  const [newProdImages, setNewProdImages] = useState<string[]>([]);
+  const [prodImageUploadMode, setProdImageUploadMode] = useState<'upload' | 'url'>('upload');
+  const [isUploadingProdImage, setIsUploadingProdImage] = useState(false);
   const [isSubmittingProd, setIsSubmittingProd] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
@@ -93,6 +98,14 @@ export default function SellerPortalPage() {
   const [editPrice, setEditPrice] = useState('');
   const [editStock, setEditStock] = useState('');
   const [editDesc, setEditDesc] = useState('');
+  const [editProdImage, setEditProdImage] = useState('');
+  const [editProdImages, setEditProdImages] = useState<string[]>([]);
+  const [editProdImageUploadMode, setEditProdImageUploadMode] = useState<'upload' | 'url'>('upload');
+  const [isUploadingEditImage, setIsUploadingEditImage] = useState(false);
+
+  // File input refs
+  const addImageFileInputRef = useRef<HTMLInputElement | null>(null);
+  const editImageFileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Store Settings Form State
   const [storeNameInput, setStoreNameInput] = useState('');
@@ -304,6 +317,88 @@ export default function SellerPortalPage() {
     );
   }
 
+  // Upload image helper function
+  const uploadImageFile = async (file: File): Promise<string | null> => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('bucket', 'products');
+      formData.append('folder', 'seller-products');
+
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      if (res.ok && data.url) {
+        return data.url;
+      }
+      // Fallback to Base64 Data URL if storage bucket is not configured yet
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(file);
+      });
+    } catch (err) {
+      console.error('Image upload failed, generating preview URL:', err);
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(file);
+      });
+    }
+  };
+
+  // Handle image file selection for Add Product
+  const handleImageFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      setErrorMsg('Image file size must be less than 5MB.');
+      return;
+    }
+
+    setIsUploadingProdImage(true);
+    setErrorMsg('');
+    try {
+      const imageUrl = await uploadImageFile(file);
+      if (imageUrl) {
+        setNewProdImage(imageUrl);
+        setNewProdImages(prev => prev.includes(imageUrl) ? prev : [imageUrl, ...prev]);
+      }
+    } catch (err) {
+      setErrorMsg('Failed to process image file.');
+    } finally {
+      setIsUploadingProdImage(false);
+    }
+  };
+
+  // Handle image file selection for Edit Product
+  const handleEditImageFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image file size must be less than 5MB.');
+      return;
+    }
+
+    setIsUploadingEditImage(true);
+    try {
+      const imageUrl = await uploadImageFile(file);
+      if (imageUrl) {
+        setEditProdImage(imageUrl);
+        setEditProdImages(prev => prev.includes(imageUrl) ? prev : [imageUrl, ...prev]);
+      }
+    } catch (err) {
+      alert('Failed to process image file.');
+    } finally {
+      setIsUploadingEditImage(false);
+    }
+  };
+
   // Handle Add Product
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -326,7 +421,9 @@ export default function SellerPortalPage() {
           category: newProdCategory,
           sku: newProdSKU.trim() || undefined,
           stock: parseInt(newProdStock, 10) || 20,
-          description: newProdDesc.trim() || undefined
+          description: newProdDesc.trim() || undefined,
+          image: newProdImage.trim() || undefined,
+          images: newProdImages.length > 0 ? newProdImages : (newProdImage.trim() ? [newProdImage.trim()] : [])
         })
       });
       const data = await res.json();
@@ -339,7 +436,10 @@ export default function SellerPortalPage() {
       setNewProdPrice('');
       setNewProdSKU('');
       setNewProdDesc('');
-      setSuccessMsg('Product SKU registered successfully in your store catalog!');
+      setNewProdImage('');
+      setNewProdImages([]);
+      if (addImageFileInputRef.current) addImageFileInputRef.current.value = '';
+      setSuccessMsg('Product SKU with photo registered successfully in your store catalog!');
       setTimeout(() => setSuccessMsg(''), 4000);
       await fetchSellerProducts();
     } catch {
@@ -356,6 +456,8 @@ export default function SellerPortalPage() {
     setEditPrice(prod.price.toString());
     setEditStock(prod.stock.toString());
     setEditDesc(prod.description || '');
+    setEditProdImage(prod.image || '');
+    setEditProdImages(prod.images || (prod.image ? [prod.image] : []));
   };
 
   // Handle Save Edit Product
@@ -373,7 +475,9 @@ export default function SellerPortalPage() {
           name: editName.trim(),
           price: parseFloat(editPrice),
           stock: parseInt(editStock, 10),
-          description: editDesc.trim()
+          description: editDesc.trim(),
+          image: editProdImage.trim() || undefined,
+          images: editProdImages.length > 0 ? editProdImages : (editProdImage.trim() ? [editProdImage.trim()] : [])
         })
       });
       if (res.ok) {
@@ -812,11 +916,11 @@ export default function SellerPortalPage() {
                     <p className="text-xs text-slate-400">No products registered in this store yet.</p>
                     <p className="text-[11px] text-slate-500">Fill in the form on the right to register your first product SKU.</p>
                   </div>
-                ) : (
-                  <div className="overflow-x-auto">
+                                    <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs border-collapse">
                       <thead>
                         <tr className="border-b border-white/10 bg-white/5 text-slate-400 font-bold">
+                          <th className="py-2.5 px-3">Photo</th>
                           <th className="py-2.5 px-3">SKU</th>
                           <th className="py-2.5 px-3">Product Name</th>
                           <th className="py-2.5 px-3">Price</th>
@@ -827,8 +931,24 @@ export default function SellerPortalPage() {
                       <tbody className="divide-y divide-white/5 font-semibold text-slate-300">
                         {sellerProducts.map(p => (
                           <tr key={p.id} className="hover:bg-white/5 transition-colors">
+                            <td className="py-3 px-3">
+                              <div className="w-10 h-10 rounded-xl overflow-hidden bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+                                {p.image ? (
+                                  <img
+                                    src={p.image}
+                                    alt={p.name}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop&q=80';
+                                    }}
+                                  />
+                                ) : (
+                                  <ImageIcon className="w-4 h-4 text-slate-500" />
+                                )}
+                              </div>
+                            </td>
                             <td className="py-3 px-3 font-mono font-bold text-primary">{p.sku}</td>
-                            <td className="py-3 px-3 text-white font-bold">{p.name}</td>
+                            <td className="py-3 px-3 text-white font-bold max-w-[180px] truncate" title={p.name}>{p.name}</td>
                             <td className="py-3 px-3 font-bold">৳{p.price.toLocaleString()}</td>
                             <td className="py-3 px-3 text-center">
                               <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border ${
@@ -841,14 +961,14 @@ export default function SellerPortalPage() {
                               <div className="flex items-center justify-end gap-2">
                                 <button
                                   onClick={() => handleOpenEditProduct(p)}
-                                  className="p-1.5 bg-white/5 hover:bg-primary/20 hover:text-primary rounded-lg text-slate-400 transition"
-                                  title="Edit Product"
+                                  className="p-1.5 bg-white/5 hover:bg-primary/20 hover:text-primary rounded-lg text-slate-400 transition cursor-pointer"
+                                  title="Edit Product & Photo"
                                 >
                                   <Edit className="w-3.5 h-3.5" />
                                 </button>
                                 <button
                                   onClick={() => handleDeleteProductItem(p.id)}
-                                  className="p-1.5 bg-white/5 hover:bg-rose-500/20 hover:text-rose-400 rounded-lg text-slate-400 transition"
+                                  className="p-1.5 bg-white/5 hover:bg-rose-500/20 hover:text-rose-400 rounded-lg text-slate-400 transition cursor-pointer"
                                   title="Delete Product"
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
@@ -865,10 +985,131 @@ export default function SellerPortalPage() {
 
               {/* Add Product Form */}
               <div className="bg-white/5 border border-white/10 p-5 rounded-2xl shadow-xl space-y-4">
-                <h3 className="text-xs font-black text-slate-300 uppercase tracking-widest border-b border-white/10 pb-3">
-                  Add New Product SKU
+                <h3 className="text-xs font-black text-slate-300 uppercase tracking-widest border-b border-white/10 pb-3 flex items-center justify-between">
+                  <span>Add New Product SKU</span>
+                  <span className="text-[10px] text-primary font-bold flex items-center gap-1">
+                    <Camera className="w-3 h-3" /> With Photo
+                  </span>
                 </h3>
                 <form onSubmit={handleAddProduct} className="space-y-3 text-xs font-bold">
+                  {/* PRODUCT IMAGE UPLOAD SECTION */}
+                  <div className="bg-black/30 border border-white/10 rounded-2xl p-3.5 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[10px] text-slate-300 uppercase tracking-wider font-extrabold flex items-center gap-1.5">
+                        <ImageIcon className="w-3.5 h-3.5 text-primary" />
+                        <span>Product Photo</span>
+                      </label>
+                      <div className="flex items-center gap-1 bg-white/5 p-0.5 rounded-lg border border-white/10">
+                        <button
+                          type="button"
+                          onClick={() => setProdImageUploadMode('upload')}
+                          className={`px-2 py-0.5 rounded text-[9px] font-extrabold transition-all cursor-pointer ${
+                            prodImageUploadMode === 'upload' ? 'bg-primary text-gray-950 shadow-sm' : 'text-slate-400 hover:text-white'
+                          }`}
+                        >
+                          Upload File
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setProdImageUploadMode('url')}
+                          className={`px-2 py-0.5 rounded text-[9px] font-extrabold transition-all cursor-pointer ${
+                            prodImageUploadMode === 'url' ? 'bg-primary text-gray-950 shadow-sm' : 'text-slate-400 hover:text-white'
+                          }`}
+                        >
+                          Image URL
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Image Preview or Dropzone */}
+                    {newProdImage ? (
+                      <div className="relative group rounded-xl overflow-hidden border border-emerald-500/30 bg-white/5 p-2 flex items-center gap-3">
+                        <img
+                          src={newProdImage}
+                          alt="Uploaded Preview"
+                          className="w-16 h-16 rounded-lg object-cover border border-white/10 shrink-0"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop&q=80';
+                          }}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1 text-emerald-400 text-[10px] font-bold">
+                            <CheckCircle2 className="w-3 h-3" />
+                            <span>Photo Attached</span>
+                          </div>
+                          <p className="text-[10px] text-slate-400 truncate mt-0.5">{newProdImage}</p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (addImageFileInputRef.current) addImageFileInputRef.current.value = '';
+                              addImageFileInputRef.current?.click();
+                            }}
+                            className="text-[10px] text-primary hover:underline font-bold mt-1 inline-block cursor-pointer"
+                          >
+                            Replace photo
+                          </button>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setNewProdImage('');
+                            setNewProdImages([]);
+                            if (addImageFileInputRef.current) addImageFileInputRef.current.value = '';
+                          }}
+                          className="p-1.5 bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 rounded-lg transition-colors cursor-pointer"
+                          title="Remove Photo"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        {prodImageUploadMode === 'upload' ? (
+                          <div
+                            onClick={() => addImageFileInputRef.current?.click()}
+                            className={`border-2 border-dashed border-white/15 hover:border-primary/50 hover:bg-white/5 rounded-xl p-4 text-center cursor-pointer transition-all ${
+                              isUploadingProdImage ? 'opacity-50 pointer-events-none' : ''
+                            }`}
+                          >
+                            <input
+                              ref={addImageFileInputRef}
+                              type="file"
+                              accept="image/png, image/jpeg, image/webp, image/gif"
+                              onChange={handleImageFileSelected}
+                              className="hidden"
+                            />
+                            {isUploadingProdImage ? (
+                              <div className="flex flex-col items-center gap-2 text-slate-400 py-1">
+                                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                                <span className="text-[11px] font-bold">Uploading product image...</span>
+                              </div>
+                            ) : (
+                              <div className="flex flex-col items-center gap-1.5 text-slate-400 py-1">
+                                <Upload className="w-6 h-6 text-primary mb-0.5" />
+                                <p className="text-[11px] font-bold text-white">Click or Drop Photo Here</p>
+                                <span className="text-[9px] text-slate-500">Supports JPG, PNG, WEBP (Max 5MB)</span>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="space-y-1.5">
+                            <div className="relative">
+                              <LinkIcon className="w-3.5 h-3.5 absolute left-3 top-3 text-slate-400" />
+                              <input
+                                type="url"
+                                placeholder="https://example.com/product-image.jpg"
+                                value={newProdImage}
+                                onChange={e => setNewProdImage(e.target.value)}
+                                className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pl-9 pr-3 text-white text-xs outline-none focus:border-primary"
+                              />
+                            </div>
+                            <span className="text-[9px] text-slate-500 block">Paste any public web image URL or CDN link</span>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+
                   <div>
                     <label className="block text-[10px] text-slate-400 uppercase mb-1">Product Name *</label>
                     <input
@@ -939,14 +1180,23 @@ export default function SellerPortalPage() {
                   </div>
                   <button
                     type="submit"
-                    disabled={isSubmittingProd}
-                    className="w-full bg-primary hover:bg-primary-accent text-gray-950 text-xs font-black py-3 rounded-xl transition-all shadow-glow cursor-pointer disabled:opacity-50"
+                    disabled={isSubmittingProd || isUploadingProdImage}
+                    className="w-full bg-primary hover:bg-primary-accent text-gray-950 text-xs font-black py-3 rounded-xl transition-all shadow-glow cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                   >
-                    {isSubmittingProd ? 'Publishing SKU...' : 'Publish Product to Store'}
+                    {isSubmittingProd ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Publishing SKU...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="w-4 h-4" />
+                        <span>Publish Product to Store</span>
+                      </>
+                    )}
                   </button>
                 </form>
               </div>
-            </div>
           </div>
         )}
 
@@ -1210,6 +1460,123 @@ export default function SellerPortalPage() {
                 Edit SKU: {editingProduct.sku}
               </h3>
               <form onSubmit={handleSaveEditProduct} className="space-y-3 text-xs font-bold">
+                {/* EDIT PRODUCT IMAGE UPLOAD SECTION */}
+                <div className="bg-black/30 border border-white/10 rounded-2xl p-3.5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] text-slate-300 uppercase tracking-wider font-extrabold flex items-center gap-1.5">
+                      <ImageIcon className="w-3.5 h-3.5 text-primary" />
+                      <span>Product Photo</span>
+                    </label>
+                    <div className="flex items-center gap-1 bg-white/5 p-0.5 rounded-lg border border-white/10">
+                      <button
+                        type="button"
+                        onClick={() => setEditProdImageUploadMode('upload')}
+                        className={`px-2 py-0.5 rounded text-[9px] font-extrabold transition-all cursor-pointer ${
+                          editProdImageUploadMode === 'upload' ? 'bg-primary text-gray-950 shadow-sm' : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        Upload File
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditProdImageUploadMode('url')}
+                        className={`px-2 py-0.5 rounded text-[9px] font-extrabold transition-all cursor-pointer ${
+                          editProdImageUploadMode === 'url' ? 'bg-primary text-gray-950 shadow-sm' : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        Image URL
+                      </button>
+                    </div>
+                  </div>
+
+                  {editProdImage ? (
+                    <div className="relative group rounded-xl overflow-hidden border border-emerald-500/30 bg-white/5 p-2 flex items-center gap-3">
+                      <img
+                        src={editProdImage}
+                        alt="Product Photo"
+                        className="w-14 h-14 rounded-lg object-cover border border-white/10 shrink-0"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop&q=80';
+                        }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1 text-emerald-400 text-[10px] font-bold">
+                          <CheckCircle2 className="w-3 h-3" />
+                          <span>Photo Linked</span>
+                        </div>
+                        <p className="text-[10px] text-slate-400 truncate mt-0.5">{editProdImage}</p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (editImageFileInputRef.current) editImageFileInputRef.current.value = '';
+                            editImageFileInputRef.current?.click();
+                          }}
+                          className="text-[10px] text-primary hover:underline font-bold mt-1 inline-block cursor-pointer"
+                        >
+                          Change photo
+                        </button>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditProdImage('');
+                          setEditProdImages([]);
+                          if (editImageFileInputRef.current) editImageFileInputRef.current.value = '';
+                        }}
+                        className="p-1.5 bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 rounded-lg transition-colors cursor-pointer"
+                        title="Remove Photo"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      {editProdImageUploadMode === 'upload' ? (
+                        <div
+                          onClick={() => editImageFileInputRef.current?.click()}
+                          className={`border-2 border-dashed border-white/15 hover:border-primary/50 hover:bg-white/5 rounded-xl p-3 text-center cursor-pointer transition-all ${
+                            isUploadingEditImage ? 'opacity-50 pointer-events-none' : ''
+                          }`}
+                        >
+                          <input
+                            ref={editImageFileInputRef}
+                            type="file"
+                            accept="image/png, image/jpeg, image/webp, image/gif"
+                            onChange={handleEditImageFileSelected}
+                            className="hidden"
+                          />
+                          {isUploadingEditImage ? (
+                            <div className="flex flex-col items-center gap-1.5 text-slate-400 py-1">
+                              <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                              <span className="text-[10px] font-bold">Uploading new image...</span>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col items-center gap-1 text-slate-400 py-1">
+                              <Upload className="w-5 h-5 text-primary mb-0.5" />
+                              <p className="text-[10px] font-bold text-white">Click or Drop New Photo</p>
+                              <span className="text-[8px] text-slate-500">Supports JPG, PNG, WEBP</span>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="space-y-1">
+                          <div className="relative">
+                            <LinkIcon className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
+                            <input
+                              type="url"
+                              placeholder="https://example.com/product-image.jpg"
+                              value={editProdImage}
+                              onChange={e => setEditProdImage(e.target.value)}
+                              className="w-full bg-white/5 border border-white/10 rounded-xl py-1.5 pl-9 pr-3 text-white text-xs outline-none focus:border-primary"
+                            />
+                          </div>
+                          <span className="text-[8px] text-slate-500 block">Enter web image URL</span>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+
                 <div>
                   <label className="block text-[10px] text-slate-400 uppercase mb-1">Product Name</label>
                   <input
@@ -1262,9 +1629,17 @@ export default function SellerPortalPage() {
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 bg-primary hover:bg-primary-accent text-gray-950 font-black py-2.5 rounded-xl transition-all shadow-glow"
+                    disabled={isUploadingEditImage}
+                    className="flex-1 bg-primary hover:bg-primary-accent text-gray-950 font-black py-2.5 rounded-xl transition-all shadow-glow flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
                   >
-                    Save Changes
+                    {isUploadingEditImage ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>Uploading...</span>
+                      </>
+                    ) : (
+                      <span>Save Changes</span>
+                    )}
                   </button>
                 </div>
               </form>

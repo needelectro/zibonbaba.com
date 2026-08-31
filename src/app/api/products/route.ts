@@ -100,13 +100,24 @@ export async function GET(request: Request) {
       const mainVariant = p.variants[0];
       const sku = mainVariant ? mainVariant.sku : 'SKU-NONE';
 
+      let customImage: string | null = null;
+      try {
+        if (mainVariant?.attributes) {
+          const parsed = typeof mainVariant.attributes === 'string' ? JSON.parse(mainVariant.attributes) : mainVariant.attributes;
+          if (parsed?.image) customImage = parsed.image;
+          else if (Array.isArray(parsed?.images) && parsed.images[0]) customImage = parsed.images[0];
+        }
+      } catch (_) {}
+
+      const displayImage = customImage || getProductImage(p.category?.name || '', p.name);
+
       return {
         id: p.id,
         name: p.name,
         price: p.basePrice,
         category: p.category?.name || 'Uncategorized',
         rating: 4.5 + Math.random() * 0.5,
-        image: getProductImage(p.category?.name || '', p.name),
+        image: displayImage,
         sku,
         stock: totalStock > 0 ? totalStock : 50,
         vendor: p.store?.name || 'Unknown',

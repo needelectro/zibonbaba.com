@@ -170,12 +170,6 @@ export default function Footer() {
             >
               💼 Reseller Hub
             </Link>
-            <Link
-              href="/admin/login"
-              className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-gray-300 font-semibold hover:text-white hover:bg-white/10 transition-all text-[11px]"
-            >
-              🛡️ Admin
-            </Link>
           </div>
         </div>
       </div>

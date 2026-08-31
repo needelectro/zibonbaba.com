@@ -48,9 +48,9 @@ export default function Footer() {
       </div>
 
       {/* Main Footer Links */}
-      <div className="max-w-[1440px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 py-12 px-4 lg:px-8">
+      <div className="max-w-[1440px] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8 py-12 px-4 lg:px-8">
         {/* Brand Column */}
-        <div>
+        <div className="lg:col-span-1">
           <Link href="/" className="flex items-center gap-2 group mb-4">
             <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center font-extrabold text-neutral-dark text-lg shadow-sm">
               Z
@@ -98,8 +98,32 @@ export default function Footer() {
           <ul className="flex flex-col gap-2.5 text-xs text-neutral-muted">
             <li><Link href="/seller/register" className="hover:text-primary transition-colors font-semibold text-yellow-400">Become a Seller / Open Store</Link></li>
             <li><Link href="/seller/login" className="hover:text-primary transition-colors">Seller Center Login</Link></li>
+            <li><Link href="/reseller/login" className="hover:text-primary transition-colors">Reseller Hub Portal</Link></li>
             <li><Link href="/seller/register" className="hover:text-primary transition-colors">Merchant Guidelines & Policies</Link></li>
-            <li><Link href="/seller/login" className="hover:text-primary transition-colors">Seller Support Hub</Link></li>
+          </ul>
+        </div>
+
+        {/* Delivery Partner */}
+        <div>
+          <h4 className="text-xs font-bold text-primary uppercase tracking-widest mb-4 flex items-center gap-1.5">
+            <Truck size={14} className="text-primary" /> Delivery Partner
+          </h4>
+          <ul className="flex flex-col gap-2.5 text-xs text-neutral-muted">
+            <li>
+              <Link
+                href="/delivery/login"
+                className="hover:text-primary transition-colors font-bold text-primary-accent flex items-center gap-1.5"
+              >
+                🚴 Delivery Man Login
+              </Link>
+            </li>
+            <li>
+              <Link href="/delivery/register" className="hover:text-primary transition-colors">
+                Join Delivery Fleet <span className="text-[10px] text-emerald-400 font-mono font-bold">(Earn ৳120+/drop)</span>
+              </Link>
+            </li>
+            <li><Link href="/tracking" className="hover:text-primary transition-colors">Live Shipment Tracker</Link></li>
+            <li><Link href="/delivery/login" className="hover:text-primary transition-colors">Courier Support Desk</Link></li>
           </ul>
         </div>
 
@@ -118,6 +142,41 @@ export default function Footer() {
               Subscribe
             </button>
           </form>
+        </div>
+      </div>
+
+      {/* Partner Portals Quick Access Strip */}
+      <div className="bg-neutral-darker/90 border-t border-neutral-body/20 py-3 px-4 lg:px-8">
+        <div className="max-w-[1440px] mx-auto flex flex-wrap items-center justify-between gap-3 text-xs">
+          <span className="text-neutral-muted font-bold text-[11px] uppercase tracking-wider">
+            Business & Rider Portals:
+          </span>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              href="/delivery/login"
+              className="px-2.5 py-1 rounded-lg bg-primary/10 border border-primary/30 text-primary-accent font-bold hover:bg-primary/20 transition-all flex items-center gap-1 text-[11px]"
+            >
+              🚴 Delivery Man Login
+            </Link>
+            <Link
+              href="/seller/login"
+              className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-gray-300 font-semibold hover:text-white hover:bg-white/10 transition-all text-[11px]"
+            >
+              🏪 Seller Center
+            </Link>
+            <Link
+              href="/reseller/login"
+              className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-gray-300 font-semibold hover:text-white hover:bg-white/10 transition-all text-[11px]"
+            >
+              💼 Reseller Hub
+            </Link>
+            <Link
+              href="/admin/login"
+              className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-gray-300 font-semibold hover:text-white hover:bg-white/10 transition-all text-[11px]"
+            >
+              🛡️ Admin
+            </Link>
+          </div>
         </div>
       </div>
 

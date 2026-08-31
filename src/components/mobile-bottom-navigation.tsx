@@ -6,7 +6,7 @@ import { Home, Grid, ShoppingCart, Package, User } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 
 export default function MobileBottomNavigation() {
-  const { mobileTab, setMobileTab, cart, orders, language } = useStore();
+  const { mobileTab, setMobileTab, cart, orders, language, role } = useStore();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -31,6 +31,13 @@ export default function MobileBottomNavigation() {
   ];
 
   const handleTabClick = (tabId: 'home' | 'categories' | 'cart' | 'orders' | 'account') => {
+    if (tabId === 'account') {
+      const normalizedRole = (role || '').toUpperCase();
+      if (normalizedRole === 'DELIVERY_MAN' || normalizedRole === 'DELIVERYMAN' || normalizedRole === 'COURIER') {
+        router.push('/delivery');
+        return;
+      }
+    }
     setMobileTab(tabId);
     if (pathname !== '/') {
       router.push('/');

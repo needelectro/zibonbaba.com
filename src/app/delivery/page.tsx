@@ -7,7 +7,7 @@ import {
   Bike, Navigation, Phone, MapPin, DollarSign, Wallet, CheckCircle2,
   AlertCircle, Clock, ShieldCheck, X, Check, Lock, Power, ChevronRight,
   TrendingUp, CreditCard, User, ExternalLink, RefreshCw, LogOut, Package,
-  AlertTriangle, Truck, Compass
+  AlertTriangle, Truck, Compass, Store, Eye
 } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 
@@ -15,7 +15,7 @@ type DeliveryTab = 'active' | 'orders' | 'earnings' | 'profile';
 
 export default function DeliveryPortalPage() {
   const router = useRouter();
-  const { isLoggedIn, role, username, logout } = useStore();
+  const { isLoggedIn, role, username, logout, login } = useStore();
 
   const [activeTab, setActiveTab] = useState<DeliveryTab>('active');
   const [isMounted, setIsMounted] = useState(false);
@@ -38,6 +38,9 @@ export default function DeliveryPortalPage() {
   const [isOtpModalOpen, setIsOtpModalOpen] = useState(false);
   const [isFailedModalOpen, setIsFailedModalOpen] = useState(false);
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
+  const [isTaskDetailModalOpen, setIsTaskDetailModalOpen] = useState(false);
+  const [selectedTaskDetail, setSelectedTaskDetail] = useState<any | null>(null);
+  const [customActiveTaskId, setCustomActiveTaskId] = useState<string | null>(null);
   const [selectedTaskForAction, setSelectedTaskForAction] = useState<any | null>(null);
 
   // Form States
@@ -181,9 +184,16 @@ export default function DeliveryPortalPage() {
       setOtpInput('');
       setProofNotes('');
 
-      fetchDashboard();
-      fetchOrders();
-      fetchEarnings();
+      // Refresh data
+      await Promise.all([
+        fetchDashboard(),
+        fetchOrders(),
+        fetchEarnings()
+      ]);
+
+      if (selectedTaskDetail && selectedTaskDetail.id === task.id) {
+        setSelectedTaskDetail((prev: any) => prev ? { ...prev, status: newStatus } : null);
+      }
     } catch (err: any) {
       setErrorMsg(err.message || 'Error updating order.');
     } finally {
@@ -235,53 +245,130 @@ export default function DeliveryPortalPage() {
     }
   };
 
+  // 1-Tap Demo Rider Login Handler
+  const handleDemoRiderLogin = async () => {
+    setActionLoading(true);
+    setErrorMsg('');
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('zibonbaba_token');
+        localStorage.removeItem('zibonbaba_user');
+        localStorage.removeItem('zibonbaba_role');
+      }
+      const ok = await login('courier@zibonbaba.com', 'Password123!');
+      if (ok) {
+        setSuccessMsg('Logged in as Rider Sabbir Ahmed!');
+        await Promise.all([
+          fetchDashboard(),
+          fetchOrders(),
+          fetchEarnings(),
+          fetchProfile()
+        ]);
+      } else {
+        setErrorMsg('Could not log in as demo rider. Please sign in manually.');
+      }
+    } catch (_) {
+      setErrorMsg('Error signing in as demo rider.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   if (!isMounted) return null;
 
-  if (!isLoggedIn) {
+  // Normalize and detect Rider Role from Zustand & LocalStorage
+  let effectiveRole = (role || '').toString().toUpperCase().trim();
+  if (typeof window !== 'undefined') {
+    const storedRole = localStorage.getItem('zibonbaba_role');
+    const storedUser = localStorage.getItem('zibonbaba_user');
+    if (storedRole) {
+      effectiveRole = storedRole.toUpperCase().trim();
+    } else if (storedUser) {
+      try {
+        const u = JSON.parse(storedUser);
+        if (u.role) effectiveRole = u.role.toUpperCase().trim();
+      } catch (_) {}
+    }
+  }
+
+  const isDeliveryRole =
+    effectiveRole === 'DELIVERY_MAN' ||
+    effectiveRole === 'DELIVERYMAN' ||
+    effectiveRole === 'COURIER' ||
+    effectiveRole === 'DELIVERY_MANAGER' ||
+    effectiveRole === 'DELIVERYMANAGER' ||
+    effectiveRole === 'SUPER_ADMIN' ||
+    effectiveRole === 'SUPERADMIN' ||
+    effectiveRole === 'ADMIN';
+
+  // If user is not logged in OR is logged in as a non-delivery role (e.g. Customer)
+  if (!isLoggedIn || !isDeliveryRole) {
     return (
       <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
-        <div className="bg-gray-900 border border-white/10 rounded-3xl p-8 max-w-sm w-full text-center text-white shadow-2xl">
-          <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mx-auto mb-6 border border-primary/20">
+        <div className="bg-gray-900 border border-white/10 rounded-3xl p-7 sm:p-9 max-w-md w-full text-center text-white shadow-2xl space-y-5">
+          <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mx-auto border border-primary/20 shadow-glow">
             <Bike className="w-8 h-8" />
           </div>
-          <h1 className="text-xl font-black mb-2">Delivery Partner Login</h1>
-          <p className="text-xs text-gray-400 mb-6">Sign in to access your courier dispatch console.</p>
-          <Link href="/delivery/login" className="bg-primary text-gray-950 font-black text-xs px-6 py-3 rounded-2xl block w-full text-center hover:bg-primary-accent transition-all shadow-glow">
-            Sign In as Rider
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
-  const normalizedRole = (role || '').toUpperCase();
-  if (
-    normalizedRole !== 'DELIVERY_MAN' &&
-    normalizedRole !== 'COURIER' &&
-    normalizedRole !== 'DELIVERY_MANAGER' &&
-    normalizedRole !== 'SUPER_ADMIN' &&
-    normalizedRole !== 'ADMIN'
-  ) {
-    return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
-        <div className="bg-gray-900 border border-white/10 rounded-3xl p-8 max-w-sm w-full text-center text-white shadow-2xl">
-          <div className="w-16 h-16 bg-rose-500/10 rounded-2xl flex items-center justify-center text-rose-500 mx-auto mb-6 border border-rose-500/20">
-            <Lock className="w-8 h-8" />
+          <div>
+            <h1 className="text-xl font-black mb-1.5 text-white">Delivery Partner Console</h1>
+            <p className="text-xs text-gray-400 leading-relaxed">
+              {isLoggedIn
+                ? `You are currently signed in as ${effectiveRole || 'Customer'}. Switch to your Delivery Partner account to access the courier dispatch console.`
+                : 'Sign in to access your courier dispatch console, manage deliveries, and view earnings.'}
+            </p>
           </div>
-          <h1 className="text-xl font-black mb-2">Rider Account Required</h1>
-          <p className="text-xs text-gray-400 mb-6">You must be registered as a Delivery Partner to access this mobile console.</p>
-          <Link href="/delivery/register" className="bg-primary text-gray-950 font-black text-xs px-6 py-3 rounded-2xl block w-full text-center mb-3">
-            Join Delivery Fleet
-          </Link>
-          <button onClick={() => router.push('/')} className="bg-white/5 border border-white/10 text-gray-300 font-black text-xs px-6 py-3 rounded-2xl block w-full">
-            Back to Marketplace
-          </button>
+
+          {errorMsg && (
+            <div className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-xl font-medium">
+              {errorMsg}
+            </div>
+          )}
+
+          <div className="space-y-2.5 pt-1">
+            {/* Primary: Sign In to Rider Console */}
+            <Link
+              href="/delivery/login"
+              className="bg-primary hover:bg-primary-accent text-gray-950 font-black text-xs px-6 py-3.5 rounded-2xl block w-full text-center transition-all shadow-glow cursor-pointer"
+            >
+              Sign In as Delivery Partner
+            </Link>
+
+            {/* 1-Tap Demo Rider Login */}
+            <button
+              type="button"
+              onClick={handleDemoRiderLogin}
+              disabled={actionLoading}
+              className="bg-amber-400/15 hover:bg-amber-400/25 border border-amber-400/40 text-amber-300 font-bold text-xs px-6 py-3 rounded-2xl block w-full text-center transition-all cursor-pointer disabled:opacity-50"
+            >
+              {actionLoading ? 'Signing in as Rider...' : '⚡ 1-Tap Demo Rider Login (Sabbir Ahmed)'}
+            </button>
+
+            {/* Join Fleet */}
+            <Link
+              href="/delivery/register"
+              className="bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 font-bold text-xs px-6 py-3 rounded-2xl block w-full text-center transition-all"
+            >
+              Join Delivery Fleet (Register)
+            </Link>
+
+            {/* Back to Marketplace */}
+            <Link
+              href="/"
+              className="text-gray-500 hover:text-gray-300 text-[11px] block text-center pt-1"
+            >
+              Back to Marketplace
+            </Link>
+          </div>
         </div>
       </div>
     );
   }
 
-  const activeTask = dashboardData?.activeDelivery;
+  const activeTask = (customActiveTaskId && orders.find(o => o.id === customActiveTaskId))
+    || dashboardData?.activeDelivery
+    || orders.find(o => ['ACCEPTED', 'PICKED_UP', 'IN_TRANSIT', 'ASSIGNED'].includes(o.status))
+    || null;
   const stats = dashboardData?.stats || {
     todayDeliveries: 0,
     todayEarnings: 0,
@@ -577,17 +664,25 @@ export default function DeliveryPortalPage() {
           <div className="space-y-4">
             {/* Filter Sub-tabs */}
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-              {['ALL', 'NEW', 'ACCEPTED', 'PICKUP', 'IN_TRANSIT', 'DELIVERED', 'FAILED'].map(tab => (
+              {[
+                { key: 'ALL', label: 'All Tasks' },
+                { key: 'NEW', label: 'New (Assigned)' },
+                { key: 'ACCEPTED', label: 'Accepted' },
+                { key: 'PICKUP', label: 'Picked Up' },
+                { key: 'IN_TRANSIT', label: 'In Transit' },
+                { key: 'DELIVERED', label: 'Delivered' },
+                { key: 'FAILED', label: 'Issues / Failed' }
+              ].map(tab => (
                 <button
-                  key={tab}
-                  onClick={() => setOrderFilterTab(tab)}
+                  key={tab.key}
+                  onClick={() => setOrderFilterTab(tab.key)}
                   className={`text-[11px] font-bold px-3 py-1.5 rounded-xl border whitespace-nowrap transition-all cursor-pointer ${
-                    orderFilterTab === tab
+                    orderFilterTab === tab.key
                       ? 'bg-primary text-gray-950 border-primary font-black shadow-glow'
                       : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'
                   }`}
                 >
-                  {tab}
+                  {tab.label}
                 </button>
               ))}
             </div>
@@ -595,37 +690,219 @@ export default function DeliveryPortalPage() {
             {/* Orders List */}
             <div className="space-y-3">
               {orders.map((ord) => (
-                <div key={ord.id} className="bg-gray-900/80 border border-white/10 rounded-2xl p-4 space-y-3">
-                  <div className="flex items-start justify-between">
+                <div
+                  key={ord.id}
+                  className="bg-gray-900/90 border border-white/10 hover:border-primary/40 rounded-2xl p-4 sm:p-5 space-y-3.5 transition-all shadow-lg"
+                >
+                  {/* Header Row */}
+                  <div className="flex items-start justify-between gap-2">
                     <div>
-                      <span className="font-mono text-xs font-bold text-white block">
-                        #{ord.orderId.slice(0, 8).toUpperCase()}
-                      </span>
-                      <p className="text-xs font-bold text-gray-200 mt-0.5">{ord.customerName}</p>
-                      <p className="text-[10px] text-gray-400">{ord.customerPhone}</p>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs font-black text-white">
+                          #{ord.orderId.slice(0, 8).toUpperCase()}
+                        </span>
+                        {ord.storeName && (
+                          <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[10px] text-gray-300 font-medium flex items-center gap-1">
+                            <Store size={10} className="text-primary" /> {ord.storeName}
+                          </span>
+                        )}
+                      </div>
+                      <h4 className="text-sm font-black text-gray-100 mt-1">{ord.customerName}</h4>
+                      <div className="flex items-center gap-3 text-xs text-gray-400 mt-0.5">
+                        <a
+                          href={`tel:${ord.customerPhone}`}
+                          className="flex items-center gap-1 text-primary hover:underline font-mono"
+                        >
+                          <Phone size={12} /> {ord.customerPhone}
+                        </a>
+                        {ord.altPhone && (
+                          <a
+                            href={`tel:${ord.altPhone}`}
+                            className="flex items-center gap-1 text-gray-400 hover:underline font-mono"
+                          >
+                            Alt: {ord.altPhone}
+                          </a>
+                        )}
+                      </div>
                     </div>
 
-                    <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black border ${
+                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-black border uppercase tracking-wider shrink-0 ${
                       ord.status === 'DELIVERED'
-                        ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
                         : ord.status === 'IN_TRANSIT'
-                        ? 'bg-blue-500/10 border-blue-500/20 text-blue-400'
+                        ? 'bg-blue-500/10 border-blue-500/30 text-blue-400'
+                        : ord.status === 'PICKED_UP'
+                        ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                        : ord.status === 'ACCEPTED'
+                        ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-300'
                         : ord.status === 'FAILED'
-                        ? 'bg-red-500/10 border-red-500/20 text-red-400'
-                        : 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+                        ? 'bg-red-500/10 border-red-500/30 text-red-400'
+                        : 'bg-primary/10 border-primary/30 text-primary'
                     }`}>
                       {ord.status}
                     </span>
                   </div>
 
-                  <div className="text-[11px] text-gray-400 space-y-1 pt-2 border-t border-white/5">
-                    <p className="flex items-start gap-1.5">
-                      <MapPin size={13} className="text-primary shrink-0 mt-0.5" />
-                      <span className="truncate">{ord.address}</span>
-                    </p>
-                    <div className="flex justify-between items-center pt-1 font-mono">
-                      <span className="text-gray-400">COD: <b className="text-amber-400">৳{ord.codAmount.toLocaleString()}</b></span>
-                      <span className="text-gray-400">Fee: <b className="text-emerald-400">+৳{ord.deliveryFee}</b></span>
+                  {/* Delivery Location & Items Preview */}
+                  <div className="text-xs text-gray-300 space-y-1.5 pt-2.5 border-t border-white/5">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-start gap-1.5 flex-1 min-w-0">
+                        <MapPin size={14} className="text-rose-400 shrink-0 mt-0.5" />
+                        <span className="truncate text-gray-300 text-xs">
+                          {ord.address}{ord.district ? `, ${ord.district}` : ''}
+                        </span>
+                      </div>
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ord.address + ', ' + (ord.district || 'Dhaka') + ', Bangladesh')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-400 hover:text-blue-300 font-bold text-[11px] flex items-center gap-1 shrink-0 px-2 py-0.5 rounded-lg bg-blue-500/10 border border-blue-500/20"
+                      >
+                        <Navigation size={11} /> Maps
+                      </a>
+                    </div>
+
+                    {ord.items && ord.items.length > 0 && (
+                      <div className="flex items-center gap-1 text-[11px] text-gray-400">
+                        <Package size={12} className="text-gray-500 shrink-0" />
+                        <span className="truncate">
+                          {ord.items.map((it: any) => `${it.quantity}x ${it.name}`).join(' • ')}
+                        </span>
+                      </div>
+                    )}
+
+                    <div className="flex justify-between items-center pt-2 font-mono text-xs">
+                      <span className="text-gray-400">
+                        COD to Collect: <b className="text-amber-400 font-bold">৳{ord.codAmount.toLocaleString()}</b>
+                      </span>
+                      <span className="text-gray-400">
+                        Rider Fee: <b className="text-emerald-400 font-bold">+৳{ord.deliveryFee}</b>
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Direct Action Bar */}
+                  <div className="pt-2.5 border-t border-white/5 flex flex-wrap items-center justify-between gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedTaskDetail(ord);
+                        setIsTaskDetailModalOpen(true);
+                      }}
+                      className="px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Eye size={14} /> Full Details
+                    </button>
+
+                    <div className="flex items-center gap-2">
+                      {ord.status === 'ASSIGNED' && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => handleTaskTransition(ord, 'REJECTED')}
+                            disabled={actionLoading}
+                            className="px-3 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-bold transition-colors cursor-pointer"
+                          >
+                            Decline
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleTaskTransition(ord, 'ACCEPTED')}
+                            disabled={actionLoading}
+                            className="px-3.5 py-2 rounded-xl bg-primary hover:bg-primary-accent text-gray-950 text-xs font-black transition-all shadow-glow cursor-pointer"
+                          >
+                            Accept Task
+                          </button>
+                        </>
+                      )}
+
+                      {ord.status === 'ACCEPTED' && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCustomActiveTaskId(ord.id);
+                              setActiveTab('active');
+                            }}
+                            className="px-2.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white text-xs font-semibold"
+                          >
+                            Set Active
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleTaskTransition(ord, 'PICKED_UP')}
+                            disabled={actionLoading}
+                            className="px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-gray-950 text-xs font-black transition-all shadow-glow flex items-center gap-1.5 cursor-pointer"
+                          >
+                            <Package size={14} /> Confirm Picked Up
+                          </button>
+                        </>
+                      )}
+
+                      {ord.status === 'PICKED_UP' && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCustomActiveTaskId(ord.id);
+                              setActiveTab('active');
+                            }}
+                            className="px-2.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white text-xs font-semibold"
+                          >
+                            Set Active
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleTaskTransition(ord, 'IN_TRANSIT')}
+                            disabled={actionLoading}
+                            className="px-3.5 py-2 rounded-xl bg-blue-500 hover:bg-blue-400 text-white text-xs font-black transition-all shadow-glow flex items-center gap-1.5 cursor-pointer"
+                          >
+                            <Navigation size={14} /> Start Transit
+                          </button>
+                        </>
+                      )}
+
+                      {ord.status === 'IN_TRANSIT' && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedTaskForAction(ord);
+                              setIsFailedModalOpen(true);
+                            }}
+                            className="px-2.5 py-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 text-xs font-bold cursor-pointer"
+                          >
+                            Issue
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedTaskForAction(ord);
+                              setIsOtpModalOpen(true);
+                            }}
+                            className="px-3.5 py-2 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-gray-950 text-xs font-black transition-all shadow-glow flex items-center gap-1.5 cursor-pointer"
+                          >
+                            <CheckCircle2 size={14} /> Deliver (OTP)
+                          </button>
+                        </>
+                      )}
+
+                      {ord.status === 'DELIVERED' && (
+                        <span className="px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-400 font-black text-xs flex items-center gap-1">
+                          <Check size={14} /> Completed
+                        </span>
+                      )}
+
+                      {ord.status === 'FAILED' && (
+                        <button
+                          type="button"
+                          onClick={() => handleTaskTransition(ord, 'IN_TRANSIT')}
+                          disabled={actionLoading}
+                          className="px-3 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-gray-950 text-xs font-black transition-all cursor-pointer"
+                        >
+                          Retry Delivery
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -634,7 +911,7 @@ export default function DeliveryPortalPage() {
               {orders.length === 0 && (
                 <div className="text-center py-12 bg-gray-900/40 rounded-3xl border border-white/5 space-y-2">
                   <Package className="w-8 h-8 text-gray-600 mx-auto" />
-                  <p className="text-xs text-gray-400 font-bold">No deliveries in this category.</p>
+                  <p className="text-xs text-gray-400 font-bold">No delivery tasks found in this filter.</p>
                 </div>
               )}
             </div>
@@ -974,6 +1251,286 @@ export default function DeliveryPortalPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* MODAL 4: TASK DETAILS & LIVE STATUS UPDATE MODAL */}
+      {/* ======================================================== */}
+      {isTaskDetailModalOpen && selectedTaskDetail && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-gray-900 border border-white/15 rounded-3xl max-w-lg w-full p-5 sm:p-6 space-y-4 shadow-2xl my-8">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between pb-3 border-b border-white/10">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-sm font-black text-white">
+                    #{selectedTaskDetail.orderId.slice(0, 8).toUpperCase()}
+                  </span>
+                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black border uppercase ${
+                    selectedTaskDetail.status === 'DELIVERED'
+                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                      : selectedTaskDetail.status === 'IN_TRANSIT'
+                      ? 'bg-blue-500/10 border-blue-500/30 text-blue-400'
+                      : selectedTaskDetail.status === 'PICKED_UP'
+                      ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                      : selectedTaskDetail.status === 'ACCEPTED'
+                      ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-300'
+                      : selectedTaskDetail.status === 'FAILED'
+                      ? 'bg-red-500/10 border-red-500/30 text-red-400'
+                      : 'bg-primary/10 border-primary/30 text-primary'
+                  }`}>
+                    {selectedTaskDetail.status}
+                  </span>
+                </div>
+                <p className="text-[11px] text-gray-400 mt-0.5">
+                  Assigned on: {new Date(selectedTaskDetail.assignedAt).toLocaleString()}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsTaskDetailModalOpen(false)}
+                className="text-gray-400 hover:text-white p-1 rounded-lg hover:bg-white/5 cursor-pointer"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Recipient Details */}
+            <div className="p-3.5 bg-white/5 rounded-2xl space-y-2.5 text-xs">
+              <div className="flex items-start justify-between">
+                <div>
+                  <span className="text-[10px] text-gray-400 uppercase font-bold block">Delivery Recipient</span>
+                  <h4 className="font-black text-white text-sm mt-0.5">{selectedTaskDetail.customerName}</h4>
+                  <p className="text-gray-300 font-mono text-xs mt-0.5">{selectedTaskDetail.customerPhone}</p>
+                  {selectedTaskDetail.altPhone && (
+                    <p className="text-gray-400 font-mono text-[11px]">Alt: {selectedTaskDetail.altPhone}</p>
+                  )}
+                </div>
+
+                <a
+                  href={`tel:${selectedTaskDetail.customerPhone}`}
+                  className="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-400 font-black text-xs flex items-center gap-1.5 shadow-glow"
+                >
+                  <Phone size={13} /> Call Customer
+                </a>
+              </div>
+
+              {/* Delivery Address */}
+              <div className="pt-2 border-t border-white/5 flex items-start justify-between gap-2">
+                <div className="flex items-start gap-2">
+                  <MapPin size={15} className="text-rose-400 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-gray-200 font-medium leading-snug">{selectedTaskDetail.address}</p>
+                    <p className="text-[10px] text-gray-500 mt-0.5">
+                      {selectedTaskDetail.upazila ? `${selectedTaskDetail.upazila}, ` : ''}{selectedTaskDetail.district || 'Dhaka'}
+                    </p>
+                  </div>
+                </div>
+
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedTaskDetail.address + ', ' + (selectedTaskDetail.district || 'Dhaka') + ', Bangladesh')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-2.5 py-1.5 rounded-xl bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/40 text-blue-400 font-bold text-xs flex items-center gap-1 shrink-0"
+                >
+                  <Navigation size={12} /> Maps
+                </a>
+              </div>
+            </div>
+
+            {/* Merchant / Store Origin */}
+            {selectedTaskDetail.storeName && (
+              <div className="p-3 bg-white/5 rounded-2xl flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2">
+                  <Store size={15} className="text-primary" />
+                  <div>
+                    <span className="text-[10px] text-gray-400 uppercase font-bold block">Pickup Merchant</span>
+                    <span className="font-bold text-gray-200">{selectedTaskDetail.storeName}</span>
+                  </div>
+                </div>
+                <span className="px-2 py-0.5 rounded-md bg-primary/10 text-primary font-mono text-[10px]">
+                  Dispatch Hub
+                </span>
+              </div>
+            )}
+
+            {/* Package Items Breakdown */}
+            <div className="space-y-2">
+              <span className="text-[11px] font-bold text-gray-300 uppercase tracking-wider block">
+                Package Contents ({selectedTaskDetail.items?.length || 0} items)
+              </span>
+              <div className="bg-gray-950/60 border border-white/5 rounded-2xl p-3 max-h-36 overflow-y-auto space-y-2 text-xs">
+                {selectedTaskDetail.items?.map((it: any) => (
+                  <div key={it.id} className="flex items-center justify-between py-1 border-b border-white/5 last:border-0">
+                    <div>
+                      <p className="font-bold text-gray-200">{it.name}</p>
+                      <span className="font-mono text-[10px] text-gray-500">SKU: {it.sku}</span>
+                    </div>
+                    <div className="text-right font-mono">
+                      <span className="font-bold text-white">{it.quantity}x</span>
+                      <span className="text-gray-400 text-[10px] block">৳{it.price.toLocaleString()}</span>
+                    </div>
+                  </div>
+                ))}
+                {(!selectedTaskDetail.items || selectedTaskDetail.items.length === 0) && (
+                  <p className="text-xs text-gray-500 text-center py-2">General Parcel Package</p>
+                )}
+              </div>
+            </div>
+
+            {/* Financial Summary */}
+            <div className="grid grid-cols-2 gap-3 p-3 bg-white/5 rounded-2xl text-xs font-mono">
+              <div>
+                <span className="text-[10px] text-amber-400 uppercase font-bold block">Cash to Collect (COD)</span>
+                <span className="text-base font-black text-amber-400">
+                  ৳{selectedTaskDetail.codAmount.toLocaleString()}
+                </span>
+              </div>
+              <div className="text-right">
+                <span className="text-[10px] text-emerald-400 uppercase font-bold block">Your Delivery Fee</span>
+                <span className="text-base font-black text-emerald-400">
+                  +৳{selectedTaskDetail.deliveryFee}
+                </span>
+              </div>
+            </div>
+
+            {/* Live Status Transition Action Buttons */}
+            <div className="pt-2 border-t border-white/10 space-y-2">
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block text-center">
+                Update Delivery Status
+              </span>
+
+              {selectedTaskDetail.status === 'ASSIGNED' && (
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleTaskTransition(selectedTaskDetail, 'REJECTED');
+                      setIsTaskDetailModalOpen(false);
+                    }}
+                    disabled={actionLoading}
+                    className="py-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-bold transition-colors cursor-pointer"
+                  >
+                    Decline Task
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleTaskTransition(selectedTaskDetail, 'ACCEPTED');
+                      setIsTaskDetailModalOpen(false);
+                    }}
+                    disabled={actionLoading}
+                    className="py-3 rounded-xl bg-primary hover:bg-primary-accent text-gray-950 text-xs font-black shadow-glow cursor-pointer"
+                  >
+                    Accept Assignment
+                  </button>
+                </div>
+              )}
+
+              {selectedTaskDetail.status === 'ACCEPTED' && (
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleTaskTransition(selectedTaskDetail, 'PICKED_UP');
+                      setIsTaskDetailModalOpen(false);
+                    }}
+                    disabled={actionLoading}
+                    className="w-full py-3.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-gray-950 text-xs font-black shadow-glow flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <Package size={15} /> Confirm Picked Up from Store / Hub
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCustomActiveTaskId(selectedTaskDetail.id);
+                      setIsTaskDetailModalOpen(false);
+                      setActiveTab('active');
+                    }}
+                    className="w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 text-xs font-bold"
+                  >
+                    Focus as Active Task in Dashboard
+                  </button>
+                </div>
+              )}
+
+              {selectedTaskDetail.status === 'PICKED_UP' && (
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleTaskTransition(selectedTaskDetail, 'IN_TRANSIT');
+                      setIsTaskDetailModalOpen(false);
+                    }}
+                    disabled={actionLoading}
+                    className="w-full py-3.5 rounded-xl bg-blue-500 hover:bg-blue-400 text-white text-xs font-black shadow-glow flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <Navigation size={15} /> Start Transit / On The Way
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCustomActiveTaskId(selectedTaskDetail.id);
+                      setIsTaskDetailModalOpen(false);
+                      setActiveTab('active');
+                    }}
+                    className="w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 text-xs font-bold"
+                  >
+                    Focus as Active Task in Dashboard
+                  </button>
+                </div>
+              )}
+
+              {selectedTaskDetail.status === 'IN_TRANSIT' && (
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedTaskForAction(selectedTaskDetail);
+                      setIsTaskDetailModalOpen(false);
+                      setIsOtpModalOpen(true);
+                    }}
+                    className="w-full py-3.5 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-gray-950 text-xs font-black shadow-glow flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <CheckCircle2 size={16} /> Enter Customer OTP & Complete Delivery
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedTaskForAction(selectedTaskDetail);
+                      setIsTaskDetailModalOpen(false);
+                      setIsFailedModalOpen(true);
+                    }}
+                    className="w-full py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-bold cursor-pointer"
+                  >
+                    Report Delivery Issue / Unreachable Customer
+                  </button>
+                </div>
+              )}
+
+              {selectedTaskDetail.status === 'DELIVERED' && (
+                <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-center text-xs text-emerald-400 font-bold">
+                  ✓ Order has been successfully delivered and fee ৳{selectedTaskDetail.deliveryFee} credited to your wallet.
+                </div>
+              )}
+
+              {selectedTaskDetail.status === 'FAILED' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleTaskTransition(selectedTaskDetail, 'IN_TRANSIT');
+                    setIsTaskDetailModalOpen(false);
+                  }}
+                  disabled={actionLoading}
+                  className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-gray-950 text-xs font-black shadow-glow cursor-pointer"
+                >
+                  Retry Delivery Attempt
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}

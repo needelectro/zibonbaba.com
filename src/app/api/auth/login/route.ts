@@ -18,25 +18,35 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Email and password are required.' }, { status: 400 });
     }
 
-    const cleanEmail = email.trim().toLowerCase();
+    const cleanInput = email.trim();
+    const cleanEmail = cleanInput.toLowerCase();
 
-    // 1. Check Prisma User Database
-    const user = await prisma.user.findUnique({
-      where: { email: cleanEmail },
+    // 1. Check Prisma User Database by Email or Phone
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: cleanEmail },
+          { phone: cleanInput },
+          { phone: cleanInput.replace(/^\+880/, '0') },
+          { phone: cleanInput.startsWith('0') ? `+88${cleanInput}` : cleanInput }
+        ]
+      },
       include: { profile: true, stores: true }
     });
 
-    // 2. Also authenticate via Supabase Auth
+    // 2. Also authenticate via Supabase Auth if email
     let supabaseAuthSuccess = false;
-    try {
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email: cleanEmail,
-        password
-      });
-      if (!authError && authData.user) {
-        supabaseAuthSuccess = true;
-      }
-    } catch (_) {}
+    if (cleanEmail.includes('@')) {
+      try {
+        const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+          email: cleanEmail,
+          password
+        });
+        if (!authError && authData.user) {
+          supabaseAuthSuccess = true;
+        }
+      } catch (_) {}
+    }
 
     // 3. Password Verification (supports Prisma bcrypt hash & Supabase Auth)
     let isValidPassword = false;
@@ -45,7 +55,7 @@ export async function POST(request: Request) {
     }
 
     if (!isValidPassword && !supabaseAuthSuccess) {
-      return NextResponse.json({ error: 'Invalid email or password.' }, { status: 401 });
+      return NextResponse.json({ error: 'Invalid credentials. Please check your email/phone and password.' }, { status: 401 });
     }
 
     if (user && (user.status === 'SUSPENDED' || user.status === 'BLOCKED')) {
@@ -54,7 +64,7 @@ export async function POST(request: Request) {
 
     const payload = {
       id: user ? user.id : 'supa-user',
-      email: cleanEmail,
+      email: user ? user.email : cleanEmail,
       role: user ? user.role : 'CUSTOMER'
     };
 

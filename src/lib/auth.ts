@@ -1,6 +1,7 @@
 import { headers, cookies } from 'next/headers';
 import { prisma } from '@/lib/prisma';
 import jwt from 'jsonwebtoken';
+import { ADMIN_ROLES, SELLER_ROLES, RESELLER_ROLES, DELIVERY_ROLES, AccountStatus } from '@/lib/constants/roles';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'zibonbaba_super_secure_jwt_session_secret_token_123';
 
@@ -8,6 +9,7 @@ export interface AuthUser {
   id: string;
   email: string;
   role: string;
+  status?: string;
 }
 
 export interface SellerContext {
@@ -23,7 +25,8 @@ export interface SellerContext {
 }
 
 /**
- * Extracts and verifies the JWT token from incoming Request headers or cookies.
+ * Extracts, verifies, and validates the JWT token from incoming Request headers or cookies.
+ * Also verifies account active status.
  */
 export async function getAuthUser(req?: Request): Promise<AuthUser | null> {
   let token: string | null = null;
@@ -56,10 +59,24 @@ export async function getAuthUser(req?: Request): Promise<AuthUser | null> {
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as any;
     if (decoded && decoded.id && decoded.email) {
+      // Check database to ensure user is not suspended or deleted
+      const dbUser = await prisma.user.findUnique({
+        where: { id: decoded.id },
+        select: { id: true, email: true, role: true, status: true }
+      });
+
+      if (!dbUser) return null;
+
+      const userStatus = dbUser.status ? dbUser.status.toUpperCase() : 'ACTIVE';
+      if (userStatus === AccountStatus.SUSPENDED || userStatus === AccountStatus.BLOCKED || userStatus === AccountStatus.DEACTIVATED) {
+        return null; // Invalidate session for suspended or blocked users
+      }
+
       return {
-        id: decoded.id,
-        email: decoded.email,
-        role: (decoded.role || 'CUSTOMER').toUpperCase()
+        id: dbUser.id,
+        email: dbUser.email,
+        role: dbUser.role.toUpperCase(),
+        status: userStatus
       };
     }
   } catch (err) {
@@ -69,24 +86,14 @@ export async function getAuthUser(req?: Request): Promise<AuthUser | null> {
   return null;
 }
 
-export const ALL_ADMIN_ROLES = [
-  'SUPER_ADMIN',
-  'ADMIN',
-  'MANAGER',
-  'ACCOUNTANT',
-  'CUSTOMER_SUPPORT',
-  'MARKETING',
-  'WAREHOUSE_MANAGER',
-  'INVENTORY_MANAGER',
-  'DELIVERY_MANAGER'
-];
+export const ALL_ADMIN_ROLES = ADMIN_ROLES;
 
 /**
  * Ensures the authenticated user has one of the allowed administrative roles.
  */
 export async function requireAdminRole(
   req?: Request,
-  allowedRoles: string[] = ALL_ADMIN_ROLES
+  allowedRoles: string[] = ADMIN_ROLES
 ): Promise<{ user: AuthUser | null; error: string | null; status: number }> {
   const user = await getAuthUser(req);
 

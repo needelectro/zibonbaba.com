@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireDeliveryMan, logAdminAction } from '@/lib/auth';
+import { isValidDeliveryTransition, mapDeliveryToOrderStatus } from '@/lib/services/stateMachine';
+import { dispatchOrderStatusEvents, sendNotification } from '@/lib/services/eventBus';
 
 export async function POST(
   request: Request,
@@ -31,7 +33,7 @@ export async function POST(
       },
       include: {
         order: {
-          include: { resellerOrder: true }
+          include: { store: true, resellerOrder: true }
         }
       }
     });
@@ -42,18 +44,10 @@ export async function POST(
 
     const currentStatus = assignment.status;
 
-    // Validate state machine transitions
-    const validTransitions: Record<string, string[]> = {
-      ASSIGNED: ['ACCEPTED', 'REJECTED'],
-      ACCEPTED: ['PICKED_UP', 'REJECTED'],
-      PICKED_UP: ['IN_TRANSIT', 'FAILED'],
-      IN_TRANSIT: ['DELIVERED', 'FAILED', 'RETURNED'],
-      FAILED: ['IN_TRANSIT', 'RETURNED']
-    };
-
-    if (!validTransitions[currentStatus]?.includes(normalizedTarget) && currentStatus !== normalizedTarget) {
+    // Validate legal state machine transition
+    if (!isValidDeliveryTransition(currentStatus, normalizedTarget)) {
       return NextResponse.json({
-        error: `Invalid transition from ${currentStatus} to ${normalizedTarget}.`
+        error: `Invalid status transition from ${currentStatus} to ${normalizedTarget}.`
       }, { status: 400 });
     }
 
@@ -197,6 +191,16 @@ export async function POST(
     });
 
     await logAdminAction(userId, `DELIVERY_STATUS_TRANSITION: AssignmentId=${assignment.id}, Status=${normalizedTarget}`);
+
+    // Dispatch cross-portal order lifecycle events
+    await dispatchOrderStatusEvents({
+      orderId: assignment.orderId,
+      newStatus: normalizedTarget,
+      customerId: assignment.order?.customerId,
+      sellerOwnerId: assignment.order?.store?.ownerId,
+      resellerId: assignment.order?.resellerOrder?.resellerId,
+      deliveryManId: userId
+    });
 
     return NextResponse.json({
       success: true,

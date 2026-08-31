@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireReseller, logAdminAction } from '@/lib/auth';
+import { sendNotification } from '@/lib/services/eventBus';
 
 export async function GET(request: Request) {
   try {
@@ -287,27 +288,46 @@ export async function POST(request: Request) {
         });
       }
 
+      const primaryStore = await tx.store.findUnique({
+        where: { id: primaryStoreId },
+        select: { id: true, name: true, ownerId: true }
+      });
+
       return {
         orderId: order.id,
         resellerOrderId: resellerOrder.id,
         sellingAmount: overallSellingTotal,
-        resellerProfit
+        resellerProfit,
+        sellerOwnerId: primaryStore?.ownerId,
+        storeName: primaryStore?.name
       };
     });
 
     await logAdminAction(resellerId, `RESELLER_ORDER_CREATED: OrderId=${result.orderId}, Profit=৳${result.resellerProfit}`);
 
-    // Create notification for Reseller
-    await prisma.notification.create({
-      data: {
-        userId: resellerId,
-        title: 'Customer Order Submitted! 📦',
-        body: `Order #${result.orderId.slice(0, 8).toUpperCase()} for ${customerName} submitted. Expected profit: ৳${result.resellerProfit.toLocaleString()}.`,
-        type: 'SUCCESS',
-        priority: 'HIGH',
-        module: 'MARKETPLACE'
-      }
+    // 1. Notify Reseller
+    await sendNotification({
+      userId: resellerId,
+      title: 'Customer Order Submitted! 📦',
+      body: `Order #${result.orderId.slice(0, 8).toUpperCase()} for ${customerName} submitted. Expected profit: ৳${result.resellerProfit.toLocaleString()}.`,
+      type: 'SUCCESS',
+      priority: 'HIGH',
+      module: 'WALLET',
+      link: '/reseller/orders'
     });
+
+    // 2. Notify Merchant Store Owner
+    if (result.sellerOwnerId) {
+      await sendNotification({
+        userId: result.sellerOwnerId,
+        title: 'New Reseller Order Received! 🛍️',
+        body: `New reseller dispatch order #${result.orderId.slice(0, 8).toUpperCase()} for ${customerName} received!`,
+        type: 'INFO',
+        priority: 'HIGH',
+        module: 'ERP',
+        link: '/seller/orders'
+      });
+    }
 
     return NextResponse.json({
       success: true,

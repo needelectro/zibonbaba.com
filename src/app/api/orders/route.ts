@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import jwt from 'jsonwebtoken';
 import { getAuthUser, logAdminAction } from '@/lib/auth';
+import { sendNotification } from '@/lib/services/eventBus';
 
 export async function POST(req: Request) {
   const user = await getAuthUser(req);
@@ -111,17 +112,32 @@ export async function POST(req: Request) {
 
     await logAdminAction(customerId, `ORDER_ONLINE_PLACED: OrdersCount=${createdOrders.length}`);
 
-    // Create customer in-app notification
-    await prisma.notification.create({
-      data: {
+    // Create notifications for customer and merchant stores
+    for (const order of createdOrders) {
+      // 1. Notify Customer
+      await sendNotification({
         userId: customerId,
         title: 'Order Placed Successfully! 🛍️',
-        body: `Your order (#${createdOrders[0].id.substring(0, 8).toUpperCase()}) has been received and sent to merchants for packing.`,
+        body: `Your order (#${order.id.substring(0, 8).toUpperCase()}) with ${order.store?.name || 'Seller'} has been received!`,
         type: 'SUCCESS',
         priority: 'HIGH',
-        module: 'MARKETPLACE'
+        module: 'MARKETPLACE',
+        link: `/tracking?orderId=${order.id}`
+      });
+
+      // 2. Notify Seller Store Owner
+      if (order.store?.ownerId) {
+        await sendNotification({
+          userId: order.store.ownerId,
+          title: 'New Store Order Received! 📦',
+          body: `New order #${order.id.substring(0, 8).toUpperCase()} for ৳${order.total.toLocaleString()} is ready to pack!`,
+          type: 'INFO',
+          priority: 'HIGH',
+          module: 'ERP',
+          link: '/seller/orders'
+        });
       }
-    });
+    }
 
     return NextResponse.json({
       success: true,

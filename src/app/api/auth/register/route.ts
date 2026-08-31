@@ -104,8 +104,11 @@ export async function POST(request: Request) {
       attempts++;
     }
 
-    // 5. Create Prisma User with Profile and optional Store & Verification Request
+    // 5. Create Prisma User with Profile and optional Store, ResellerProfile, or DeliveryProfile
     const isSeller = normalizedRole === 'VENDOR_ADMIN';
+    const isReseller = normalizedRole === 'RESELLER';
+    const isDelivery = normalizedRole === 'DELIVERY_MAN';
+
     let finalStoreName = storeName ? storeName.trim() : (isSeller ? `${resolvedName}'s Store` : undefined);
     if (finalStoreName) {
       const existingStore = await prisma.store.findUnique({ where: { name: finalStoreName } });
@@ -113,6 +116,20 @@ export async function POST(request: Request) {
         finalStoreName = `${finalStoreName} (${Date.now().toString().slice(-4)})`;
       }
     }
+
+    const {
+      businessName,
+      address,
+      district,
+      division,
+      city,
+      paymentMethod,
+      paymentNumber,
+      vehicleType,
+      preferredZone,
+      emergencyContact,
+      nidNumber
+    } = body;
 
     const newUser = await prisma.user.create({
       data: {
@@ -149,21 +166,62 @@ export async function POST(request: Request) {
             }
           }
         } : {}),
+        ...(isReseller ? {
+          resellerProfile: {
+            create: {
+              businessName: businessName || `${resolvedName} Reseller Hub`,
+              address: address || null,
+              district: district || null,
+              division: division || null,
+              city: city || null,
+              paymentMethod: paymentMethod || 'bKash',
+              paymentNumber: paymentNumber || cleanPhone || null,
+              status: 'ACTIVE',
+              commissionRate: 5.0
+            }
+          }
+        } : {}),
+        ...(isDelivery ? {
+          deliveryProfile: {
+            create: {
+              vehicleType: vehicleType || 'BIKE',
+              preferredZone: preferredZone || district || 'Dhaka Central',
+              emergencyContact: emergencyContact || null,
+              nidNumber: nidNumber || null,
+              district: district || null,
+              division: division || null,
+              status: 'APPROVED',
+              availabilityStatus: 'OFFLINE'
+            }
+          }
+        } : {}),
         notifications: {
           create: {
-            title: isSeller ? 'Store Application Submitted 🏪' : 'Welcome to Zibonbaba! 🎉',
+            title: isSeller
+              ? 'Store Application Submitted 🏪'
+              : isReseller
+              ? 'Welcome to Reseller Portal! 🚀'
+              : isDelivery
+              ? 'Welcome to Delivery Network! 🛵'
+              : 'Welcome to Zibonbaba! 🎉',
             body: isSeller
               ? `Welcome ${resolvedName}! Your store application for "${finalStoreName || 'My Store'}" has been received and is pending admin verification.`
+              : isReseller
+              ? `Welcome ${resolvedName}! Your Reseller account is active. Browse products, set your profit margins, and start earning.`
+              : isDelivery
+              ? `Welcome ${resolvedName}! Your Delivery account is ready. Go Online in your dashboard to receive shipment assignments.`
               : `Welcome ${resolvedName}! Your account has been registered successfully. You received 100 welcome bonus loyalty points!`,
             type: 'SUCCESS',
-            module: 'MARKETPLACE',
+            module: isReseller ? 'MARKETPLACE' : isDelivery ? 'DELIVERY' : 'MARKETPLACE',
             priority: 'INFO'
           }
         }
       },
       include: {
         profile: true,
-        stores: true
+        stores: true,
+        resellerProfile: true,
+        deliveryProfile: true
       }
     });
 

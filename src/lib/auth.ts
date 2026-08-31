@@ -167,8 +167,111 @@ export async function requireSeller(
   };
 }
 
+export interface ResellerContext {
+  user: AuthUser;
+  profile: any | null;
+}
+
+export interface DeliveryContext {
+  user: AuthUser;
+  profile: any | null;
+}
+
 /**
- * Ensures the authenticated user is logged in (Customer, Seller, or Admin).
+ * Ensures the authenticated user is a Reseller (or Admin).
+ */
+export async function requireReseller(
+  req?: Request
+): Promise<{ context: ResellerContext | null; error: string | null; status: number }> {
+  const user = await getAuthUser(req);
+
+  if (!user) {
+    return { context: null, error: 'Authentication required. Please log in to the reseller portal.', status: 401 };
+  }
+
+  const normalizedRole = user.role.toUpperCase();
+  const resellerRoles = ['RESELLER', 'SUPER_ADMIN', 'ADMIN'];
+
+  if (!resellerRoles.includes(normalizedRole)) {
+    return {
+      context: null,
+      error: 'Access Denied. A reseller account is required to access this resource.',
+      status: 403
+    };
+  }
+
+  let profile = await prisma.resellerProfile.findUnique({
+    where: { userId: user.id }
+  });
+
+  if (!profile && normalizedRole === 'RESELLER') {
+    profile = await prisma.resellerProfile.create({
+      data: {
+        userId: user.id,
+        status: 'ACTIVE'
+      }
+    });
+  }
+
+  return {
+    context: {
+      user,
+      profile
+    },
+    error: null,
+    status: 200
+  };
+}
+
+/**
+ * Ensures the authenticated user is a Delivery Man / Courier (or Delivery Manager / Admin).
+ */
+export async function requireDeliveryMan(
+  req?: Request
+): Promise<{ context: DeliveryContext | null; error: string | null; status: number }> {
+  const user = await getAuthUser(req);
+
+  if (!user) {
+    return { context: null, error: 'Authentication required. Please log in to the delivery partner portal.', status: 401 };
+  }
+
+  const normalizedRole = user.role.toUpperCase();
+  const deliveryRoles = ['DELIVERY_MAN', 'COURIER', 'DELIVERY_MANAGER', 'SUPER_ADMIN', 'ADMIN'];
+
+  if (!deliveryRoles.includes(normalizedRole)) {
+    return {
+      context: null,
+      error: 'Access Denied. A delivery partner account is required to access this resource.',
+      status: 403
+    };
+  }
+
+  let profile = await prisma.deliveryProfile.findUnique({
+    where: { userId: user.id }
+  });
+
+  if (!profile && (normalizedRole === 'DELIVERY_MAN' || normalizedRole === 'COURIER')) {
+    profile = await prisma.deliveryProfile.create({
+      data: {
+        userId: user.id,
+        status: 'APPROVED',
+        availabilityStatus: 'OFFLINE'
+      }
+    });
+  }
+
+  return {
+    context: {
+      user,
+      profile
+    },
+    error: null,
+    status: 200
+  };
+}
+
+/**
+ * Ensures the authenticated user is logged in (Customer, Seller, Reseller, Delivery, or Admin).
  */
 export async function requireCustomer(
   req?: Request
@@ -202,4 +305,5 @@ export async function logAdminAction(
     console.error('Audit Log Error:', err);
   }
 }
+
 

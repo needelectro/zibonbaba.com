@@ -6,6 +6,7 @@ datasource db {
 
 generator client {
   provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
 }
 
 // =============================================================================
@@ -20,7 +21,7 @@ model User {
   role                String    @default("CUSTOMER")
   // SUPER_ADMIN | ADMIN | MANAGER | ACCOUNTANT | CUSTOMER_SUPPORT |
   // MARKETING | WAREHOUSE_MANAGER | INVENTORY_MANAGER | DELIVERY_MANAGER |
-  // VENDOR_ADMIN | VENDOR_STAFF | CUSTOMER
+  // VENDOR_ADMIN | VENDOR_STAFF | CUSTOMER | RESELLER | DELIVERY_MAN
   status              String    @default("PENDING")
   // PENDING | VERIFIED | ACTIVE | SUSPENDED | BLOCKED | REJECTED | DELETED
   avatar              String?
@@ -57,6 +58,15 @@ model User {
   staffManaged        StaffMember[]   @relation("StaffSeller")
   verifications       VerificationRequest[]
   addresses           Address[]
+
+  resellerProfile     ResellerProfile?
+  deliveryProfile     DeliveryProfile?
+  resellerProducts    ResellerProduct[]   @relation("ResellerCatalog")
+  resellerCustomers   ResellerCustomer[]  @relation("ResellerClients")
+  resellerOrders      ResellerOrder[]     @relation("ResellerSales")
+  deliveryAssignments DeliveryAssignment[] @relation("RiderAssignments")
+  assignedDeliveries  DeliveryAssignment[] @relation("AdminAssignments")
+  withdrawals         WithdrawalRequest[] @relation("UserWithdrawals")
 
   walletBalance       Float     @default(0.0)
   loyaltyPoints       Int       @default(0)
@@ -372,6 +382,7 @@ model Product {
   basePrice   Float
   status      String           @default("PUBLISHED")
   variants    ProductVariant[]
+  resellerProducts ResellerProduct[]
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
 
@@ -442,6 +453,8 @@ model Order {
   total      Float
   status     String      @default("PENDING")
   items      OrderItem[]
+  resellerOrder      ResellerOrder?
+  deliveryAssignment DeliveryAssignment?
   createdAt  DateTime    @default(now())
 
   @@index([customerId, storeId])
@@ -562,4 +575,182 @@ model Wishlist {
 
   @@unique([userId, productId])
   @@index([userId])
+}
+
+// =============================================================================
+// RESELLER ECOSYSTEM
+// =============================================================================
+
+model ResellerProfile {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessName   String?
+  address        String?
+  city           String?
+  district       String?
+  division       String?
+  nidNumber      String?
+  paymentMethod  String?  // bKash | Nagad | Rocket | Bank Transfer
+  paymentNumber  String?
+  bankName       String?
+  bankAccount    String?
+  bankBranch     String?
+  status         String   @default("ACTIVE") // PENDING | ACTIVE | SUSPENDED | REJECTED
+  rejectReason   String?
+  commissionRate Float    @default(5.0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model ResellerProduct {
+  id             String   @id @default(uuid())
+  resellerId     String
+  reseller       User     @relation("ResellerCatalog", fields: [resellerId], references: [id], onDelete: Cascade)
+  productId      String
+  product        Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  resellerPrice  Float?
+  resellerMarkup Float?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([resellerId, productId])
+  @@index([resellerId])
+  @@index([productId])
+}
+
+model ResellerCustomer {
+  id          String   @id @default(uuid())
+  resellerId  String
+  reseller    User     @relation("ResellerClients", fields: [resellerId], references: [id], onDelete: Cascade)
+  name        String
+  phone       String
+  altPhone    String?
+  email       String?
+  address     String
+  district    String?
+  upazila     String?
+  city        String?
+  notes       String?
+  totalOrders Int      @default(0)
+  totalSales  Float    @default(0.0)
+  totalProfit Float    @default(0.0)
+  status      String   @default("ACTIVE")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([resellerId, phone])
+}
+
+model ResellerOrder {
+  id              String   @id @default(uuid())
+  orderId         String   @unique
+  order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  resellerId      String
+  reseller        User     @relation("ResellerSales", fields: [resellerId], references: [id], onDelete: Cascade)
+  customerName    String
+  customerPhone   String
+  altPhone        String?
+  shippingAddress String
+  district        String?
+  upazila         String?
+  baseAmount      Float
+  sellingAmount   Float
+  resellerProfit  Float
+  platformFee     Float    @default(0.0)
+  deliveryFee     Float    @default(0.0)
+  status          String   @default("PENDING") // PENDING | CONFIRMED | PROCESSING | PICKED_UP | IN_TRANSIT | DELIVERED | CANCELLED | RETURNED | FAILED
+  payoutStatus    String   @default("PENDING") // PENDING | AVAILABLE | PAID | REVERSED
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([resellerId])
+  @@index([status])
+}
+
+// =============================================================================
+// DELIVERY MAN & COURIER ECOSYSTEM
+// =============================================================================
+
+model DeliveryProfile {
+  id                  String   @id @default(uuid())
+  userId              String   @unique
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicleType         String   @default("BIKE") // BIKE | MOTORCYCLE | CYCLE | VAN | TRUCK | ON_FOOT
+  vehicleNumber       String?
+  drivingLicense      String?
+  nidNumber           String?
+  emergencyContact    String?
+  division            String?
+  district            String?
+  upazila             String?
+  preferredZone       String?
+  currentLat          Float?
+  currentLng          Float?
+  isOnline            Boolean  @default(false)
+  availabilityStatus  String   @default("OFFLINE") // ONLINE | OFFLINE | BUSY | SUSPENDED
+  status              String   @default("APPROVED") // PENDING | APPROVED | REJECTED | SUSPENDED
+  rejectReason        String?
+  completedDeliveries Int      @default(0)
+  failedDeliveries    Int      @default(0)
+  cashInHand          Float    @default(0.0)
+  totalEarnings       Float    @default(0.0)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model DeliveryAssignment {
+  id            String    @id @default(uuid())
+  orderId       String    @unique
+  order         Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  deliveryManId String
+  deliveryMan   User      @relation("RiderAssignments", fields: [deliveryManId], references: [id], onDelete: Cascade)
+  assignedById  String?
+  assignedBy    User?     @relation("AdminAssignments", fields: [assignedById], references: [id])
+  status        String    @default("ASSIGNED") // ASSIGNED | ACCEPTED | REJECTED | PICKED_UP | IN_TRANSIT | DELIVERED | FAILED | RETURNED
+  deliveryOtp   String?
+  proofNotes    String?
+  proofPhoto    String?
+  codAmount     Float     @default(0.0)
+  codCollected  Boolean   @default(false)
+  deliveryFee   Float     @default(120.0)
+  assignedAt    DateTime  @default(now())
+  acceptedAt    DateTime?
+  pickedUpAt    DateTime?
+  deliveredAt   DateTime?
+  failedAt      DateTime?
+  failedReason  String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([deliveryManId])
+  @@index([status])
+}
+
+// =============================================================================
+// UNIVERSAL WITHDRAWAL & PAYOUT SYSTEM
+// =============================================================================
+
+model WithdrawalRequest {
+  id             String    @id @default(uuid())
+  userId         String
+  user           User      @relation("UserWithdrawals", fields: [userId], references: [id], onDelete: Cascade)
+  role           String    // RESELLER | DELIVERY_MAN | VENDOR_ADMIN
+  amount         Float
+  paymentMethod  String    // bKash | Nagad | Rocket | Bank Transfer
+  accountNumber  String
+  accountDetails String?
+  notes          String?
+  status         String    @default("PENDING") // PENDING | APPROVED | PROCESSING | COMPLETED | REJECTED
+  adminNote      String?
+  transactionRef String?
+  processedById  String?
+  processedAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([role])
 }

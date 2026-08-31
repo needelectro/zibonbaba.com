@@ -144,6 +144,16 @@ export default function AdminDashboardPage() {
   const [editProdDesc, setEditProdDesc] = useState('');
   const [editProdStatus, setEditProdStatus] = useState('PUBLISHED');
 
+  // Real-time Reseller & Delivery Management States
+  const [adminResellers, setAdminResellers] = useState<any[]>([]);
+  const [resellerSearchQuery, setResellerSearchQuery] = useState('');
+  const [adminDeliveryMen, setAdminDeliveryMen] = useState<any[]>([]);
+  const [deliverySearchQuery, setDeliverySearchQuery] = useState('');
+  const [adminUnassignedOrders, setAdminUnassignedOrders] = useState<any[]>([]);
+  const [adminWithdrawals, setAdminWithdrawals] = useState<any[]>([]);
+  const [selectedRiderForAssign, setSelectedRiderForAssign] = useState<Record<string, string>>({});
+  const [isAssigningOrder, setIsAssigningOrder] = useState<string | null>(null);
+
   const fetchAdminSellers = async () => {
     const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null);
     if (!activeToken) return;
@@ -168,6 +178,135 @@ export default function AdminDashboardPage() {
     } catch (_) {}
   };
 
+  const fetchAdminResellers = async () => {
+    const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null);
+    if (!activeToken) return;
+    try {
+      const res = await fetch('/api/admin/resellers', { headers: { Authorization: `Bearer ${activeToken}` } });
+      const data = await res.json();
+      if (res.ok && Array.isArray(data.resellers)) {
+        setAdminResellers(data.resellers);
+      }
+    } catch (_) {}
+  };
+
+  const fetchAdminDeliveryMen = async () => {
+    const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null);
+    if (!activeToken) return;
+    try {
+      const res = await fetch('/api/admin/delivery-men', { headers: { Authorization: `Bearer ${activeToken}` } });
+      const data = await res.json();
+      if (res.ok && Array.isArray(data.deliveryMen)) {
+        setAdminDeliveryMen(data.deliveryMen);
+      }
+    } catch (_) {}
+  };
+
+  const fetchAdminUnassignedOrders = async () => {
+    const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null);
+    if (!activeToken) return;
+    try {
+      const res = await fetch('/api/admin/delivery/unassigned-orders', { headers: { Authorization: `Bearer ${activeToken}` } });
+      const data = await res.json();
+      if (res.ok && Array.isArray(data.orders)) {
+        setAdminUnassignedOrders(data.orders);
+      }
+    } catch (_) {}
+  };
+
+  const fetchAdminWithdrawals = async () => {
+    const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null);
+    if (!activeToken) return;
+    try {
+      const res = await fetch('/api/admin/withdrawals', { headers: { Authorization: `Bearer ${activeToken}` } });
+      const data = await res.json();
+      if (res.ok && Array.isArray(data.withdrawals)) {
+        setAdminWithdrawals(data.withdrawals);
+      }
+    } catch (_) {}
+  };
+
+  const handleUpdateResellerStatus = async (resellerId: string, newStatus: string) => {
+    const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null);
+    if (!activeToken) return;
+    try {
+      const res = await fetch('/api/admin/resellers', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${activeToken}`
+        },
+        body: JSON.stringify({ resellerId, newStatus })
+      });
+      if (res.ok) {
+        fetchAdminResellers();
+      }
+    } catch (_) {}
+  };
+
+  const handleUpdateDeliveryManStatus = async (deliveryManId: string, newStatus: string) => {
+    const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null);
+    if (!activeToken) return;
+    try {
+      const res = await fetch('/api/admin/delivery-men', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${activeToken}`
+        },
+        body: JSON.stringify({ deliveryManId, newStatus })
+      });
+      if (res.ok) {
+        fetchAdminDeliveryMen();
+      }
+    } catch (_) {}
+  };
+
+  const handleAssignOrderToRider = async (orderId: string, deliveryManId: string) => {
+    const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null);
+    if (!activeToken || !deliveryManId) return;
+    setIsAssigningOrder(orderId);
+    try {
+      const res = await fetch('/api/admin/delivery/assign', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${activeToken}`
+        },
+        body: JSON.stringify({ orderId, deliveryManId })
+      });
+      if (res.ok) {
+        fetchAdminUnassignedOrders();
+        fetchAdminDeliveryMen();
+        fetchOrders();
+      }
+    } catch (_) {} finally {
+      setIsAssigningOrder(null);
+    }
+  };
+
+  const handleUpdateWithdrawalStatus = async (withdrawalId: string, newStatus: string) => {
+    const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null);
+    if (!activeToken) return;
+    try {
+      const res = await fetch('/api/admin/withdrawals', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${activeToken}`
+        },
+        body: JSON.stringify({
+          withdrawalId,
+          newStatus,
+          transactionRef: `TXN-${Date.now().toString().slice(-6)}`
+        })
+      });
+      if (res.ok) {
+        fetchAdminWithdrawals();
+      }
+    } catch (_) {}
+  };
+
   useEffect(() => {
     setIsMounted(true);
     fetchProducts();
@@ -175,6 +314,10 @@ export default function AdminDashboardPage() {
     fetchCrmCustomers();
     fetchAdminSellers();
     fetchAdminCustomers();
+    fetchAdminResellers();
+    fetchAdminDeliveryMen();
+    fetchAdminUnassignedOrders();
+    fetchAdminWithdrawals();
 
     const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null);
     if (activeToken) {
@@ -2310,85 +2453,341 @@ export default function AdminDashboardPage() {
           )}
 
           {/* ================================================= */}
-          {/* VIEW: RESELLER NETWORK */}
+          {/* VIEW: RESELLER NETWORK MANAGEMENT */}
           {/* ================================================= */}
           {activeModule === 'resellers' && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
-              <div className="bg-white/[0.02] border border-white/5 p-5 rounded-2xl shadow-xl lg:col-span-2 space-y-4">
-                <h3 className="text-xs font-black text-slate-300 uppercase tracking-widest border-b border-white/5 pb-3">
-                  Resellers Affiliation Quotas
-                </h3>
-                <div className="space-y-3.5">
-                  {[
-                    { name: 'Sabbir Ahmed (Commission)', code: 'ZIBON-RES001', activeReferred: 14, earned: 2450.00, target: 'Flat 5%' },
-                    { name: 'Nila Islam (Target Quota)', code: 'ZIBON-RES054', activeReferred: 32, earned: 15000.00, target: '72% Quota Met' }
-                  ].map((res, i) => (
-                    <div key={i} className="p-4 bg-white/5 border border-white/5 rounded-xl flex items-center justify-between">
-                      <div>
-                        <span className="font-mono text-[9px] text-[#FFC107] block">{res.code}</span>
-                        <h4 className="text-xs font-black text-white mt-0.5">{res.name}</h4>
-                        <span className="text-[9px] text-slate-500 block mt-1">Referred Shoppers: {res.activeReferred} Accounts</span>
+            <div className="space-y-6 animate-fade-in">
+              {/* Header & Metrics */}
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                <div className="bg-white/[0.02] border border-white/5 p-4 rounded-2xl">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase block">Total Resellers</span>
+                  <span className="text-xl font-black text-white">{adminResellers.length} Partners</span>
+                </div>
+                <div className="bg-white/[0.02] border border-white/5 p-4 rounded-2xl">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase block">Gross Reseller GMV</span>
+                  <span className="text-xl font-black text-[#FFC107]">
+                    ৳{adminResellers.reduce((sum, r) => sum + (r.grossSales || 0), 0).toLocaleString()}
+                  </span>
+                </div>
+                <div className="bg-white/[0.02] border border-white/5 p-4 rounded-2xl">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase block">Paid Profit Payouts</span>
+                  <span className="text-xl font-black text-emerald-400">
+                    ৳{adminResellers.reduce((sum, r) => sum + (r.totalProfit || 0), 0).toLocaleString()}
+                  </span>
+                </div>
+                <div className="bg-white/[0.02] border border-white/5 p-4 rounded-2xl">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase block">Active Accounts</span>
+                  <span className="text-xl font-black text-blue-400">
+                    {adminResellers.filter(r => r.status === 'ACTIVE' || r.status === 'APPROVED').length} Active
+                  </span>
+                </div>
+              </div>
+
+              {/* Resellers Table */}
+              <div className="bg-white/[0.02] border border-white/5 p-5 rounded-2xl shadow-xl space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <h3 className="text-xs font-black text-slate-300 uppercase tracking-widest">
+                    Registered Reseller Network Partners
+                  </h3>
+                  <div className="flex items-center bg-white/5 border border-white/5 rounded-xl px-3 h-9 w-full sm:max-w-xs focus-within:border-[#FFC107]">
+                    <Search size={14} className="text-slate-400 mr-2 shrink-0" />
+                    <input
+                      type="text"
+                      placeholder="Search reseller or shop..."
+                      value={resellerSearchQuery}
+                      onChange={e => setResellerSearchQuery(e.target.value)}
+                      className="bg-transparent text-xs w-full outline-none text-white font-medium"
+                    />
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-white/5 text-slate-400 font-bold">
+                        <th className="pb-3 px-3">Reseller Details</th>
+                        <th className="pb-3 px-3">Business / Page</th>
+                        <th className="pb-3 px-3">District</th>
+                        <th className="pb-3 px-3">Orders</th>
+                        <th className="pb-3 px-3">Total Sales</th>
+                        <th className="pb-3 px-3">Profit Balance</th>
+                        <th className="pb-3 px-3">Status</th>
+                        <th className="pb-3 px-3 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5 text-slate-300">
+                      {adminResellers
+                        .filter(r => {
+                          if (!resellerSearchQuery) return true;
+                          const q = resellerSearchQuery.toLowerCase();
+                          return (
+                            r.fullName?.toLowerCase().includes(q) ||
+                            r.email?.toLowerCase().includes(q) ||
+                            r.businessName?.toLowerCase().includes(q) ||
+                            r.phone?.includes(q)
+                          );
+                        })
+                        .map(res => (
+                          <tr key={res.id} className="hover:bg-white/5 transition-colors">
+                            <td className="py-3.5 px-3">
+                              <p className="font-bold text-white">{res.fullName}</p>
+                              <p className="text-[10px] text-slate-500 font-mono">{res.email}</p>
+                              <p className="text-[10px] text-slate-400">{res.phone || 'N/A'}</p>
+                            </td>
+                            <td className="py-3.5 px-3 font-bold text-slate-200">{res.businessName}</td>
+                            <td className="py-3.5 px-3 text-slate-400">{res.district}</td>
+                            <td className="py-3.5 px-3 font-mono font-bold text-white">{res.totalOrders || 0}</td>
+                            <td className="py-3.5 px-3 font-mono font-bold text-[#FFC107]">৳{(res.grossSales || 0).toLocaleString()}</td>
+                            <td className="py-3.5 px-3 font-mono font-bold text-emerald-400">৳{(res.walletBalance || 0).toLocaleString()}</td>
+                            <td className="py-3.5 px-3">
+                              <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-black border ${
+                                res.status === 'ACTIVE' || res.status === 'APPROVED'
+                                  ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                                  : res.status === 'SUSPENDED'
+                                  ? 'bg-red-500/10 border-red-500/20 text-red-400'
+                                  : 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+                              }`}>
+                                {res.status}
+                              </span>
+                            </td>
+                            <td className="py-3.5 px-3 text-right">
+                              <div className="flex items-center justify-end gap-1.5">
+                                {res.status !== 'ACTIVE' && (
+                                  <button
+                                    onClick={() => handleUpdateResellerStatus(res.id, 'ACTIVE')}
+                                    className="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                                  >
+                                    Approve
+                                  </button>
+                                )}
+                                {res.status !== 'SUSPENDED' && (
+                                  <button
+                                    onClick={() => handleUpdateResellerStatus(res.id, 'SUSPENDED')}
+                                    className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 text-[10px] font-bold px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                                  >
+                                    Suspend
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      {adminResellers.length === 0 && (
+                        <tr>
+                          <td colSpan={8} className="py-8 text-center text-slate-500 text-xs">
+                            No registered resellers yet.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ================================================= */}
+          {/* VIEW: LOGISTICS COURIERS & DISPATCH CONSOLE */}
+          {/* ================================================= */}
+          {activeModule === 'delivery' && (
+            <div className="space-y-6 animate-fade-in">
+              {/* Dispatch Console: Unassigned Orders */}
+              <div className="bg-white/[0.02] border border-white/5 p-5 rounded-2xl shadow-xl space-y-4">
+                <div className="flex items-center justify-between border-b border-white/5 pb-3">
+                  <div>
+                    <h3 className="text-xs font-black text-slate-300 uppercase tracking-widest">
+                      Live Courier Dispatch Console
+                    </h3>
+                    <p className="text-[10px] text-slate-500">Orders ready for driver dispatch and delivery assignment</p>
+                  </div>
+                  <span className="text-xs font-black text-[#FFC107] bg-[#FFC107]/10 border border-[#FFC107]/20 px-2.5 py-1 rounded-full">
+                    {adminUnassignedOrders.length} Pending Dispatch
+                  </span>
+                </div>
+
+                <div className="space-y-3">
+                  {adminUnassignedOrders.map(ord => (
+                    <div key={ord.id} className="p-4 bg-white/5 border border-white/5 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-xs font-bold text-white">#{ord.id.slice(0, 8).toUpperCase()}</span>
+                          {ord.isResellerOrder && (
+                            <span className="text-[9px] font-bold px-2 py-0.2 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                              Reseller Order
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs font-bold text-white">{ord.customerName} ({ord.customerPhone})</p>
+                        <p className="text-[10px] text-slate-400">{ord.address}, {ord.district}</p>
+                        <p className="text-[10px] text-slate-500">{ord.itemsSummary}</p>
                       </div>
-                      <div className="text-right">
-                        <span className="text-xs font-black text-white block">${res.earned.toLocaleString()}</span>
-                        <span className="text-[9px] bg-white/5 text-slate-300 px-2 py-0.5 rounded font-black border border-white/5 block mt-1">{res.target}</span>
+
+                      <div className="flex items-center gap-3 shrink-0">
+                        <div className="text-right font-mono">
+                          <span className="text-[10px] text-slate-400 block">Total COD</span>
+                          <span className="text-xs font-black text-[#FFC107]">৳{ord.total.toLocaleString()}</span>
+                        </div>
+
+                        <select
+                          value={selectedRiderForAssign[ord.id] || ''}
+                          onChange={e => setSelectedRiderForAssign({ ...selectedRiderForAssign, [ord.id]: e.target.value })}
+                          className="bg-slate-900 border border-white/10 text-white rounded-xl px-3 py-2 text-xs font-bold focus:outline-none"
+                        >
+                          <option value="">-- Assign Courier Rider --</option>
+                          {adminDeliveryMen.map(d => (
+                            <option key={d.id} value={d.id}>
+                              {d.fullName} ({d.preferredZone} - {d.isOnline ? '🟢 Online' : '⚪ Offline'})
+                            </option>
+                          ))}
+                        </select>
+
+                        <button
+                          disabled={!selectedRiderForAssign[ord.id] || isAssigningOrder === ord.id}
+                          onClick={() => handleAssignOrderToRider(ord.id, selectedRiderForAssign[ord.id])}
+                          className="bg-[#FFC107] hover:bg-amber-400 text-slate-950 text-xs font-black px-4 py-2 rounded-xl transition-all shadow-glow cursor-pointer disabled:opacity-40"
+                        >
+                          {isAssigningOrder === ord.id ? 'Dispatching...' : 'Dispatch Rider'}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+
+                  {adminUnassignedOrders.length === 0 && (
+                    <div className="py-8 text-center text-slate-500 text-xs">
+                      All active orders have been assigned to delivery riders!
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Courier Fleet Grid */}
+              <div className="bg-white/[0.02] border border-white/5 p-5 rounded-2xl shadow-xl space-y-4">
+                <h3 className="text-xs font-black text-slate-300 uppercase tracking-widest border-b border-white/5 pb-3">
+                  Registered Delivery Fleet ({adminDeliveryMen.length} Riders)
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {adminDeliveryMen.map((cour) => (
+                    <div key={cour.id} className="p-4 bg-white/[0.02] border border-white/5 rounded-xl space-y-3 hover:border-white/10 transition-colors">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="text-xs font-black text-white">{cour.fullName}</h4>
+                          <p className="text-[10px] text-slate-500 font-mono">{cour.phone || cour.email}</p>
+                          <span className="text-[9px] text-slate-400 block mt-0.5">Vehicle: {cour.vehicleType}</span>
+                        </div>
+                        <span className={`text-[8px] font-black px-2 py-0.5 rounded border ${
+                          cour.isOnline ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-white/5 border-white/5 text-slate-400'
+                        }`}>
+                          {cour.isOnline ? '🟢 ONLINE' : 'OFFLINE'}
+                        </span>
+                      </div>
+
+                      <div className="text-[10px] text-slate-400 space-y-1 font-medium pt-2 border-t border-white/5">
+                        <p className="flex justify-between">
+                          <span>Active Deliveries:</span>
+                          <span className="text-white font-bold">{cour.activeAssignments} Packages</span>
+                        </p>
+                        <p className="flex justify-between">
+                          <span>Completed Drops:</span>
+                          <span className="text-emerald-400 font-bold">{cour.completedDeliveries} Delivered</span>
+                        </p>
+                        <p className="flex justify-between">
+                          <span>Cash In Hand:</span>
+                          <span className="text-[#FFC107] font-black">৳{(cour.cashInHand || 0).toLocaleString()}</span>
+                        </p>
+                      </div>
+
+                      <div className="pt-2 border-t border-white/5 flex gap-2">
+                        {cour.status !== 'APPROVED' && (
+                          <button
+                            onClick={() => handleUpdateDeliveryManStatus(cour.id, 'APPROVED')}
+                            className="flex-1 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 text-[10px] font-bold py-1.5 rounded-lg transition-colors cursor-pointer"
+                          >
+                            Approve
+                          </button>
+                        )}
+                        {cour.status !== 'SUSPENDED' && (
+                          <button
+                            onClick={() => handleUpdateDeliveryManStatus(cour.id, 'SUSPENDED')}
+                            className="flex-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-[10px] font-bold py-1.5 rounded-lg transition-colors cursor-pointer"
+                          >
+                            Suspend
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
 
+              {/* Universal Withdrawals Queue */}
               <div className="bg-white/[0.02] border border-white/5 p-5 rounded-2xl shadow-xl space-y-4">
                 <h3 className="text-xs font-black text-slate-300 uppercase tracking-widest border-b border-white/5 pb-3">
-                  Commission Settings
+                  Universal Payout Settlements Queue ({adminWithdrawals.length} Requests)
                 </h3>
-                <form onSubmit={e => { e.preventDefault(); alert('Reseller rates updated.'); }} className="space-y-3.5">
-                  <div>
-                    <label className="block text-[8px] font-black text-slate-500 uppercase mb-1">Standard Affiliate Rate (%)</label>
-                    <input type="number" defaultValue="5" className="w-full bg-white/5 border border-white/5 rounded-xl p-2 text-xs font-bold text-white" />
-                  </div>
-                  <div>
-                    <label className="block text-[8px] font-black text-slate-500 uppercase mb-1">Monthly Base Salary Threshold (৳)</label>
-                    <input type="number" defaultValue="15000" className="w-full bg-white/5 border border-white/5 rounded-xl p-2 text-xs font-bold text-white" />
-                  </div>
-                  <button type="submit" className="w-full bg-[#FFC107] text-slate-950 text-xs font-black py-2 rounded-xl transition-all cursor-pointer">
-                    Save Variables
-                  </button>
-                </form>
-              </div>
-            </div>
-          )}
-
-          {/* ================================================= */}
-          {/* VIEW: LOGISTICS COURIERS */}
-          {/* ================================================= */}
-          {activeModule === 'delivery' && (
-            <div className="space-y-6 animate-fade-in">
-              <div className="bg-white/[0.02] border border-white/5 p-5 rounded-2xl shadow-xl space-y-4">
-                <h3 className="text-xs font-black text-slate-300 uppercase tracking-widest border-b border-white/5 pb-3">
-                  Courier Staff Assignments Grid
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {[
-                    { id: 'cour-01', name: 'Zahid Hasan', activeAssignments: 2, status: 'Out For Delivery', cashInHand: 450 },
-                    { id: 'cour-02', name: 'Aminul Islam', activeAssignments: 0, status: 'Idle', cashInHand: 0 },
-                    { id: 'cour-03', name: 'Taskin Ahmed', activeAssignments: 1, status: 'Dispatched', cashInHand: 149 }
-                  ].map((cour, idx) => (
-                    <div key={idx} className="p-4 bg-white/[0.02] border border-white/5 rounded-xl space-y-2 hover:border-white/10 transition-colors">
-                      <div className="flex justify-between items-center">
-                        <h4 className="text-xs font-black text-white">{cour.name}</h4>
-                        <span className={`text-[8px] font-black px-2 py-0.5 rounded border ${
-                          cour.status === 'Idle' ? 'bg-white/5 border-white/5 text-slate-400' : 'bg-blue-500/10 border-blue-500/20 text-blue-400'
-                        }`}>
-                          {cour.status}
-                        </span>
-                      </div>
-                      <div className="text-[10px] text-slate-400 space-y-1 font-medium pt-2 border-t border-white/5">
-                        <p>Active Shipments: <span className="text-white">{cour.activeAssignments} Packages</span></p>
-                        <p>Cash on Delivery In Hand: <span className="text-[#FFC107] font-bold">${cour.cashInHand}</span></p>
-                      </div>
-                    </div>
-                  ))}
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-white/5 text-slate-400 font-bold">
+                        <th className="pb-3 px-3">User & Role</th>
+                        <th className="pb-3 px-3">Amount</th>
+                        <th className="pb-3 px-3">Payment Method</th>
+                        <th className="pb-3 px-3">Account Number</th>
+                        <th className="pb-3 px-3">Status</th>
+                        <th className="pb-3 px-3 text-right">Review Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5 text-slate-300">
+                      {adminWithdrawals.map(w => (
+                        <tr key={w.id} className="hover:bg-white/5 transition-colors">
+                          <td className="py-3 px-3">
+                            <p className="font-bold text-white">{w.userName}</p>
+                            <span className="text-[9px] px-1.5 py-0.2 rounded font-bold bg-white/5 text-slate-400 uppercase">
+                              {w.role}
+                            </span>
+                          </td>
+                          <td className="py-3 px-3 font-mono font-black text-[#FFC107]">৳{w.amount.toLocaleString()}</td>
+                          <td className="py-3 px-3 font-bold text-white">{w.paymentMethod}</td>
+                          <td className="py-3 px-3 font-mono text-slate-300">{w.accountNumber}</td>
+                          <td className="py-3 px-3">
+                            <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-black border ${
+                              w.status === 'COMPLETED'
+                                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                                : w.status === 'REJECTED'
+                                ? 'bg-red-500/10 border-red-500/20 text-red-400'
+                                : 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+                            }`}>
+                              {w.status}
+                            </span>
+                          </td>
+                          <td className="py-3 px-3 text-right">
+                            {w.status === 'PENDING' && (
+                              <div className="flex items-center justify-end gap-1.5">
+                                <button
+                                  onClick={() => handleUpdateWithdrawalStatus(w.id, 'COMPLETED')}
+                                  className="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 text-[10px] font-bold px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                                >
+                                  Disburse Payout
+                                </button>
+                                <button
+                                  onClick={() => handleUpdateWithdrawalStatus(w.id, 'REJECTED')}
+                                  className="bg-red-500/10 hover:bg-red-500/20 text-red-400 text-[10px] font-bold px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                                >
+                                  Reject & Refund
+                                </button>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                      {adminWithdrawals.length === 0 && (
+                        <tr>
+                          <td colSpan={6} className="py-6 text-center text-slate-500 text-xs">
+                            No payout withdrawal requests pending review.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>

@@ -21,6 +21,8 @@ export function middleware(request: NextRequest) {
   const normalizedRole = role ? role.trim().toUpperCase() : null;
   const isAdminRole = normalizedRole === 'ADMIN' || normalizedRole === 'SUPER_ADMIN';
   const isSellerRole = normalizedRole === 'VENDOR_ADMIN' || normalizedRole === 'VENDOR_STAFF' || normalizedRole === 'SELLER' || normalizedRole === 'VENDOR';
+  const isResellerRole = normalizedRole === 'RESELLER';
+  const isDeliveryRole = normalizedRole === 'DELIVERY_MAN' || normalizedRole === 'DELIVERYMAN' || normalizedRole === 'COURIER' || normalizedRole === 'DELIVERY_MANAGER';
 
   // 1. ADMIN PORTAL ROUTE PROTECTION
   if (pathname.startsWith('/admin') || pathname.startsWith('/superadmin')) {
@@ -41,12 +43,11 @@ export function middleware(request: NextRequest) {
 
   // 2. SELLER PORTAL ROUTE PROTECTION
   if (pathname.startsWith('/seller')) {
-    const publicSellerPaths = ['/seller', '/seller/login', '/seller/register', '/seller/forgot-password'];
+    const publicSellerPaths = ['/seller/login', '/seller/register', '/seller/forgot-password'];
     const isPublicSellerPath = publicSellerPaths.some(p => pathname === p || pathname.startsWith(`${p}/`));
 
     if (isPublicSellerPath) {
-      // If already logged in as seller and visits seller/login or seller/register, redirect to /seller
-      if (token && isSellerRole && (pathname === '/seller/login' || pathname === '/seller/register')) {
+      if (token && isSellerRole) {
         return NextResponse.redirect(new URL('/seller', request.url));
       }
       return NextResponse.next();
@@ -58,7 +59,43 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // 3. CUSTOMER AUTH ROUTES (allow public access without redirect loops)
+  // 3. RESELLER PORTAL ROUTE PROTECTION
+  if (pathname.startsWith('/reseller')) {
+    const publicResellerPaths = ['/reseller/login', '/reseller/register', '/reseller/forgot-password'];
+    const isPublicResellerPath = publicResellerPaths.some(p => pathname === p || pathname.startsWith(`${p}/`));
+
+    if (isPublicResellerPath) {
+      if (token && isResellerRole) {
+        return NextResponse.redirect(new URL('/reseller', request.url));
+      }
+      return NextResponse.next();
+    }
+
+    // Require token and reseller role
+    if (!token || (!isResellerRole && !isAdminRole)) {
+      return NextResponse.redirect(new URL('/reseller/login', request.url));
+    }
+  }
+
+  // 4. DELIVERY MAN PORTAL ROUTE PROTECTION
+  if (pathname.startsWith('/delivery')) {
+    const publicDeliveryPaths = ['/delivery/login', '/delivery/register', '/delivery/forgot-password'];
+    const isPublicDeliveryPath = publicDeliveryPaths.some(p => pathname === p || pathname.startsWith(`${p}/`));
+
+    if (isPublicDeliveryPath) {
+      if (token && isDeliveryRole) {
+        return NextResponse.redirect(new URL('/delivery', request.url));
+      }
+      return NextResponse.next();
+    }
+
+    // Require token and delivery role
+    if (!token || (!isDeliveryRole && !isAdminRole)) {
+      return NextResponse.redirect(new URL('/delivery/login', request.url));
+    }
+  }
+
+  // 5. CUSTOMER AUTH ROUTES (allow public access without redirect loops)
   if (
     pathname === '/login' ||
     pathname === '/register' ||

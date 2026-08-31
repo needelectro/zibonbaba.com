@@ -1,276 +1,982 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useStore } from '../../store/useStore';
-import {
-  Truck,
-  MapPin,
-  Clock,
-  CheckCircle,
-  XCircle,
-  Navigation,
-  DollarSign,
-  Phone,
-  LogOut,
-  Map,
-  Sparkles,
-  Inbox
-} from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Lock, ShieldAlert } from 'lucide-react';
+import {
+  Bike, Navigation, Phone, MapPin, DollarSign, Wallet, CheckCircle2,
+  AlertCircle, Clock, ShieldCheck, X, Check, Lock, Power, ChevronRight,
+  TrendingUp, CreditCard, User, ExternalLink, RefreshCw, LogOut, Package,
+  AlertTriangle, Truck, Compass
+} from 'lucide-react';
+import { useStore } from '@/store/useStore';
 
-export default function DeliveryManDashboard() {
+type DeliveryTab = 'active' | 'orders' | 'earnings' | 'profile';
+
+export default function DeliveryPortalPage() {
   const router = useRouter();
-  const { username, userEmail, token, logout, isLoggedIn, role } = useStore();
-  const [isMounted, setIsMounted] = useState(false);
+  const { isLoggedIn, role, username, logout } = useStore();
 
-  useEffect(() => {
-    setIsMounted(true);
+  const [activeTab, setActiveTab] = useState<DeliveryTab>('active');
+  const [isMounted, setIsMounted] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Core Data States
+  const [dashboardData, setDashboardData] = useState<any>(null);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [earningsData, setEarningsData] = useState<any>(null);
+  const [profileData, setProfileData] = useState<any>(null);
+
+  // Active status toggle
+  const [isOnline, setIsOnline] = useState(false);
+  const [isTogglingOnline, setIsTogglingOnline] = useState(false);
+
+  // Filter tab for orders
+  const [orderFilterTab, setOrderFilterTab] = useState('ALL');
+
+  // Modals & Action States
+  const [isOtpModalOpen, setIsOtpModalOpen] = useState(false);
+  const [isFailedModalOpen, setIsFailedModalOpen] = useState(false);
+  const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
+  const [selectedTaskForAction, setSelectedTaskForAction] = useState<any | null>(null);
+
+  // Form States
+  const [otpInput, setOtpInput] = useState('');
+  const [proofNotes, setProofNotes] = useState('');
+  const [codCollectedChecked, setCodCollectedChecked] = useState(true);
+  const [failedReasonInput, setFailedReasonInput] = useState('Customer unavailable / phone unreachable');
+
+  const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [withdrawMethod, setWithdrawMethod] = useState('bKash');
+  const [withdrawAccount, setWithdrawAccount] = useState('');
+  const [isSubmittingWithdraw, setIsSubmittingWithdraw] = useState(false);
+
+  // Feedback Messages
+  const [successMsg, setSuccessMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
+  const [actionLoading, setActionLoading] = useState(false);
+
+  const getAuthToken = () => {
+    return typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null;
+  };
+
+  const getAuthHeaders = () => {
+    const token = getAuthToken();
+    return {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    };
+  };
+
+  // 1. Fetch Dashboard
+  const fetchDashboard = useCallback(async () => {
+    try {
+      const res = await fetch('/api/delivery/dashboard', { headers: getAuthHeaders() });
+      const data = await res.json();
+      if (res.ok) {
+        setDashboardData(data);
+        setIsOnline(data.profile?.isOnline ?? false);
+      }
+    } catch (_) {}
   }, []);
 
-  // Simulated delivery tasks
-  const [tasks, setTasks] = useState([
-    {
-      id: 'ORD-982104',
-      customer: 'Kabir Hasan',
-      phone: '+8801712345678',
-      address: 'House 12, Road 5, Dhanmondi, Dhaka',
-      codAmount: 149.00,
-      paymentMethod: 'Cash on Delivery',
-      status: 'ASSIGNED',
-      notes: 'Please call before arrival.'
-    },
-    {
-      id: 'ORD-982054',
-      customer: 'Mita Roy',
-      phone: '+8801812345678',
-      address: 'House 22, Sector 11, Uttara, Dhaka',
-      codAmount: 0.00,
-      paymentMethod: 'Prepaid (Wallet)',
-      status: 'SHIPPED',
-      notes: 'Leave package with security.'
-    }
-  ]);
+  // 2. Fetch Orders
+  const fetchOrders = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/delivery/orders?tab=${orderFilterTab}`, { headers: getAuthHeaders() });
+      const data = await res.json();
+      if (res.ok) {
+        setOrders(data.orders || []);
+      }
+    } catch (_) {}
+  }, [orderFilterTab]);
 
-  const [deliveredCount, setDeliveredCount] = useState(12);
-  const [earnings, setEarnings] = useState(1560.00);
-  const [cashInHand, setCashInHand] = useState(450.00);
+  // 3. Fetch Earnings
+  const fetchEarnings = useCallback(async () => {
+    try {
+      const res = await fetch('/api/delivery/earnings', { headers: getAuthHeaders() });
+      const data = await res.json();
+      if (res.ok) {
+        setEarningsData(data);
+      }
+    } catch (_) {}
+  }, []);
+
+  // 4. Fetch Profile
+  const fetchProfile = useCallback(async () => {
+    try {
+      const res = await fetch('/api/delivery/profile', { headers: getAuthHeaders() });
+      const data = await res.json();
+      if (res.ok) {
+        setProfileData(data.deliveryProfile);
+      }
+    } catch (_) {}
+  }, []);
+
+  // Master Initial Load
+  useEffect(() => {
+    setIsMounted(true);
+    const token = getAuthToken();
+    if (token) {
+      Promise.all([
+        fetchDashboard(),
+        fetchOrders(),
+        fetchEarnings(),
+        fetchProfile()
+      ]).finally(() => setLoading(false));
+    } else {
+      setLoading(false);
+    }
+  }, [fetchDashboard, fetchOrders, fetchEarnings, fetchProfile]);
+
+  // Toggle Availability Status (Online / Offline)
+  const handleToggleOnline = async () => {
+    setIsTogglingOnline(true);
+    const targetState = !isOnline;
+    try {
+      const res = await fetch('/api/delivery/availability', {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          isOnline: targetState,
+          availabilityStatus: targetState ? 'ONLINE' : 'OFFLINE'
+        })
+      });
+      if (res.ok) {
+        setIsOnline(targetState);
+        setSuccessMsg(targetState ? 'You are now ONLINE! Ready for delivery dispatches.' : 'You are now OFFLINE.');
+        fetchDashboard();
+      }
+    } catch (_) {
+      setErrorMsg('Failed to update online status.');
+    } finally {
+      setIsTogglingOnline(false);
+    }
+  };
+
+  // Perform Status Transition on Active Task
+  const handleTaskTransition = async (task: any, newStatus: string, payload: any = {}) => {
+    setActionLoading(true);
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    try {
+      const res = await fetch(`/api/delivery/orders/${task.id}/status`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          newStatus,
+          ...payload
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to update order status.');
+      }
+
+      setSuccessMsg(data.message || `Order updated to ${newStatus}`);
+      setIsOtpModalOpen(false);
+      setIsFailedModalOpen(false);
+      setOtpInput('');
+      setProofNotes('');
+
+      fetchDashboard();
+      fetchOrders();
+      fetchEarnings();
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Error updating order.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Submit Withdrawal Request
+  const handleWithdrawSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    const amt = parseFloat(withdrawAmount);
+    if (!amt || amt < 100) {
+      setErrorMsg('Minimum payout amount is ৳100.');
+      return;
+    }
+
+    setIsSubmittingWithdraw(true);
+
+    try {
+      const res = await fetch('/api/delivery/withdrawals', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          amount: amt,
+          paymentMethod: withdrawMethod,
+          accountNumber: withdrawAccount.trim()
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to submit payout request.');
+      }
+
+      setSuccessMsg(`Payout request for ৳${amt.toLocaleString()} submitted successfully!`);
+      setIsWithdrawModalOpen(false);
+      setWithdrawAmount('');
+      setWithdrawAccount('');
+
+      fetchEarnings();
+      fetchDashboard();
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Payout request error.');
+    } finally {
+      setIsSubmittingWithdraw(false);
+    }
+  };
 
   if (!isMounted) return null;
 
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen bg-[#1F2937] flex items-center justify-center p-4">
-        <div className="bg-gray-800 border border-gray-700 rounded-3xl p-8 max-w-sm w-full text-center text-white">
-          <div className="w-16 h-16 bg-red-500/10 rounded-2xl flex items-center justify-center text-red-500 mx-auto mb-6 border border-red-500/20">
-            <Lock className="w-8 h-8" />
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
+        <div className="bg-gray-900 border border-white/10 rounded-3xl p-8 max-w-sm w-full text-center text-white shadow-2xl">
+          <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center text-primary mx-auto mb-6 border border-primary/20">
+            <Bike className="w-8 h-8" />
           </div>
-          <h1 className="text-xl font-black mb-2">Login Required</h1>
-          <p className="text-xs text-gray-400 mb-6">Please log in to your account to view the Delivery Portal.</p>
-          <Link href="/login" className="bg-[#FFC107] text-[#1F2937] font-black text-xs px-6 py-3 rounded-2xl block w-full text-center">
-            Proceed to Login
+          <h1 className="text-xl font-black mb-2">Delivery Partner Login</h1>
+          <p className="text-xs text-gray-400 mb-6">Sign in to access your courier dispatch console.</p>
+          <Link href="/delivery/login" className="bg-primary text-gray-950 font-black text-xs px-6 py-3 rounded-2xl block w-full text-center hover:bg-primary-accent transition-all shadow-glow">
+            Sign In as Rider
           </Link>
         </div>
       </div>
     );
   }
 
-  const allowedDeliveryRoles = ['deliveryman', 'delivery_manager', 'superadmin'];
-  if (!allowedDeliveryRoles.includes(role)) {
+  const normalizedRole = (role || '').toUpperCase();
+  if (
+    normalizedRole !== 'DELIVERY_MAN' &&
+    normalizedRole !== 'COURIER' &&
+    normalizedRole !== 'DELIVERY_MANAGER' &&
+    normalizedRole !== 'SUPER_ADMIN' &&
+    normalizedRole !== 'ADMIN'
+  ) {
     return (
-      <div className="min-h-screen bg-[#1F2937] flex items-center justify-center p-4">
-        <div className="bg-gray-800 border border-gray-700 rounded-3xl p-8 max-w-sm w-full text-center text-white">
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
+        <div className="bg-gray-900 border border-white/10 rounded-3xl p-8 max-w-sm w-full text-center text-white shadow-2xl">
           <div className="w-16 h-16 bg-rose-500/10 rounded-2xl flex items-center justify-center text-rose-500 mx-auto mb-6 border border-rose-500/20">
-            <ShieldAlert className="w-8 h-8" />
+            <Lock className="w-8 h-8" />
           </div>
-          <h1 className="text-xl font-black mb-2">Access Denied</h1>
-          <p className="text-xs text-gray-400 mb-6">Strict Dashboard Isolation is active. You do not have permission to view the Delivery Portal.</p>
-          <button onClick={() => router.push('/')} className="bg-white/5 border border-white/5 text-slate-350 hover:text-white font-black text-xs px-6 py-3 rounded-2xl block w-full cursor-pointer">
-            Back to Homepage
+          <h1 className="text-xl font-black mb-2">Rider Account Required</h1>
+          <p className="text-xs text-gray-400 mb-6">You must be registered as a Delivery Partner to access this mobile console.</p>
+          <Link href="/delivery/register" className="bg-primary text-gray-950 font-black text-xs px-6 py-3 rounded-2xl block w-full text-center mb-3">
+            Join Delivery Fleet
+          </Link>
+          <button onClick={() => router.push('/')} className="bg-white/5 border border-white/10 text-gray-300 font-black text-xs px-6 py-3 rounded-2xl block w-full">
+            Back to Marketplace
           </button>
         </div>
       </div>
     );
   }
 
-  const handleUpdateStatus = (taskId: string, newStatus: string) => {
-    setTasks(prev => prev.map(t => {
-      if (t.id === taskId) {
-        // If delivered, update earnings and cash in hand
-        if (newStatus === 'DELIVERED') {
-          setDeliveredCount(c => c + 1);
-          setEarnings(e => e + 120); // 120 BDT delivery fee
-          if (t.codAmount > 0) {
-            setCashInHand(ch => ch + t.codAmount);
-          }
-        }
-        return { ...t, status: newStatus };
-      }
-      return t;
-    }));
-    
-    // Simulate real-time websocket/SSE notifications
-    alert(`Order ${taskId} status updated to ${newStatus}. Notifications sent to Customer and Seller.`);
+  const activeTask = dashboardData?.activeDelivery;
+  const stats = dashboardData?.stats || {
+    todayDeliveries: 0,
+    todayEarnings: 0,
+    pendingDeliveries: 0,
+    completedDeliveries: 0,
+    availableBalance: 0,
+    cashInHand: 0
   };
 
   return (
-    <main className="min-h-screen bg-gray-50 pb-16">
-      {/* Header Banner */}
-      <header className="bg-[#1F2937] text-white py-10 px-4 md:px-8 border-b border-gray-800">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="bg-[#FFC107] text-[#1F2937] text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full">
-                Courier & Logistics Portal
-              </span>
-            </div>
-            <h1 className="text-3xl font-black mt-2">Courier Dashboard: {username || 'Delivery Agent'}</h1>
-            <p className="text-xs text-gray-400 mt-1">Accept shipments, track delivery coordinates, and manage cash collection logs.</p>
+    <div className="min-h-screen bg-gray-950 text-white flex flex-col pb-20 sm:pb-6">
+      {/* Top Header */}
+      <header className="border-b border-white/10 bg-gray-900/80 backdrop-blur-xl sticky top-0 z-40 px-4 sm:px-6 py-3.5 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center font-black text-gray-900 text-lg shadow-glow">
+            <Bike size={20} />
           </div>
+          <div>
+            <h1 className="font-extrabold text-sm tracking-tight text-white flex items-center gap-1.5">
+              Zibonbaba Express
+              <span className="text-[10px] px-2 py-0.2 rounded-full bg-primary/10 border border-primary/20 text-primary font-bold">
+                RIDER
+              </span>
+            </h1>
+            <p className="text-[10px] text-gray-400 font-medium">Zone: {dashboardData?.profile?.preferredZone || 'Dhaka Central'}</p>
+          </div>
+        </div>
+
+        {/* Online / Offline Switch */}
+        <div className="flex items-center gap-3">
           <button
-            onClick={() => { logout(); window.location.href = '/login'; }}
-            className="flex items-center gap-1.5 border border-red-500/30 text-red-400 hover:bg-red-500/10 text-xs font-bold px-4 py-2.5 rounded-xl transition-all cursor-pointer"
+            onClick={handleToggleOnline}
+            disabled={isTogglingOnline}
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-black border transition-all cursor-pointer ${
+              isOnline
+                ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400 shadow-glow'
+                : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'
+            }`}
           >
-            <LogOut className="w-4 h-4" />
-            Sign Out
+            <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-emerald-400 animate-pulse' : 'bg-gray-500'}`} />
+            {isOnline ? 'ONLINE' : 'OFFLINE'}
+          </button>
+
+          <button
+            onClick={() => { logout(); router.push('/delivery/login'); }}
+            className="text-gray-400 hover:text-red-400 p-1.5 rounded-lg hover:bg-white/5 cursor-pointer"
+            title="Sign Out"
+          >
+            <LogOut size={16} />
           </button>
         </div>
       </header>
 
       {/* Main Container */}
-      <div className="max-w-7xl mx-auto px-4 md:px-8 mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* Left Column: Stats & Map */}
-        <div className="lg:col-span-1 space-y-6">
-          {/* Stats grid */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white border border-gray-200 p-5 rounded-2xl shadow-sm">
-              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Completed Deliveries</p>
-              <p className="text-2xl font-black text-[#1F2937] mt-1">{deliveredCount}</p>
+      <main className="flex-1 max-w-2xl w-full mx-auto p-4 space-y-4">
+        {/* Notifications */}
+        {successMsg && (
+          <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-2xl font-bold flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 size={16} /> <span>{successMsg}</span>
             </div>
-            <div className="bg-white border border-gray-200 p-5 rounded-2xl shadow-sm">
-              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Courier Earnings</p>
-              <p className="text-2xl font-black text-green-600 mt-1">${earnings}</p>
+            <button onClick={() => setSuccessMsg('')} className="text-emerald-400"><X size={14} /></button>
+          </div>
+        )}
+
+        {errorMsg && (
+          <div className="p-3.5 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-2xl font-bold flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <AlertTriangle size={16} /> <span>{errorMsg}</span>
             </div>
-            <div className="bg-white border border-gray-200 p-5 rounded-2xl shadow-sm col-span-2">
-              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider font-semibold">Cash in Hand (COD)</p>
-              <p className="text-2xl font-black text-[#1F2937] mt-1">${cashInHand}</p>
-              <span className="text-[8px] text-gray-400 block mt-1">Please deposit COD amount to Delivery Manager weekly.</span>
-            </div>
+            <button onClick={() => setErrorMsg('')} className="text-rose-400"><X size={14} /></button>
+          </div>
+        )}
+
+        {/* Quick Stats Grid */}
+        <div className="grid grid-cols-3 gap-3">
+          <div className="bg-gray-900/80 border border-white/10 p-3 rounded-2xl text-center">
+            <span className="text-[9px] font-bold text-gray-400 uppercase block">Today Done</span>
+            <span className="text-lg font-black text-white">{stats.todayDeliveries} Drops</span>
           </div>
 
-          {/* Interactive Routing Coordinates */}
-          <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden p-5 space-y-3">
-            <h3 className="font-black text-[#1F2937] text-sm flex items-center gap-1.5">
-              <Map className="w-4.5 h-4.5 text-[#FF8F00]" />
-              Live Routing Map Coordinates
-            </h3>
-            <div className="bg-gray-100 rounded-xl h-48 flex items-center justify-center border border-gray-200 text-center relative overflow-hidden">
-              <div className="absolute inset-0 bg-cover bg-center opacity-30" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1524661135-423995f22d0b?w=600&auto=format&fit=crop&q=60')" }} />
-              <div className="relative z-10 p-4">
-                <Navigation className="w-8 h-8 text-[#FF8F00] mx-auto mb-2 animate-bounce" />
-                <span className="text-[10px] font-bold text-gray-800">Map Rendering Sandbox</span>
-                <p className="text-[9px] text-gray-500 mt-1 max-w-[200px] mx-auto">Dhaka Metropolitan Grid routing enabled. Dispatch coords synced.</p>
-              </div>
-            </div>
+          <div className="bg-gray-900/80 border border-white/10 p-3 rounded-2xl text-center">
+            <span className="text-[9px] font-bold text-emerald-400 uppercase block">Today Earned</span>
+            <span className="text-lg font-black text-emerald-400">৳{stats.todayEarnings}</span>
+          </div>
+
+          <div className="bg-gray-900/80 border border-white/10 p-3 rounded-2xl text-center">
+            <span className="text-[9px] font-bold text-amber-400 uppercase block">Cash in Hand</span>
+            <span className="text-lg font-black text-amber-400">৳{stats.cashInHand}</span>
           </div>
         </div>
 
-        {/* Right Column: Assigned Shipments */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 space-y-4">
-            <h3 className="font-black text-[#1F2937] text-base flex items-center gap-2">
-              <Truck className="w-5 h-5 text-[#FF8F00]" />
-              Active Shipments Assigned ({tasks.filter(t => t.status !== 'DELIVERED').length})
-            </h3>
+        {/* ======================================================== */}
+        {/* TAB 1: ACTIVE TASK (RIDER WORKFLOW) */}
+        {/* ======================================================== */}
+        {activeTab === 'active' && (
+          <div className="space-y-4">
+            {activeTask ? (
+              <div className="bg-gray-900 border-2 border-primary/40 rounded-3xl p-5 sm:p-6 space-y-5 shadow-2xl relative overflow-hidden">
+                {/* Header Tag */}
+                <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-primary text-gray-950 uppercase shadow-glow">
+                      Active Assignment
+                    </span>
+                    <span className="font-mono text-xs font-bold text-gray-300">
+                      #{activeTask.orderId.slice(0, 8).toUpperCase()}
+                    </span>
+                  </div>
+                  <span className="text-xs font-black text-emerald-400">
+                    +৳{activeTask.deliveryFee} Fee
+                  </span>
+                </div>
 
-            <div className="space-y-4">
-              {tasks.filter(t => t.status !== 'DELIVERED').map(task => (
-                <div key={task.id} className="p-5 border border-gray-100 bg-gray-50 rounded-xl space-y-4">
-                  <div className="flex justify-between items-start border-b border-gray-200/60 pb-3">
+                {/* Progress Stepper */}
+                <div className="grid grid-cols-4 gap-1 text-center text-[9px] font-bold text-gray-400">
+                  {[
+                    { key: 'ASSIGNED', label: '1. Assigned' },
+                    { key: 'ACCEPTED', label: '2. Accepted' },
+                    { key: 'PICKED_UP', label: '3. Picked Up' },
+                    { key: 'DELIVERED', label: '4. Delivered' }
+                  ].map((step, idx) => {
+                    const isCompleted = (
+                      (step.key === 'ASSIGNED') ||
+                      (step.key === 'ACCEPTED' && ['ACCEPTED', 'PICKED_UP', 'IN_TRANSIT', 'DELIVERED'].includes(activeTask.status)) ||
+                      (step.key === 'PICKED_UP' && ['PICKED_UP', 'IN_TRANSIT', 'DELIVERED'].includes(activeTask.status)) ||
+                      (step.key === 'DELIVERED' && activeTask.status === 'DELIVERED')
+                    );
+                    const isCurrent = activeTask.status === step.key || (step.key === 'PICKED_UP' && activeTask.status === 'IN_TRANSIT');
+
+                    return (
+                      <div key={idx} className="space-y-1">
+                        <div className={`h-1.5 rounded-full transition-all ${
+                          isCompleted ? 'bg-primary' : 'bg-white/10'
+                        } ${isCurrent ? 'ring-2 ring-primary ring-offset-2 ring-offset-gray-900' : ''}`} />
+                        <span className={isCompleted ? 'text-white' : 'text-gray-500'}>{step.label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Customer & Location Details */}
+                <div className="bg-white/5 border border-white/5 rounded-2xl p-4 space-y-3">
+                  <div className="flex items-start justify-between">
                     <div>
-                      <span className="font-mono text-xs font-black text-gray-900">{task.id}</span>
-                      <span className="text-[9px] text-gray-400 block mt-0.5">Method: {task.paymentMethod}</span>
+                      <h3 className="text-base font-black text-white">{activeTask.customerName}</h3>
+                      <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5 font-mono">
+                        <Phone size={12} className="text-primary" /> {activeTask.customerPhone}
+                      </p>
                     </div>
-                    <span className={`text-[8.5px] font-black px-2.5 py-1 border rounded-full uppercase ${
-                      task.status === 'ASSIGNED' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' :
-                      task.status === 'SHIPPED' ? 'bg-blue-100 text-blue-700 border-blue-200' :
-                      'bg-orange-100 text-orange-700 border-orange-200'
+
+                    <a
+                      href={`tel:${activeTask.customerPhone}`}
+                      className="bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-400 px-3 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shadow-glow"
+                    >
+                      <Phone size={14} /> Call Customer
+                    </a>
+                  </div>
+
+                  {/* Delivery Address & Navigation */}
+                  <div className="pt-3 border-t border-white/5 flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-2">
+                      <MapPin size={16} className="text-rose-400 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-xs font-bold text-gray-200">{activeTask.address}</p>
+                        <p className="text-[10px] text-gray-500">{activeTask.upazila ? `${activeTask.upazila}, ` : ''}{activeTask.district}</p>
+                      </div>
+                    </div>
+
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(activeTask.address + ', ' + activeTask.district + ', Bangladesh')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/40 text-blue-400 px-3 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all shrink-0"
+                    >
+                      <Navigation size={14} /> Maps
+                    </a>
+                  </div>
+
+                  {/* Items & COD Collection Info */}
+                  <div className="pt-3 border-t border-white/5 flex items-center justify-between text-xs">
+                    <div>
+                      <span className="text-[10px] text-gray-400 uppercase font-bold block">Package Items</span>
+                      <span className="text-gray-200 font-medium">{activeTask.itemsSummary}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[10px] text-amber-400 uppercase font-bold block">COD Amount to Collect</span>
+                      <span className="text-base font-black text-amber-400 font-mono">
+                        ৳{activeTask.codAmount.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Workflow Buttons */}
+                <div className="space-y-2 pt-1">
+                  {activeTask.status === 'ASSIGNED' && (
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        onClick={() => handleTaskTransition(activeTask, 'REJECTED')}
+                        disabled={actionLoading}
+                        className="bg-white/5 hover:bg-red-500/20 text-gray-400 hover:text-red-400 font-bold py-3.5 rounded-2xl text-xs transition-colors cursor-pointer"
+                      >
+                        Decline Task
+                      </button>
+                      <button
+                        onClick={() => handleTaskTransition(activeTask, 'ACCEPTED')}
+                        disabled={actionLoading}
+                        className="bg-primary hover:bg-primary-accent text-gray-950 font-black py-3.5 rounded-2xl text-xs transition-all shadow-glow cursor-pointer"
+                      >
+                        Accept Assignment
+                      </button>
+                    </div>
+                  )}
+
+                  {activeTask.status === 'ACCEPTED' && (
+                    <button
+                      onClick={() => handleTaskTransition(activeTask, 'PICKED_UP')}
+                      disabled={actionLoading}
+                      className="w-full bg-amber-400 hover:bg-amber-300 text-gray-950 font-black py-4 rounded-2xl text-sm transition-all shadow-glow flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <Package size={18} /> Confirm Picked Up from Seller / Hub
+                    </button>
+                  )}
+
+                  {activeTask.status === 'PICKED_UP' && (
+                    <button
+                      onClick={() => handleTaskTransition(activeTask, 'IN_TRANSIT')}
+                      disabled={actionLoading}
+                      className="w-full bg-blue-500 hover:bg-blue-400 text-white font-black py-4 rounded-2xl text-sm transition-all shadow-glow flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <Navigation size={18} /> Start Transit / On The Way to Customer
+                    </button>
+                  )}
+
+                  {activeTask.status === 'IN_TRANSIT' && (
+                    <div className="space-y-2">
+                      <button
+                        onClick={() => {
+                          setSelectedTaskForAction(activeTask);
+                          setIsOtpModalOpen(true);
+                        }}
+                        className="w-full bg-emerald-400 hover:bg-emerald-300 text-gray-950 font-black py-4 rounded-2xl text-sm transition-all shadow-glow flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <CheckCircle2 size={18} /> Enter Customer OTP & Complete Delivery
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setSelectedTaskForAction(activeTask);
+                          setIsFailedModalOpen(true);
+                        }}
+                        className="w-full bg-white/5 hover:bg-red-500/10 border border-white/5 text-gray-400 hover:text-red-400 font-bold py-2.5 rounded-xl text-xs transition-colors cursor-pointer"
+                      >
+                        Report Delivery Issue / Unreachable Customer
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              /* No Active Task */
+              <div className="bg-gray-900/80 border border-white/10 rounded-3xl p-8 text-center space-y-4">
+                <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mx-auto">
+                  <Compass className="w-8 h-8 animate-spin" style={{ animationDuration: '10s' }} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-white">No Active Delivery Task</h3>
+                  <p className="text-xs text-gray-400 mt-1 max-w-sm mx-auto">
+                    {isOnline
+                      ? 'You are online and active in the dispatch queue. You will receive an instant notification when a shipment is assigned.'
+                      : 'You are currently offline. Switch your status to Online to start receiving shipment assignments.'}
+                  </p>
+                </div>
+
+                {!isOnline && (
+                  <button
+                    onClick={handleToggleOnline}
+                    className="bg-primary hover:bg-primary-accent text-gray-950 font-black text-xs px-6 py-3 rounded-2xl transition-all shadow-glow cursor-pointer inline-flex items-center gap-2"
+                  >
+                    <Power size={15} /> Go Online Now
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ======================================================== */}
+        {/* TAB 2: ASSIGNED DELIVERIES QUEUE */}
+        {/* ======================================================== */}
+        {activeTab === 'orders' && (
+          <div className="space-y-4">
+            {/* Filter Sub-tabs */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+              {['ALL', 'NEW', 'ACCEPTED', 'PICKUP', 'IN_TRANSIT', 'DELIVERED', 'FAILED'].map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setOrderFilterTab(tab)}
+                  className={`text-[11px] font-bold px-3 py-1.5 rounded-xl border whitespace-nowrap transition-all cursor-pointer ${
+                    orderFilterTab === tab
+                      ? 'bg-primary text-gray-950 border-primary font-black shadow-glow'
+                      : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+
+            {/* Orders List */}
+            <div className="space-y-3">
+              {orders.map((ord) => (
+                <div key={ord.id} className="bg-gray-900/80 border border-white/10 rounded-2xl p-4 space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <span className="font-mono text-xs font-bold text-white block">
+                        #{ord.orderId.slice(0, 8).toUpperCase()}
+                      </span>
+                      <p className="text-xs font-bold text-gray-200 mt-0.5">{ord.customerName}</p>
+                      <p className="text-[10px] text-gray-400">{ord.customerPhone}</p>
+                    </div>
+
+                    <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black border ${
+                      ord.status === 'DELIVERED'
+                        ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                        : ord.status === 'IN_TRANSIT'
+                        ? 'bg-blue-500/10 border-blue-500/20 text-blue-400'
+                        : ord.status === 'FAILED'
+                        ? 'bg-red-500/10 border-red-500/20 text-red-400'
+                        : 'bg-amber-500/10 border-amber-500/20 text-amber-400'
                     }`}>
-                      {task.status}
+                      {ord.status}
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-[10px] font-semibold text-gray-600">
-                    <div className="space-y-2">
-                      <p className="flex items-center gap-1.5">
-                        <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                        <span>Address: <span className="font-bold text-gray-800">{task.address}</span></span>
-                      </p>
-                      <p className="flex items-center gap-1.5">
-                        <Phone className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                        <span>Phone: <span className="font-bold text-gray-800">{task.phone}</span></span>
-                      </p>
+                  <div className="text-[11px] text-gray-400 space-y-1 pt-2 border-t border-white/5">
+                    <p className="flex items-start gap-1.5">
+                      <MapPin size={13} className="text-primary shrink-0 mt-0.5" />
+                      <span className="truncate">{ord.address}</span>
+                    </p>
+                    <div className="flex justify-between items-center pt-1 font-mono">
+                      <span className="text-gray-400">COD: <b className="text-amber-400">৳{ord.codAmount.toLocaleString()}</b></span>
+                      <span className="text-gray-400">Fee: <b className="text-emerald-400">+৳{ord.deliveryFee}</b></span>
                     </div>
-
-                    <div className="space-y-2 md:text-right">
-                      <p>
-                        <span>Collect COD: <span className="text-sm font-black text-[#1F2937]">৳{task.codAmount}</span></span>
-                      </p>
-                      <p className="text-[9px] text-gray-400 italic">Notes: "{task.notes}"</p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2 border-t border-gray-200/60 pt-3">
-                    {task.status === 'ASSIGNED' && (
-                      <button
-                        onClick={() => handleUpdateStatus(task.id, 'SHIPPED')}
-                        className="bg-[#1F2937] hover:bg-black text-white text-[10px] font-bold px-4 py-2 rounded-lg transition-colors cursor-pointer"
-                      >
-                        Accept & Start Shipping
-                      </button>
-                    )}
-                    {task.status === 'SHIPPED' && (
-                      <button
-                        onClick={() => handleUpdateStatus(task.id, 'PICKED_UP')}
-                        className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold px-4 py-2 rounded-lg transition-colors cursor-pointer"
-                      >
-                        Mark Out For Delivery
-                      </button>
-                    )}
-                    {(task.status === 'PICKED_UP' || task.status === 'SHIPPED') && (
-                      <>
-                        <button
-                          onClick={() => handleUpdateStatus(task.id, 'DELIVERED')}
-                          className="bg-[#FFC107] hover:bg-[#FFB300] text-[#1F2937] text-[10px] font-black px-4 py-2 rounded-lg transition-colors cursor-pointer"
-                        >
-                          Confirm Delivered
-                        </button>
-                        <button
-                          onClick={() => handleUpdateStatus(task.id, 'FAILED')}
-                          className="border border-red-500/20 text-red-500 hover:bg-red-500/5 text-[10px] font-bold px-4 py-2 rounded-lg transition-colors cursor-pointer"
-                        >
-                          Mark Delivery Failed
-                        </button>
-                      </>
-                    )}
                   </div>
                 </div>
               ))}
 
-              {tasks.filter(t => t.status !== 'DELIVERED').length === 0 && (
-                <div className="text-center py-12 text-gray-400 space-y-2">
-                  <Inbox className="w-10 h-10 mx-auto text-gray-300" />
-                  <p className="text-xs font-bold">No pending deliveries</p>
-                  <p className="text-[10px] text-gray-400">All shipments have been successfully dispatched and delivered.</p>
+              {orders.length === 0 && (
+                <div className="text-center py-12 bg-gray-900/40 rounded-3xl border border-white/5 space-y-2">
+                  <Package className="w-8 h-8 text-gray-600 mx-auto" />
+                  <p className="text-xs text-gray-400 font-bold">No deliveries in this category.</p>
                 </div>
               )}
             </div>
           </div>
-        </div>
+        )}
 
-      </div>
-    </main>
+        {/* ======================================================== */}
+        {/* TAB 3: EARNINGS & WALLET */}
+        {/* ======================================================== */}
+        {activeTab === 'earnings' && (
+          <div className="space-y-4">
+            <div className="bg-gradient-to-br from-gray-900 to-gray-900/60 border border-white/10 rounded-3xl p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Available Wallet Balance</span>
+                  <p className="text-3xl font-black text-amber-400 mt-1">৳{(earningsData?.earnings?.availableBalance || 0).toLocaleString()}</p>
+                </div>
+                <button
+                  onClick={() => setIsWithdrawModalOpen(true)}
+                  className="bg-primary hover:bg-primary-accent text-gray-950 font-black text-xs px-4 py-2.5 rounded-xl transition-all shadow-glow cursor-pointer"
+                >
+                  Withdraw Money
+                </button>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 pt-3 border-t border-white/10 text-center text-xs">
+                <div>
+                  <span className="text-[10px] text-gray-400 font-bold uppercase block">This Week</span>
+                  <span className="font-bold text-white">৳{earningsData?.earnings?.thisWeek || 0}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-gray-400 font-bold uppercase block">This Month</span>
+                  <span className="font-bold text-white">৳{earningsData?.earnings?.thisMonth || 0}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-emerald-400 font-bold uppercase block">All Time</span>
+                  <span className="font-black text-emerald-400">৳{earningsData?.earnings?.totalEarnings || 0}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Transactions */}
+            <div className="bg-gray-900/80 border border-white/10 rounded-3xl p-5 space-y-3">
+              <h3 className="text-xs font-black text-white uppercase tracking-wider">Earnings & Payout Ledger</h3>
+              <div className="space-y-2">
+                {earningsData?.transactions?.map((tx: any) => (
+                  <div key={tx.id} className="p-3 bg-white/5 rounded-xl flex items-center justify-between text-xs">
+                    <div>
+                      <p className="font-bold text-white">{tx.description}</p>
+                      <p className="text-[10px] text-gray-400">{new Date(tx.date).toLocaleDateString()}</p>
+                    </div>
+                    <span className={`font-mono font-black ${tx.type === 'CREDIT' ? 'text-emerald-400' : 'text-red-400'}`}>
+                      {tx.type === 'CREDIT' ? '+' : '-'}৳{tx.amount.toLocaleString()}
+                    </span>
+                  </div>
+                ))}
+                {(!earningsData?.transactions || earningsData.transactions.length === 0) && (
+                  <p className="text-xs text-gray-500 text-center py-6">No wallet transactions recorded yet.</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ======================================================== */}
+        {/* TAB 4: RIDER PROFILE */}
+        {/* ======================================================== */}
+        {activeTab === 'profile' && (
+          <div className="bg-gray-900/80 border border-white/10 rounded-3xl p-6 space-y-4">
+            <h3 className="text-sm font-black text-white uppercase tracking-wider">Rider Fleet Profile</h3>
+            <div className="space-y-3 text-xs">
+              <div className="p-3 bg-white/5 rounded-xl flex justify-between">
+                <span className="text-gray-400">Vehicle Type:</span>
+                <span className="font-bold text-white">{profileData?.vehicleType || 'Motorcycle'}</span>
+              </div>
+              <div className="p-3 bg-white/5 rounded-xl flex justify-between">
+                <span className="text-gray-400">Preferred Zone:</span>
+                <span className="font-bold text-white">{profileData?.preferredZone || 'Dhaka Central'}</span>
+              </div>
+              <div className="p-3 bg-white/5 rounded-xl flex justify-between">
+                <span className="text-gray-400">Emergency Phone:</span>
+                <span className="font-bold text-white">{profileData?.emergencyContact || 'Not Set'}</span>
+              </div>
+              <div className="p-3 bg-white/5 rounded-xl flex justify-between">
+                <span className="text-gray-400">Deliveries Completed:</span>
+                <span className="font-bold text-emerald-400">{profileData?.completedDeliveries || 0} Successful</span>
+              </div>
+            </div>
+
+            <button
+              onClick={() => { logout(); router.push('/delivery/login'); }}
+              className="w-full mt-4 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-bold py-3 rounded-xl transition-colors"
+            >
+              Sign Out from Rider App
+            </button>
+          </div>
+        )}
+      </main>
+
+      {/* Mobile Bottom Navigation Bar */}
+      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-xl border-t border-white/10 px-4 py-2 flex items-center justify-around">
+        {[
+          { id: 'active', label: 'Active Task', icon: Navigation },
+          { id: 'orders', label: 'Queue', icon: Package },
+          { id: 'earnings', label: 'Earnings', icon: Wallet },
+          { id: 'profile', label: 'Profile', icon: User }
+        ].map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => {
+                setActiveTab(tab.id as DeliveryTab);
+                setSuccessMsg('');
+                setErrorMsg('');
+              }}
+              className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition-all cursor-pointer ${
+                isActive ? 'text-primary font-black' : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              <Icon size={18} className={isActive ? 'text-primary' : ''} />
+              <span className="text-[10px]">{tab.label}</span>
+            </button>
+          );
+        })}
+      </nav>
+
+      {/* ======================================================== */}
+      {/* MODAL 1: OTP VERIFICATION & COMPLETE DELIVERY */}
+      {/* ======================================================== */}
+      {isOtpModalOpen && selectedTaskForAction && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-gray-900 border border-white/10 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-white/10">
+              <h3 className="text-base font-black text-white">Complete Delivery</h3>
+              <button onClick={() => setIsOtpModalOpen(false)} className="text-gray-400 hover:text-white">
+                <X size={18} />
+              </button>
+            </div>
+
+            <p className="text-xs text-gray-300">
+              Ask customer <b className="text-white">{selectedTaskForAction.customerName}</b> for the 4-digit verification code sent to their phone.
+            </p>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-semibold text-gray-300 mb-1">Customer Delivery OTP *</label>
+                <input
+                  type="text"
+                  maxLength={6}
+                  required
+                  placeholder="e.g. 4829"
+                  value={otpInput}
+                  onChange={(e) => setOtpInput(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 text-center text-xl font-mono tracking-widest focus:outline-none focus:ring-2 focus:ring-primary/50"
+                />
+              </div>
+
+              {selectedTaskForAction.codAmount > 0 && (
+                <label className="flex items-center gap-3 p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl cursor-pointer text-xs select-none">
+                  <input
+                    type="checkbox"
+                    checked={codCollectedChecked}
+                    onChange={(e) => setCodCollectedChecked(e.target.checked)}
+                    className="w-4 h-4 rounded border-white/20 bg-white/5 text-primary focus:ring-primary"
+                  />
+                  <span>
+                    Collected <b className="text-amber-400 font-mono">৳{selectedTaskForAction.codAmount.toLocaleString()}</b> COD Cash from customer
+                  </span>
+                </label>
+              )}
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-300 mb-1">Delivery Notes / Handover Details</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Handed over to recipient directly"
+                  value={proofNotes}
+                  onChange={(e) => setProofNotes(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-3 py-2 text-xs focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setIsOtpModalOpen(false)}
+                className="flex-1 bg-white/5 hover:bg-white/10 text-gray-300 text-xs font-bold py-3 rounded-xl cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => handleTaskTransition(selectedTaskForAction, 'DELIVERED', {
+                  otp: otpInput.trim(),
+                  proofNotes: proofNotes.trim(),
+                  codCollected: codCollectedChecked
+                })}
+                disabled={actionLoading}
+                className="flex-1 bg-primary hover:bg-primary-accent text-gray-950 text-xs font-black py-3 rounded-xl shadow-glow cursor-pointer disabled:opacity-50"
+              >
+                {actionLoading ? 'Verifying OTP...' : 'Confirm Delivery'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* MODAL 2: REPORT DELIVERY FAILED */}
+      {/* ======================================================== */}
+      {isFailedModalOpen && selectedTaskForAction && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-gray-900 border border-white/10 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-white/10">
+              <h3 className="text-base font-black text-rose-400">Report Delivery Issue</h3>
+              <button onClick={() => setIsFailedModalOpen(false)} className="text-gray-400 hover:text-white">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-semibold text-gray-300 mb-1">Reason for Failure *</label>
+                <select
+                  value={failedReasonInput}
+                  onChange={(e) => setFailedReasonInput(e.target.value)}
+                  className="w-full bg-gray-950 border border-white/10 text-white rounded-xl px-3 py-2.5 text-xs focus:outline-none"
+                >
+                  <option value="Customer unavailable / phone unreachable">Customer unavailable / phone unreachable</option>
+                  <option value="Customer refused package / canceled order">Customer refused package / canceled order</option>
+                  <option value="Incorrect address / location not found">Incorrect address / location not found</option>
+                  <option value="Damaged package during transit">Damaged package during transit</option>
+                  <option value="Customer requested delivery reschedule">Customer requested delivery reschedule</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setIsFailedModalOpen(false)}
+                className="flex-1 bg-white/5 hover:bg-white/10 text-gray-300 text-xs font-bold py-3 rounded-xl cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => handleTaskTransition(selectedTaskForAction, 'FAILED', {
+                  failedReason: failedReasonInput
+                })}
+                disabled={actionLoading}
+                className="flex-1 bg-red-500 hover:bg-red-400 text-white text-xs font-black py-3 rounded-xl shadow-glow cursor-pointer disabled:opacity-50"
+              >
+                {actionLoading ? 'Submitting...' : 'Submit Issue'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* MODAL 3: WITHDRAWAL REQUEST */}
+      {/* ======================================================== */}
+      {isWithdrawModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-gray-900 border border-white/10 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-white/10">
+              <h3 className="text-base font-black text-white">Withdraw Delivery Earnings</h3>
+              <button onClick={() => setIsWithdrawModalOpen(false)} className="text-gray-400 hover:text-white">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-xs flex justify-between">
+              <span className="text-gray-300">Available Balance:</span>
+              <span className="font-black text-amber-400">৳{(earningsData?.earnings?.availableBalance || 0).toLocaleString()}</span>
+            </div>
+
+            <form onSubmit={handleWithdrawSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-300 mb-1">Amount (৳) *</label>
+                <input
+                  type="number"
+                  min="100"
+                  max={earningsData?.earnings?.availableBalance || 999999}
+                  required
+                  placeholder="Min ৳100"
+                  value={withdrawAmount}
+                  onChange={(e) => setWithdrawAmount(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-3 py-2.5 text-xs font-bold focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-300 mb-1">Payout Method *</label>
+                <select
+                  value={withdrawMethod}
+                  onChange={(e) => setWithdrawMethod(e.target.value)}
+                  className="w-full bg-gray-950 border border-white/10 text-white rounded-xl px-3 py-2.5 text-xs focus:outline-none"
+                >
+                  <option value="bKash">bKash</option>
+                  <option value="Nagad">Nagad</option>
+                  <option value="Rocket">Rocket</option>
+                  <option value="Bank Transfer">Bank Transfer</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-300 mb-1">Account Number *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="01XXXXXXXXX"
+                  value={withdrawAccount}
+                  onChange={(e) => setWithdrawAccount(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-3 py-2.5 text-xs focus:outline-none"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsWithdrawModalOpen(false)}
+                  className="flex-1 bg-white/5 hover:bg-white/10 text-gray-300 text-xs font-bold py-3 rounded-xl cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingWithdraw}
+                  className="flex-1 bg-primary hover:bg-primary-accent text-gray-950 text-xs font-black py-3 rounded-xl shadow-glow cursor-pointer disabled:opacity-50"
+                >
+                  {isSubmittingWithdraw ? 'Submitting...' : 'Confirm Payout'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

@@ -245,35 +245,6 @@ export default function DeliveryPortalPage() {
     }
   };
 
-  // 1-Tap Demo Rider Login Handler
-  const handleDemoRiderLogin = async () => {
-    setActionLoading(true);
-    setErrorMsg('');
-    try {
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('zibonbaba_token');
-        localStorage.removeItem('zibonbaba_user');
-        localStorage.removeItem('zibonbaba_role');
-      }
-      const ok = await login('courier@zibonbaba.com', 'Password123!');
-      if (ok) {
-        setSuccessMsg('Logged in as Rider Sabbir Ahmed!');
-        await Promise.all([
-          fetchDashboard(),
-          fetchOrders(),
-          fetchEarnings(),
-          fetchProfile()
-        ]);
-      } else {
-        setErrorMsg('Could not log in as demo rider. Please sign in manually.');
-      }
-    } catch (_) {
-      setErrorMsg('Error signing in as demo rider.');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
   if (!isMounted) return null;
 
   // Normalize and detect Rider Role from Zustand & LocalStorage
@@ -333,16 +304,6 @@ export default function DeliveryPortalPage() {
             >
               Sign In as Delivery Partner
             </Link>
-
-            {/* 1-Tap Demo Rider Login */}
-            <button
-              type="button"
-              onClick={handleDemoRiderLogin}
-              disabled={actionLoading}
-              className="bg-amber-400/15 hover:bg-amber-400/25 border border-amber-400/40 text-amber-300 font-bold text-xs px-6 py-3 rounded-2xl block w-full text-center transition-all cursor-pointer disabled:opacity-50"
-            >
-              {actionLoading ? 'Signing in as Rider...' : '⚡ 1-Tap Demo Rider Login (Sabbir Ahmed)'}
-            </button>
 
             {/* Join Fleet */}
             <Link

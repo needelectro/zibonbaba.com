@@ -227,19 +227,6 @@ export default function DeliveryLoginPage() {
                   </>
                 )}
               </button>
-
-              {/* Demo Rider Credentials Helper */}
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail('courier@zibonbaba.com');
-                  setPassword('Password123!');
-                  setError('');
-                }}
-                className="w-full bg-amber-400/10 hover:bg-amber-400/20 border border-amber-400/30 text-amber-300 font-bold py-2.5 px-4 rounded-xl text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                ⚡ Autofill Demo Rider Account (courier@zibonbaba.com)
-              </button>
             </form>
 
             <div className="mt-6 text-center text-xs text-gray-400">

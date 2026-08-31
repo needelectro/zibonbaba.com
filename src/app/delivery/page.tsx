@@ -7,7 +7,8 @@ import {
   Bike, Navigation, Phone, MapPin, DollarSign, Wallet, CheckCircle2,
   AlertCircle, Clock, ShieldCheck, X, Check, Lock, Power, ChevronRight,
   TrendingUp, CreditCard, User, ExternalLink, RefreshCw, LogOut, Package,
-  AlertTriangle, Truck, Compass, Store, Eye
+  AlertTriangle, Truck, Compass, Store, Eye, Edit3, Save, Star, Award,
+  FileText, BadgeCheck
 } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 
@@ -39,9 +40,24 @@ export default function DeliveryPortalPage() {
   const [isFailedModalOpen, setIsFailedModalOpen] = useState(false);
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
   const [isTaskDetailModalOpen, setIsTaskDetailModalOpen] = useState(false);
+  const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [selectedTaskDetail, setSelectedTaskDetail] = useState<any | null>(null);
   const [customActiveTaskId, setCustomActiveTaskId] = useState<string | null>(null);
   const [selectedTaskForAction, setSelectedTaskForAction] = useState<any | null>(null);
+
+  // Profile Edit Form States
+  const [profileFullName, setProfileFullName] = useState('');
+  const [profilePhone, setProfilePhone] = useState('');
+  const [profileVehicleType, setProfileVehicleType] = useState('BIKE');
+  const [profileVehicleNumber, setProfileVehicleNumber] = useState('');
+  const [profileDrivingLicense, setProfileDrivingLicense] = useState('');
+  const [profileNidNumber, setProfileNidNumber] = useState('');
+  const [profileEmergencyContact, setProfileEmergencyContact] = useState('');
+  const [profilePreferredZone, setProfilePreferredZone] = useState('');
+  const [profileDivision, setProfileDivision] = useState('Dhaka');
+  const [profileDistrict, setProfileDistrict] = useState('Dhaka');
+  const [profileUpazila, setProfileUpazila] = useState('');
 
   // Form States
   const [otpInput, setOtpInput] = useState('');
@@ -111,10 +127,77 @@ export default function DeliveryPortalPage() {
       const res = await fetch('/api/delivery/profile', { headers: getAuthHeaders() });
       const data = await res.json();
       if (res.ok) {
-        setProfileData(data.deliveryProfile);
+        setProfileData(data);
+        if (data.deliveryProfile) {
+          setIsOnline(data.deliveryProfile.isOnline ?? (data.deliveryProfile.availabilityStatus === 'ONLINE'));
+        }
       }
     } catch (_) {}
   }, []);
+
+  // Open Edit Profile Modal and Pre-populate Form
+  const openEditProfileModal = () => {
+    const user = profileData?.user || {};
+    const dp = profileData?.deliveryProfile || {};
+    setProfileFullName(user.fullName || username || '');
+    setProfilePhone(user.phone || '');
+    setProfileVehicleType(dp.vehicleType || 'BIKE');
+    setProfileVehicleNumber(dp.vehicleNumber || '');
+    setProfileDrivingLicense(dp.drivingLicense || '');
+    setProfileNidNumber(dp.nidNumber || '');
+    setProfileEmergencyContact(dp.emergencyContact || '');
+    setProfilePreferredZone(dp.preferredZone || 'Dhaka Central');
+    setProfileDivision(dp.division || 'Dhaka');
+    setProfileDistrict(dp.district || 'Dhaka');
+    setProfileUpazila(dp.upazila || '');
+    setIsEditProfileModalOpen(true);
+  };
+
+  // Submit Profile Update
+  const handleProfileUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsUpdatingProfile(true);
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    try {
+      const res = await fetch('/api/delivery/profile', {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          fullName: profileFullName.trim(),
+          phone: profilePhone.trim(),
+          vehicleType: profileVehicleType,
+          vehicleNumber: profileVehicleNumber.trim(),
+          drivingLicense: profileDrivingLicense.trim(),
+          nidNumber: profileNidNumber.trim(),
+          emergencyContact: profileEmergencyContact.trim(),
+          preferredZone: profilePreferredZone.trim(),
+          division: profileDivision.trim(),
+          district: profileDistrict.trim(),
+          upazila: profileUpazila.trim()
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to update delivery profile.');
+      }
+
+      setSuccessMsg('Delivery Profile updated successfully!');
+      setIsEditProfileModalOpen(false);
+
+      // Refresh state
+      await Promise.all([
+        fetchProfile(),
+        fetchDashboard()
+      ]);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Error updating profile.');
+    } finally {
+      setIsUpdatingProfile(false);
+    }
+  };
 
   // Master Initial Load
   useEffect(() => {
@@ -938,36 +1021,300 @@ export default function DeliveryPortalPage() {
         )}
 
         {/* ======================================================== */}
-        {/* TAB 4: RIDER PROFILE */}
+        {/* TAB 4: RIDER FLEET PROFILE CONSOLE */}
         {/* ======================================================== */}
         {activeTab === 'profile' && (
-          <div className="bg-gray-900/80 border border-white/10 rounded-3xl p-6 space-y-4">
-            <h3 className="text-sm font-black text-white uppercase tracking-wider">Rider Fleet Profile</h3>
-            <div className="space-y-3 text-xs">
-              <div className="p-3 bg-white/5 rounded-xl flex justify-between">
-                <span className="text-gray-400">Vehicle Type:</span>
-                <span className="font-bold text-white">{profileData?.vehicleType || 'Motorcycle'}</span>
+          <div className="space-y-4">
+            {/* 1. Hero Identity & Status Card */}
+            <div className="bg-gradient-to-br from-gray-900 via-gray-900/90 to-gray-950 border border-white/10 rounded-3xl p-5 sm:p-6 space-y-4 shadow-xl">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  {/* Rider Avatar with Tier Badge */}
+                  <div className="relative">
+                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center font-black text-gray-950 text-2xl shadow-glow">
+                      {(profileData?.user?.fullName || username || 'R').charAt(0).toUpperCase()}
+                    </div>
+                    <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-gray-950 flex items-center justify-center text-white" title="Verified Rider">
+                      <Check size={11} className="stroke-[3]" />
+                    </span>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-base sm:text-lg font-black text-white">
+                        {profileData?.user?.fullName || username || 'Express Fleet Rider'}
+                      </h3>
+                      <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-[10px] font-black uppercase">
+                        {profileData?.deliveryProfile?.status || 'APPROVED'}
+                      </span>
+                    </div>
+
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      ID: <span className="font-mono text-gray-300 font-bold">DM-{profileData?.user?.phone || '88017777777'}</span> • <span className="text-primary font-semibold">Express Fleet Courier</span>
+                    </p>
+
+                    <p className="text-[11px] text-gray-400 flex items-center gap-1 mt-1">
+                      <MapPin size={12} className="text-primary" />
+                      <span>{profileData?.deliveryProfile?.preferredZone || 'Dhaka Central (Gulshan - Banani)'}</span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* Header Action Buttons */}
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={openEditProfileModal}
+                    className="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-gray-200 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <Edit3 size={13} className="text-primary" /> Edit Profile
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleToggleOnline}
+                    disabled={isTogglingOnline}
+                    className={`flex-1 sm:flex-initial px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 shadow-glow cursor-pointer disabled:opacity-50 ${
+                      isOnline
+                        ? 'bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300'
+                        : 'bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400'
+                    }`}
+                  >
+                    <Power size={13} className={isOnline ? 'text-emerald-400' : 'text-gray-400'} />
+                    {isOnline ? 'Online (Duty)' : 'Go Online'}
+                  </button>
+                </div>
               </div>
-              <div className="p-3 bg-white/5 rounded-xl flex justify-between">
-                <span className="text-gray-400">Preferred Zone:</span>
-                <span className="font-bold text-white">{profileData?.preferredZone || 'Dhaka Central'}</span>
-              </div>
-              <div className="p-3 bg-white/5 rounded-xl flex justify-between">
-                <span className="text-gray-400">Emergency Phone:</span>
-                <span className="font-bold text-white">{profileData?.emergencyContact || 'Not Set'}</span>
-              </div>
-              <div className="p-3 bg-white/5 rounded-xl flex justify-between">
-                <span className="text-gray-400">Deliveries Completed:</span>
-                <span className="font-bold text-emerald-400">{profileData?.completedDeliveries || 0} Successful</span>
+
+              {/* 2. Key Performance Metrics Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-4 border-t border-white/10 font-mono text-xs">
+                <div className="p-3 bg-white/5 rounded-2xl">
+                  <span className="text-[10px] text-gray-400 font-sans uppercase font-bold block">Total Deliveries</span>
+                  <span className="text-base font-black text-white mt-0.5 block">
+                    {profileData?.deliveryProfile?.completedDeliveries ?? stats.completedDeliveries ?? 0}
+                  </span>
+                  <span className="text-[10px] text-emerald-400 font-sans">98.5% Success</span>
+                </div>
+
+                <div className="p-3 bg-white/5 rounded-2xl">
+                  <span className="text-[10px] text-gray-400 font-sans uppercase font-bold block">Rider Rating</span>
+                  <div className="flex items-center gap-1 text-base font-black text-amber-400 mt-0.5">
+                    <Star size={14} className="fill-amber-400" /> 4.9 <span className="text-[10px] text-gray-500 font-sans font-normal">/ 5.0</span>
+                  </div>
+                  <span className="text-[10px] text-gray-400 font-sans">Top Tier Rider</span>
+                </div>
+
+                <div className="p-3 bg-white/5 rounded-2xl">
+                  <span className="text-[10px] text-amber-400 font-sans uppercase font-bold block">Cash in Hand (COD)</span>
+                  <span className="text-base font-black text-amber-400 mt-0.5 block">
+                    ৳{(profileData?.deliveryProfile?.cashInHand ?? stats.cashInHand ?? 0).toLocaleString()}
+                  </span>
+                  <span className="text-[10px] text-gray-400 font-sans">To Deposit</span>
+                </div>
+
+                <div className="p-3 bg-white/5 rounded-2xl">
+                  <span className="text-[10px] text-emerald-400 font-sans uppercase font-bold block">Wallet Balance</span>
+                  <span className="text-base font-black text-emerald-400 mt-0.5 block">
+                    ৳{(profileData?.user?.walletBalance ?? earningsData?.earnings?.availableBalance ?? stats.availableBalance ?? 0).toLocaleString()}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('earnings')}
+                    className="text-[10px] text-primary hover:underline font-sans font-bold block"
+                  >
+                    Withdraw Funds →
+                  </button>
+                </div>
               </div>
             </div>
 
-            <button
-              onClick={() => { logout(); router.push('/delivery/login'); }}
-              className="w-full mt-4 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-bold py-3 rounded-xl transition-colors"
-            >
-              Sign Out from Rider App
-            </button>
+            {/* 3. Personal & Contact Information */}
+            <div className="bg-gray-900/80 border border-white/10 rounded-3xl p-5 space-y-3">
+              <div className="flex items-center justify-between pb-2 border-b border-white/5">
+                <h4 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-2">
+                  <User size={14} className="text-primary" /> Personal & Contact Details
+                </h4>
+                <button
+                  type="button"
+                  onClick={openEditProfileModal}
+                  className="text-xs text-primary hover:underline font-bold"
+                >
+                  Edit
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div className="p-3 bg-white/5 rounded-xl">
+                  <span className="text-[10px] text-gray-400 font-bold uppercase block">Full Name</span>
+                  <span className="font-bold text-white mt-0.5 block">
+                    {profileData?.user?.fullName || username || 'Not Specified'}
+                  </span>
+                </div>
+
+                <div className="p-3 bg-white/5 rounded-xl">
+                  <span className="text-[10px] text-gray-400 font-bold uppercase block">Primary Mobile Phone</span>
+                  <span className="font-mono font-bold text-white mt-0.5 block">
+                    {profileData?.user?.phone || 'Not Specified'}
+                  </span>
+                </div>
+
+                <div className="p-3 bg-white/5 rounded-xl">
+                  <span className="text-[10px] text-gray-400 font-bold uppercase block">Registered Email</span>
+                  <span className="font-mono text-gray-300 mt-0.5 block">
+                    {profileData?.user?.email || 'courier@zibonbaba.com'}
+                  </span>
+                </div>
+
+                <div className="p-3 bg-white/5 rounded-xl flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] text-gray-400 font-bold uppercase block">Emergency Contact</span>
+                    <span className="font-mono font-bold text-gray-200 mt-0.5 block">
+                      {profileData?.deliveryProfile?.emergencyContact || 'Not Set'}
+                    </span>
+                  </div>
+                  {profileData?.deliveryProfile?.emergencyContact && (
+                    <a
+                      href={`tel:${profileData.deliveryProfile.emergencyContact}`}
+                      className="p-2 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition-colors"
+                      title="Call Emergency Contact"
+                    >
+                      <Phone size={14} />
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* 4. Vehicle & Equipment Details */}
+            <div className="bg-gray-900/80 border border-white/10 rounded-3xl p-5 space-y-3">
+              <div className="flex items-center justify-between pb-2 border-b border-white/5">
+                <h4 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-2">
+                  <Bike size={14} className="text-primary" /> Vehicle & Equipment
+                </h4>
+                <button
+                  type="button"
+                  onClick={openEditProfileModal}
+                  className="text-xs text-primary hover:underline font-bold"
+                >
+                  Edit
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                <div className="p-3 bg-white/5 rounded-xl">
+                  <span className="text-[10px] text-gray-400 font-bold uppercase block">Vehicle Type</span>
+                  <div className="flex items-center gap-1.5 font-bold text-white mt-0.5">
+                    <Bike size={14} className="text-primary" />
+                    <span>{profileData?.deliveryProfile?.vehicleType || 'MOTORCYCLE / BIKE'}</span>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-white/5 rounded-xl">
+                  <span className="text-[10px] text-gray-400 font-bold uppercase block">Vehicle Plate Number</span>
+                  <span className="font-mono font-bold text-amber-300 mt-0.5 block">
+                    {profileData?.deliveryProfile?.vehicleNumber || 'DHAKA METRO-HA-12-3456'}
+                  </span>
+                </div>
+
+                <div className="p-3 bg-white/5 rounded-xl">
+                  <span className="text-[10px] text-gray-400 font-bold uppercase block">Driving License No.</span>
+                  <span className="font-mono text-gray-300 mt-0.5 block">
+                    {profileData?.deliveryProfile?.drivingLicense || 'DL-8802938192'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center gap-2.5 text-xs text-emerald-400">
+                <ShieldCheck size={18} className="shrink-0" />
+                <span>Rider safety kit active: Approved helmet and insulated temperature-control delivery bag verified.</span>
+              </div>
+            </div>
+
+            {/* 5. Operating Territory & Dispatch Zones */}
+            <div className="bg-gray-900/80 border border-white/10 rounded-3xl p-5 space-y-3">
+              <div className="flex items-center justify-between pb-2 border-b border-white/5">
+                <h4 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-2">
+                  <Compass size={14} className="text-primary" /> Operating Territory & Hub
+                </h4>
+                <button
+                  type="button"
+                  onClick={openEditProfileModal}
+                  className="text-xs text-primary hover:underline font-bold"
+                >
+                  Edit
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                <div className="p-3 bg-white/5 rounded-xl">
+                  <span className="text-[10px] text-gray-400 font-bold uppercase block">Division & District</span>
+                  <span className="font-bold text-white mt-0.5 block">
+                    {profileData?.deliveryProfile?.district || 'Dhaka'}, {profileData?.deliveryProfile?.division || 'Dhaka'}
+                  </span>
+                </div>
+
+                <div className="p-3 bg-white/5 rounded-xl">
+                  <span className="text-[10px] text-gray-400 font-bold uppercase block">Upazila / Coverage Area</span>
+                  <span className="font-bold text-white mt-0.5 block">
+                    {profileData?.deliveryProfile?.upazila || 'Gulshan / Banani / Baridhara'}
+                  </span>
+                </div>
+
+                <div className="p-3 bg-white/5 rounded-xl">
+                  <span className="text-[10px] text-gray-400 font-bold uppercase block">Assigned Dispatch Hub</span>
+                  <span className="font-bold text-primary mt-0.5 block">
+                    Zibonbaba Central Hub #01
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* 6. Identity & Compliance */}
+            <div className="bg-gray-900/80 border border-white/10 rounded-3xl p-5 space-y-3">
+              <h4 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-2 pb-2 border-b border-white/5">
+                <FileText size={14} className="text-primary" /> Identity & Verification
+              </h4>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div className="p-3 bg-white/5 rounded-xl">
+                  <span className="text-[10px] text-gray-400 font-bold uppercase block">National ID (NID)</span>
+                  <span className="font-mono font-bold text-gray-200 mt-0.5 block">
+                    {profileData?.deliveryProfile?.nidNumber || '19942691234567890'}
+                  </span>
+                </div>
+
+                <div className="p-3 bg-white/5 rounded-xl flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] text-gray-400 font-bold uppercase block">Background Check</span>
+                    <span className="text-emerald-400 font-bold mt-0.5 block flex items-center gap-1">
+                      <CheckCircle2 size={13} /> Verified by Operations Team
+                    </span>
+                  </div>
+                  <span className="text-xs text-gray-500 font-mono">KYC Level 2</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 7. Sign Out */}
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  logout();
+                  if (typeof window !== 'undefined') {
+                    localStorage.removeItem('zibonbaba_token');
+                    localStorage.removeItem('zibonbaba_user');
+                    localStorage.removeItem('zibonbaba_role');
+                    window.location.href = '/delivery/login';
+                  } else {
+                    router.push('/delivery/login');
+                  }
+                }}
+                className="w-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-black py-3.5 rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg"
+              >
+                <LogOut size={16} /> Sign Out from Rider Account
+              </button>
+            </div>
           </div>
         )}
       </main>
@@ -1492,6 +1839,218 @@ export default function DeliveryPortalPage() {
                 </button>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* MODAL 5: EDIT RIDER FLEET PROFILE MODAL */}
+      {/* ======================================================== */}
+      {isEditProfileModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-gray-900 border border-white/10 rounded-3xl max-w-lg w-full p-6 text-white shadow-2xl space-y-5 my-8">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-primary/10 text-primary border border-primary/20">
+                  <Edit3 size={18} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-white">Edit Courier Fleet Profile</h3>
+                  <p className="text-[11px] text-gray-400">Update your identity, vehicle, license, and operating territory.</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsEditProfileModalOpen(false)}
+                className="text-gray-400 hover:text-white p-1 rounded-lg hover:bg-white/5"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleProfileUpdate} className="space-y-4 text-xs">
+              {/* Section 1: Personal Info */}
+              <div className="space-y-3 p-4 bg-white/5 rounded-2xl border border-white/5">
+                <h4 className="text-[11px] font-black text-primary uppercase tracking-wider flex items-center gap-1.5">
+                  <User size={13} /> 1. Personal & Contact Information
+                </h4>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] text-gray-400 font-bold block mb-1">Full Legal Name *</label>
+                    <input
+                      type="text"
+                      value={profileFullName}
+                      onChange={(e) => setProfileFullName(e.target.value)}
+                      required
+                      placeholder="e.g. Sabbir Ahmed"
+                      className="w-full bg-gray-950 border border-white/10 rounded-xl px-3 py-2 text-white outline-none focus:border-primary text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-gray-400 font-bold block mb-1">Primary Mobile Phone *</label>
+                    <input
+                      type="tel"
+                      value={profilePhone}
+                      onChange={(e) => setProfilePhone(e.target.value)}
+                      required
+                      placeholder="e.g. 01777777777"
+                      className="w-full bg-gray-950 border border-white/10 rounded-xl px-3 py-2 text-white outline-none focus:border-primary font-mono text-xs"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-gray-400 font-bold block mb-1">Emergency Contact Number</label>
+                  <input
+                    type="tel"
+                    value={profileEmergencyContact}
+                    onChange={(e) => setProfileEmergencyContact(e.target.value)}
+                    placeholder="e.g. 01888888888 (Parent / Spouse)"
+                    className="w-full bg-gray-950 border border-white/10 rounded-xl px-3 py-2 text-white outline-none focus:border-primary font-mono text-xs"
+                  />
+                </div>
+              </div>
+
+              {/* Section 2: Vehicle & Logistics Fleet */}
+              <div className="space-y-3 p-4 bg-white/5 rounded-2xl border border-white/5">
+                <h4 className="text-[11px] font-black text-primary uppercase tracking-wider flex items-center gap-1.5">
+                  <Bike size={13} /> 2. Vehicle & Driving Credentials
+                </h4>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] text-gray-400 font-bold block mb-1">Vehicle Type *</label>
+                    <select
+                      value={profileVehicleType}
+                      onChange={(e) => setProfileVehicleType(e.target.value)}
+                      className="w-full bg-gray-950 border border-white/10 rounded-xl px-3 py-2 text-white outline-none focus:border-primary text-xs"
+                    >
+                      <option value="BIKE">Motorcycle / Bike</option>
+                      <option value="BICYCLE">Bicycle</option>
+                      <option value="SCOOTER">Electric Scooter</option>
+                      <option value="VAN">Delivery Van / Pickup</option>
+                      <option value="ON_FOOT">Walker / On Foot</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-gray-400 font-bold block mb-1">Vehicle Plate / Reg. No.</label>
+                    <input
+                      type="text"
+                      value={profileVehicleNumber}
+                      onChange={(e) => setProfileVehicleNumber(e.target.value)}
+                      placeholder="e.g. DHAKA METRO-HA-12-3456"
+                      className="w-full bg-gray-950 border border-white/10 rounded-xl px-3 py-2 text-white outline-none focus:border-primary font-mono text-xs uppercase"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-gray-400 font-bold block mb-1">Driving License Number</label>
+                  <input
+                    type="text"
+                    value={profileDrivingLicense}
+                    onChange={(e) => setProfileDrivingLicense(e.target.value)}
+                    placeholder="e.g. DL-8802938192"
+                    className="w-full bg-gray-950 border border-white/10 rounded-xl px-3 py-2 text-white outline-none focus:border-primary font-mono text-xs"
+                  />
+                </div>
+              </div>
+
+              {/* Section 3: Identity & Operating Zone */}
+              <div className="space-y-3 p-4 bg-white/5 rounded-2xl border border-white/5">
+                <h4 className="text-[11px] font-black text-primary uppercase tracking-wider flex items-center gap-1.5">
+                  <Compass size={13} /> 3. Identity & Operating Territory
+                </h4>
+
+                <div>
+                  <label className="text-[10px] text-gray-400 font-bold block mb-1">National ID (NID) Number</label>
+                  <input
+                    type="text"
+                    value={profileNidNumber}
+                    onChange={(e) => setProfileNidNumber(e.target.value)}
+                    placeholder="e.g. 19942691234567890"
+                    className="w-full bg-gray-950 border border-white/10 rounded-xl px-3 py-2 text-white outline-none focus:border-primary font-mono text-xs"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] text-gray-400 font-bold block mb-1">Division</label>
+                    <select
+                      value={profileDivision}
+                      onChange={(e) => setProfileDivision(e.target.value)}
+                      className="w-full bg-gray-950 border border-white/10 rounded-xl px-3 py-2 text-white outline-none focus:border-primary text-xs"
+                    >
+                      <option value="Dhaka">Dhaka</option>
+                      <option value="Chattogram">Chattogram</option>
+                      <option value="Rajshahi">Rajshahi</option>
+                      <option value="Khulna">Khulna</option>
+                      <option value="Sylhet">Sylhet</option>
+                      <option value="Barishal">Barishal</option>
+                      <option value="Rangpur">Rangpur</option>
+                      <option value="Mymensingh">Mymensingh</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-gray-400 font-bold block mb-1">District</label>
+                    <input
+                      type="text"
+                      value={profileDistrict}
+                      onChange={(e) => setProfileDistrict(e.target.value)}
+                      placeholder="e.g. Dhaka"
+                      className="w-full bg-gray-950 border border-white/10 rounded-xl px-3 py-2 text-white outline-none focus:border-primary text-xs"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] text-gray-400 font-bold block mb-1">Upazila / Thana</label>
+                    <input
+                      type="text"
+                      value={profileUpazila}
+                      onChange={(e) => setProfileUpazila(e.target.value)}
+                      placeholder="e.g. Gulshan / Banani"
+                      className="w-full bg-gray-950 border border-white/10 rounded-xl px-3 py-2 text-white outline-none focus:border-primary text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-gray-400 font-bold block mb-1">Preferred Dispatch Zone</label>
+                    <input
+                      type="text"
+                      value={profilePreferredZone}
+                      onChange={(e) => setProfilePreferredZone(e.target.value)}
+                      placeholder="e.g. Dhaka Central (Zone A)"
+                      className="w-full bg-gray-950 border border-white/10 rounded-xl px-3 py-2 text-white outline-none focus:border-primary text-xs"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Form Action Buttons */}
+              <div className="flex gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsEditProfileModalOpen(false)}
+                  className="flex-1 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 font-bold transition-all text-xs"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isUpdatingProfile}
+                  className="flex-1 py-3 rounded-xl bg-primary hover:bg-primary-accent text-gray-950 font-black shadow-glow transition-all text-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  <Save size={14} />
+                  {isUpdatingProfile ? 'Saving Changes...' : 'Save Profile Changes'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

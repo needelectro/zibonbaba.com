@@ -105,10 +105,24 @@ export async function PUT(request: Request) {
       }
     });
 
+    // Fetch updated user with profile
+    const updatedUser = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { profile: true, deliveryProfile: true }
+    });
+
     return NextResponse.json({
       success: true,
       message: 'Delivery partner profile updated successfully.',
-      deliveryProfile: updatedProfile
+      user: {
+        id: updatedUser?.id,
+        email: updatedUser?.email,
+        phone: updatedUser?.phone,
+        fullName: updatedUser?.profile?.fullName || '',
+        avatar: updatedUser?.avatar,
+        walletBalance: updatedUser?.walletBalance || 0
+      },
+      deliveryProfile: updatedUser?.deliveryProfile || updatedProfile
     });
   } catch (err: any) {
     console.error('Delivery Profile PUT API Error:', err);

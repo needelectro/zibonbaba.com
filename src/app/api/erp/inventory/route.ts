@@ -5,8 +5,22 @@ const JWT_SECRET = process.env.JWT_SECRET || 'zibonbaba_super_secure_jwt_session
 
 async function getUser(req: Request) {
   const authHeader = req.headers.get('authorization');
-  if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
-  const token = authHeader.split(' ')[1];
+  let token: string | null = null;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.split(' ')[1];
+  } else {
+    const cookieHeader = req.headers.get('cookie');
+    if (cookieHeader) {
+      const cookies = cookieHeader.split(';').reduce((acc: Record<string, string>, c) => {
+        const parts = c.trim().split('=');
+        acc[parts[0]] = parts.slice(1).join('=');
+        return acc;
+      }, {});
+      token = cookies.zibonbaba_token || null;
+    }
+  }
+
+  if (!token) return null;
   try {
     return jwt.verify(token, JWT_SECRET) as any;
   } catch (e) {
@@ -16,21 +30,26 @@ async function getUser(req: Request) {
 
 export async function GET(req: Request) {
   const user = await getUser(req);
-  if (!user || !['VENDOR_ADMIN', 'VENDOR_STAFF', 'ADMIN'].includes(user.role)) {
+  const allowedRoles = ['VENDOR_ADMIN', 'VENDOR_STAFF', 'ADMIN', 'SUPER_ADMIN', 'INVENTORY_MANAGER', 'WAREHOUSE_MANAGER', 'MANAGER'];
+  if (!user || !allowedRoles.includes(user.role)) {
     return NextResponse.json({ error: 'Unauthorized or insufficient permissions' }, { status: 403 });
   }
 
   try {
-    const store = await prisma.store.findFirst({ where: { ownerId: user.id } });
-    if (!store) return NextResponse.json({ stock: [] });
+    const isPlatformStaff = ['ADMIN', 'SUPER_ADMIN', 'INVENTORY_MANAGER', 'WAREHOUSE_MANAGER', 'MANAGER'].includes(user.role);
+    let store = null;
+    if (!isPlatformStaff) {
+      store = await prisma.store.findFirst({ where: { ownerId: user.id } });
+      if (!store) return NextResponse.json({ stock: [] });
+    }
 
     const inventoryItems = await prisma.inventory.findMany({
-      where: {
+      where: store ? {
         OR: [
           { warehouse: { storeId: store.id } },
           { branch: { storeId: store.id } }
         ]
-      },
+      } : undefined,
       include: {
         variant: { include: { product: true } },
         warehouse: true,

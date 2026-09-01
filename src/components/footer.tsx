@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Mail, Phone, MapPin, ShieldCheck, Heart, Store, Truck, RotateCcw, HelpCircle } from 'lucide-react';
+import { Mail, Phone, MapPin, ShieldCheck, Heart, Store, Truck, RotateCcw, HelpCircle, Code } from 'lucide-react';
 import Link from 'next/link';
 
 export default function Footer() {
@@ -177,9 +177,18 @@ export default function Footer() {
       {/* Bottom Copyright */}
       <div className="bg-neutral-darker py-6 border-t border-neutral-body/20 text-center text-xs text-neutral-muted">
         <div className="max-w-[1440px] mx-auto px-4 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="flex items-center gap-1.5 justify-center md:justify-start">
-            © {new Date().getFullYear()} Zibonbaba.com. All Rights Reserved.
-          </p>
+          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 justify-center md:justify-start">
+            <p className="flex items-center gap-1.5">
+              © {new Date().getFullYear()} Zibonbaba.com. All Rights Reserved.
+            </p>
+            <span className="hidden sm:inline text-neutral-body/40">•</span>
+            <p className="inline-flex items-center gap-1.5 text-gray-400">
+              <span className="inline-flex items-center justify-center w-5 h-5 rounded bg-primary/10 border border-primary/20 text-primary font-mono text-[11px] font-bold">
+                &lt;/&gt;
+              </span>
+              <span>Built With <strong className="text-white font-semibold tracking-wide hover:text-primary transition-colors">AMDADS GROUP</strong></span>
+            </p>
+          </div>
           <div className="flex gap-4">
             <Link href="/" className="hover:text-primary transition-colors">Privacy Policy</Link>
             <span>•</span>

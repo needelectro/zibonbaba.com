@@ -66,6 +66,7 @@ model User {
   resellerOrders      ResellerOrder[]     @relation("ResellerSales")
   deliveryAssignments DeliveryAssignment[] @relation("RiderAssignments")
   assignedDeliveries  DeliveryAssignment[] @relation("AdminAssignments")
+  managedHubs         DeliveryHub[]       @relation("HubManager")
   withdrawals         WithdrawalRequest[] @relation("UserWithdrawals")
 
   walletBalance       Float     @default(0.0)
@@ -455,6 +456,8 @@ model Order {
   items      OrderItem[]
   resellerOrder      ResellerOrder?
   deliveryAssignment DeliveryAssignment?
+  hubId              String?
+  hub                DeliveryHub?        @relation("HubOrders", fields: [hubId], references: [id])
   createdAt  DateTime    @default(now())
 
   @@index([customerId, storeId])
@@ -677,6 +680,8 @@ model DeliveryProfile {
   id                  String   @id @default(uuid())
   userId              String   @unique
   user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hubId               String?
+  hub                 DeliveryHub? @relation("HubRiders", fields: [hubId], references: [id])
   vehicleType         String   @default("BIKE") // BIKE | MOTORCYCLE | CYCLE | VAN | TRUCK | ON_FOOT
   vehicleNumber       String?
   drivingLicense      String?
@@ -701,30 +706,63 @@ model DeliveryProfile {
 }
 
 model DeliveryAssignment {
-  id            String    @id @default(uuid())
-  orderId       String    @unique
-  order         Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  deliveryManId String
-  deliveryMan   User      @relation("RiderAssignments", fields: [deliveryManId], references: [id], onDelete: Cascade)
-  assignedById  String?
-  assignedBy    User?     @relation("AdminAssignments", fields: [assignedById], references: [id])
-  status        String    @default("ASSIGNED") // ASSIGNED | ACCEPTED | REJECTED | PICKED_UP | IN_TRANSIT | DELIVERED | FAILED | RETURNED
-  deliveryOtp   String?
-  proofNotes    String?
-  proofPhoto    String?
-  codAmount     Float     @default(0.0)
-  codCollected  Boolean   @default(false)
-  deliveryFee   Float     @default(120.0)
-  assignedAt    DateTime  @default(now())
-  acceptedAt    DateTime?
-  pickedUpAt    DateTime?
-  deliveredAt   DateTime?
-  failedAt      DateTime?
-  failedReason  String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id                  String       @id @default(uuid())
+  orderId             String       @unique
+  order               Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  deliveryManId       String
+  deliveryMan         User         @relation("RiderAssignments", fields: [deliveryManId], references: [id], onDelete: Cascade)
+  assignedById        String?
+  assignedBy          User?        @relation("AdminAssignments", fields: [assignedById], references: [id])
+  hubId               String?
+  hub                 DeliveryHub? @relation("HubAssignments", fields: [hubId], references: [id])
+  status              String       @default("ASSIGNED") // ASSIGNED | ACCEPTED | REJECTED | PICKED_UP | IN_TRANSIT | DELIVERED | FAILED | RETURNED
+  deliveryOtp         String?
+  proofNotes          String?
+  proofPhoto          String?
+  codAmount           Float        @default(0.0)
+  codCollected        Boolean      @default(false)
+  deliveryFee         Float        @default(120.0)
+  estimatedDeliveryAt DateTime?
+  specialInstructions String?
+  assignedAt          DateTime     @default(now())
+  acceptedAt          DateTime?
+  pickedUpAt          DateTime?
+  deliveredAt         DateTime?
+  failedAt            DateTime?
+  failedReason        String?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
 
   @@index([deliveryManId])
+  @@index([hubId])
+  @@index([status])
+}
+
+model DeliveryHub {
+  id             String               @id @default(uuid())
+  name           String
+  code           String               @unique
+  address        String
+  division       String
+  district       String
+  upazila        String?
+  contactNumber  String?
+  email          String?
+  capacity       Int                  @default(500)
+  status         String               @default("ACTIVE") // ACTIVE | INACTIVE | AT_CAPACITY | MAINTENANCE
+  managerId      String?
+  manager        User?                @relation("HubManager", fields: [managerId], references: [id])
+  operatingHours String?              @default("8:00 AM - 10:00 PM")
+  coverageAreas  String?              // JSON string array or comma separated list of coverage areas
+  latitude       Float?
+  longitude      Float?
+  riders         DeliveryProfile[]    @relation("HubRiders")
+  assignments    DeliveryAssignment[] @relation("HubAssignments")
+  orders         Order[]              @relation("HubOrders")
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  @@index([division, district])
   @@index([status])
 }
 

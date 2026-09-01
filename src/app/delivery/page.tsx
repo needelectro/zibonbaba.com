@@ -1263,7 +1263,9 @@ export default function DeliveryPortalPage() {
                 <div className="p-3 bg-white/5 rounded-xl">
                   <span className="text-[10px] text-gray-400 font-bold uppercase block">Assigned Dispatch Hub</span>
                   <span className="font-bold text-primary mt-0.5 block">
-                    Zibonbaba Central Hub #01
+                    {dashboardData?.profile?.stationedHub
+                      ? `${dashboardData.profile.stationedHub.name} (${dashboardData.profile.stationedHub.code})`
+                      : 'Dhaka Central Hub (HUB-DHK-01)'}
                   </span>
                 </div>
               </div>

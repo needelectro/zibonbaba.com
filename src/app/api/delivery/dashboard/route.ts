@@ -11,10 +11,14 @@ export async function GET(request: Request) {
 
     const userId = context.user.id;
 
-    // Fetch user with delivery profile
+    // Fetch user with delivery profile and stationed hub
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      include: { deliveryProfile: true }
+      include: {
+        deliveryProfile: {
+          include: { hub: true }
+        }
+      }
     });
 
     const dProfile = user?.deliveryProfile;
@@ -23,10 +27,12 @@ export async function GET(request: Request) {
     const assignments = await prisma.deliveryAssignment.findMany({
       where: { deliveryManId: userId },
       include: {
+        hub: true,
         order: {
           include: {
             customer: { include: { profile: true } },
             store: true,
+            hub: true,
             resellerOrder: true,
             items: {
               include: {
@@ -118,10 +124,19 @@ export async function GET(request: Request) {
         isOnline: dProfile?.isOnline ?? false,
         availabilityStatus: dProfile?.availabilityStatus || 'OFFLINE',
         vehicleType: dProfile?.vehicleType || 'BIKE',
+        vehicleNumber: dProfile?.vehicleNumber || 'N/A',
         preferredZone: dProfile?.preferredZone || 'Dhaka Central',
         status: dProfile?.status || 'APPROVED',
         cashInHand: totalCashInHand,
-        walletBalance: user?.walletBalance || 0
+        walletBalance: user?.walletBalance || 0,
+        stationedHub: dProfile?.hub ? {
+          id: dProfile.hub.id,
+          name: dProfile.hub.name,
+          code: dProfile.hub.code,
+          address: dProfile.hub.address,
+          contactNumber: dProfile.hub.contactNumber,
+          operatingHours: dProfile.hub.operatingHours
+        } : null
       },
       stats: {
         todayDeliveries: todayDeliveriesCount,

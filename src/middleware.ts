@@ -105,10 +105,17 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 4. CUSTOMER ACCOUNT AREA PROTECTION
+  // 5. CUSTOMER ACCOUNT AREA PROTECTION
   if (pathname.startsWith('/account')) {
     if (!token) {
       return NextResponse.redirect(new URL('/customer/login', request.url));
+    }
+  }
+
+  // 6. STAFF PORTAL ROUTE PROTECTION
+  if (pathname.startsWith('/staff')) {
+    if (!token) {
+      return NextResponse.redirect(new URL('/login', request.url));
     }
   }
 

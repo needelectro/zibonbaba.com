@@ -7,18 +7,29 @@ export async function GET(request: Request) {
     const { error, status } = await requireAdminRole(request);
     if (error) return NextResponse.json({ error }, { status });
 
-    // Orders without a deliveryAssignment or where delivery assignment is REJECTED
+    const { searchParams } = new URL(request.url);
+    const hubId = searchParams.get('hubId');
+    const statusParam = searchParams.get('status');
+
+    const where: any = {
+      status: statusParam ? { in: [statusParam] } : { in: ['PENDING', 'PROCESSING', 'READY_FOR_DELIVERY'] },
+      OR: [
+        { deliveryAssignment: null },
+        { deliveryAssignment: { status: 'REJECTED' } }
+      ]
+    };
+
+    if (hubId && hubId !== 'ALL') {
+      where.hubId = hubId;
+    }
+
+    // Orders without an active deliveryAssignment or where delivery assignment is REJECTED
     const orders = await prisma.order.findMany({
-      where: {
-        status: { in: ['PENDING', 'PROCESSING'] },
-        OR: [
-          { deliveryAssignment: null },
-          { deliveryAssignment: { status: 'REJECTED' } }
-        ]
-      },
+      where,
       include: {
         customer: { include: { profile: true } },
         store: true,
+        hub: true,
         resellerOrder: true,
         items: {
           include: {
@@ -45,9 +56,15 @@ export async function GET(request: Request) {
         district: ro?.district || 'Dhaka',
         upazila: ro?.upazila || '',
         total: o.total,
+        status: o.status,
         isResellerOrder: Boolean(ro),
         resellerProfit: ro?.resellerProfit || 0,
         storeName: o.store?.name || 'Zibonbaba Seller Store',
+        hub: o.hub ? {
+          id: o.hub.id,
+          name: o.hub.name,
+          code: o.hub.code
+        } : null,
         itemsCount: o.items.length,
         itemsSummary: o.items.map(it => `${it.quantity}x ${it.variant?.product?.name || 'Product'}`).join(', ')
       };

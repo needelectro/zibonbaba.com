@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   TrendingUp, Package, ShoppingBag, DollarSign, AlertTriangle, RefreshCw, X, Lock, ShieldAlert, Shield, ShieldCheck,

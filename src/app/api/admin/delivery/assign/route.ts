@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     if (error || !user) return NextResponse.json({ error }, { status });
 
     const body = await request.json();
-    const { orderId, deliveryManId, deliveryFee } = body;
+    const { orderId, deliveryManId, deliveryFee, hubId, specialInstructions } = body;
 
     if (!orderId || !deliveryManId) {
       return NextResponse.json({ error: 'Order ID and Delivery Man ID are required.' }, { status: 400 });
@@ -36,6 +36,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Delivery rider not found.' }, { status: 404 });
     }
 
+    let resolvedHubId: string | null = hubId || null;
+    let hubName = 'Central Dispatch Hub';
+    if (hubId) {
+      const hub = await prisma.deliveryHub.findFirst({
+        where: { OR: [{ id: hubId }, { code: hubId }] }
+      });
+      if (hub) {
+        resolvedHubId = hub.id;
+        hubName = hub.name;
+      }
+    } else if (rider.deliveryProfile?.hubId) {
+      resolvedHubId = rider.deliveryProfile.hubId;
+    }
+
     const deliveryOtp = generateDeliveryOtp();
     const fee = deliveryFee ? parseFloat(deliveryFee) : 120.0;
 
@@ -44,9 +58,11 @@ export async function POST(request: Request) {
       update: {
         deliveryManId,
         assignedById: user.id,
+        ...(resolvedHubId ? { hubId: resolvedHubId } : {}),
         status: 'ASSIGNED',
         deliveryOtp,
         deliveryFee: fee,
+        specialInstructions: specialInstructions || null,
         codAmount: order.total,
         codCollected: false,
         assignedAt: new Date(),
@@ -60,9 +76,11 @@ export async function POST(request: Request) {
         orderId,
         deliveryManId,
         assignedById: user.id,
+        ...(resolvedHubId ? { hubId: resolvedHubId } : {}),
         status: 'ASSIGNED',
         deliveryOtp,
         deliveryFee: fee,
+        specialInstructions: specialInstructions || null,
         codAmount: order.total,
         codCollected: false
       }
@@ -70,7 +88,10 @@ export async function POST(request: Request) {
 
     await prisma.order.update({
       where: { id: orderId },
-      data: { status: 'PROCESSING' }
+      data: {
+        status: 'PROCESSING',
+        ...(resolvedHubId ? { hubId: resolvedHubId } : {})
+      }
     });
 
     await logAdminAction(user.id, `ADMIN_ASSIGN_DELIVERY: OrderId=${orderId}, DriverId=${deliveryManId}`);

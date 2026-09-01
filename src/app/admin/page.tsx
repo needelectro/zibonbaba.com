@@ -2600,9 +2600,17 @@ export default function AdminDashboardPage() {
                     </h3>
                     <p className="text-[10px] text-slate-500">Orders ready for driver dispatch and delivery assignment</p>
                   </div>
-                  <span className="text-xs font-black text-[#FFC107] bg-[#FFC107]/10 border border-[#FFC107]/20 px-2.5 py-1 rounded-full">
-                    {adminUnassignedOrders.length} Pending Dispatch
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-black text-[#FFC107] bg-[#FFC107]/10 border border-[#FFC107]/20 px-2.5 py-1 rounded-full">
+                      {adminUnassignedOrders.length} Pending Dispatch
+                    </span>
+                    <Link
+                      href="/staff/delivery"
+                      className="bg-white/10 hover:bg-white/15 text-white text-xs font-bold px-3 py-1 rounded-full border border-white/10 transition flex items-center gap-1.5"
+                    >
+                      🏢 Open Hub Station
+                    </Link>
+                  </div>
                 </div>
 
                 <div className="space-y-3">

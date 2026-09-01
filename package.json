@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
+    "seed:build": "tsc prisma/seed.ts --outDir prisma/dist --target es2020 --module commonjs --esModuleInterop --skipLibCheck",
+    "seed": "node prisma/dist/seed.js",
     "start": "next start",
     "lint": "next lint"
   },
@@ -17,6 +19,7 @@
     "@types/pg": "^8.20.0",
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
+    "dotenv": "^17.4.2",
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^0.453.0",
     "next": "^15.0.0",
@@ -40,6 +43,6 @@
     "typescript": "^5.5.2"
   },
   "prisma": {
-    "seed": "ts-node prisma/seed.ts"
+    "seed": "node prisma/dist/seed.js"
   }
 }

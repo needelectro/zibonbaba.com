@@ -34,10 +34,12 @@ export async function GET(request: Request) {
     const assignments = await prisma.deliveryAssignment.findMany({
       where,
       include: {
+        hub: true,
         order: {
           include: {
             customer: { include: { profile: true } },
             store: true,
+            hub: true,
             resellerOrder: true,
             items: {
               include: {
@@ -56,6 +58,7 @@ export async function GET(request: Request) {
       const recipientName = ro?.customerName || cust?.profile?.fullName || 'Valued Customer';
       const recipientPhone = ro?.customerPhone || cust?.phone || '+8801700000000';
       const shippingAddress = ro?.shippingAddress || 'Customer Address, Bangladesh';
+      const originHub = a.hub || a.order?.hub;
 
       return {
         id: a.id,
@@ -71,6 +74,14 @@ export async function GET(request: Request) {
         codCollected: a.codCollected,
         deliveryFee: a.deliveryFee,
         deliveryOtp: a.deliveryOtp,
+        specialInstructions: a.specialInstructions || null,
+        hub: originHub ? {
+          id: originHub.id,
+          name: originHub.name,
+          code: originHub.code,
+          address: originHub.address,
+          contactNumber: originHub.contactNumber
+        } : null,
         storeName: a.order?.store?.name || 'Zibonbaba Seller Store',
         items: a.order?.items?.map((it) => ({
           id: it.id,

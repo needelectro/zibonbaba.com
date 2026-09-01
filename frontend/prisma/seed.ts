@@ -1,8 +1,14 @@
+import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
-// Initialize platform Prisma Client
-const prisma: any = new PrismaClient();
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DIRECT_URL || process.env.DATABASE_URL
+    }
+  }
+});
 
 async function main() {
   console.log('🚀 Starting Master Database Seeding for Zibonbaba.com Platform...');
@@ -18,6 +24,7 @@ async function main() {
         "WithdrawalRequest",
         "DeliveryAssignment",
         "DeliveryProfile",
+        "DeliveryHub",
         "ResellerOrder",
         "ResellerCustomer",
         "ResellerProduct",
@@ -42,6 +49,9 @@ async function main() {
         "Session",
         "CRMClient",
         "CRMNote",
+        "Coupon",
+        "Employee",
+        "PasswordResetToken",
         "Expense",
         "Supplier",
         "OrderItem",
@@ -65,6 +75,7 @@ async function main() {
     await prisma.withdrawalRequest.deleteMany().catch(() => {});
     await prisma.deliveryAssignment.deleteMany().catch(() => {});
     await prisma.deliveryProfile.deleteMany().catch(() => {});
+    await prisma.deliveryHub.deleteMany().catch(() => {});
     await prisma.resellerOrder.deleteMany().catch(() => {});
     await prisma.resellerCustomer.deleteMany().catch(() => {});
     await prisma.resellerProduct.deleteMany().catch(() => {});
@@ -88,6 +99,10 @@ async function main() {
     await prisma.auditLog.deleteMany().catch(() => {});
     await prisma.session.deleteMany().catch(() => {});
     await prisma.cRMClient.deleteMany().catch(() => {});
+    await prisma.cRMNote.deleteMany().catch(() => {});
+    await prisma.coupon.deleteMany().catch(() => {});
+    await prisma.employee.deleteMany().catch(() => {});
+    await prisma.passwordResetToken.deleteMany().catch(() => {});
     await prisma.expense.deleteMany().catch(() => {});
     await prisma.supplier.deleteMany().catch(() => {});
     await prisma.orderItem.deleteMany().catch(() => {});
@@ -527,16 +542,138 @@ async function main() {
     }
   }
 
+  // 10. DELIVERY HUBS & COURIER FLEET ECOSYSTEM
+  console.log('🚚 Seeding 6 Regional Delivery Hubs & Stationing Riders...');
+  const deliveryManagerUser = userMap['delivery@zibonbaba.com'];
+
+  const dhakaHub = await prisma.deliveryHub.create({
+    data: {
+      name: 'Dhaka Central Hub',
+      code: 'HUB-DHK-01',
+      address: 'Plot 14, Road 5, Tejgaon Industrial Area, Dhaka',
+      division: 'Dhaka',
+      district: 'Dhaka',
+      upazila: 'Tejgaon',
+      contactNumber: '+8801700000009',
+      email: 'dhaka.hub@zibonbaba.com',
+      capacity: 1200,
+      status: 'ACTIVE',
+      managerId: deliveryManagerUser?.id || null,
+      operatingHours: '7:30 AM - 11:00 PM',
+      coverageAreas: JSON.stringify(['Tejgaon', 'Gulshan', 'Banani', 'Dhanmondi', 'Mohakhali', 'Badda', 'Mirpur']),
+      latitude: 23.7594,
+      longitude: 90.3906
+    }
+  });
+
+  const uttaraHub = await prisma.deliveryHub.create({
+    data: {
+      name: 'Uttara Dispatch Hub',
+      code: 'HUB-UTR-02',
+      address: 'House 32, Road 18, Sector 3, Uttara, Dhaka',
+      division: 'Dhaka',
+      district: 'Dhaka',
+      upazila: 'Uttara',
+      contactNumber: '+8801711223399',
+      email: 'uttara.hub@zibonbaba.com',
+      capacity: 800,
+      status: 'ACTIVE',
+      managerId: deliveryManagerUser?.id || null,
+      operatingHours: '8:00 AM - 10:00 PM',
+      coverageAreas: JSON.stringify(['Uttara', 'Airport', 'Khilkhet', 'Tongi', 'Gazipur Border', 'Dania']),
+      latitude: 23.8759,
+      longitude: 90.3795
+    }
+  });
+
+  const ctgHub = await prisma.deliveryHub.create({
+    data: {
+      name: 'Chattogram Port Hub',
+      code: 'HUB-CTG-01',
+      address: 'Holding 89, Agrabad Commercial Area, Chattogram',
+      division: 'Chattogram',
+      district: 'Chattogram',
+      upazila: 'Double Mooring',
+      contactNumber: '+8801811998877',
+      email: 'ctg.hub@zibonbaba.com',
+      capacity: 950,
+      status: 'ACTIVE',
+      operatingHours: '8:00 AM - 10:30 PM',
+      coverageAreas: JSON.stringify(['Agrabad', 'GEC Circle', 'Nasirabad', 'Halishahar', 'Chawkbazar', 'Patenga']),
+      latitude: 22.3275,
+      longitude: 91.8123
+    }
+  });
+
+  const sylhetHub = await prisma.deliveryHub.create({
+    data: {
+      name: 'Sylhet Express Hub',
+      code: 'HUB-SYL-01',
+      address: 'Shubidbazar Road, Zindabazar, Sylhet',
+      division: 'Sylhet',
+      district: 'Sylhet',
+      upazila: 'Sylhet Sadar',
+      contactNumber: '+8801733445566',
+      email: 'sylhet.hub@zibonbaba.com',
+      capacity: 600,
+      status: 'ACTIVE',
+      operatingHours: '8:30 AM - 9:30 PM',
+      coverageAreas: JSON.stringify(['Zindabazar', 'Amberkhana', 'Shahi Eidgah', 'Subidbazar', 'Kumarpara']),
+      latitude: 24.8949,
+      longitude: 91.8687
+    }
+  });
+
+  const khulnaHub = await prisma.deliveryHub.create({
+    data: {
+      name: 'Khulna Logistics Hub',
+      code: 'HUB-KLN-01',
+      address: 'KDA Avenue, Shib Bari Mor, Khulna',
+      division: 'Khulna',
+      district: 'Khulna',
+      upazila: 'Sonadanga',
+      contactNumber: '+8801922334455',
+      email: 'khulna.hub@zibonbaba.com',
+      capacity: 500,
+      status: 'ACTIVE',
+      operatingHours: '8:30 AM - 9:00 PM',
+      coverageAreas: JSON.stringify(['Shib Bari', 'Sonadanga', 'Boyra', 'Khalishpur', 'Daulatpur']),
+      latitude: 22.8456,
+      longitude: 89.5403
+    }
+  });
+
+  const rajshahiHub = await prisma.deliveryHub.create({
+    data: {
+      name: 'Rajshahi Regional Hub',
+      code: 'HUB-RAJ-01',
+      address: 'Station Road, Shaheb Bazar, Rajshahi',
+      division: 'Rajshahi',
+      district: 'Rajshahi',
+      upazila: 'Boalia',
+      contactNumber: '+8801744556677',
+      email: 'rajshahi.hub@zibonbaba.com',
+      capacity: 450,
+      status: 'ACTIVE',
+      operatingHours: '8:30 AM - 9:00 PM',
+      coverageAreas: JSON.stringify(['Shaheb Bazar', 'Motihar', 'Kazla', 'Upashahar', 'Talaimari']),
+      latitude: 24.3745,
+      longitude: 88.6042
+    }
+  });
+
+  // Station Rider 1 at Dhaka Central Hub
   if (courierUser) {
     await prisma.deliveryProfile.create({
       data: {
         userId: courierUser.id,
+        hubId: dhakaHub.id,
         vehicleType: 'MOTORCYCLE',
         vehicleNumber: 'DHAKA-METRO-HA-12-3456',
         drivingLicense: 'DL-88239012',
         nidNumber: '1995827361928',
         emergencyContact: '01700000099',
-        preferredZone: 'Uttara, Gulshan, Banani',
+        preferredZone: 'Tejgaon, Gulshan, Banani',
         isOnline: true,
         availabilityStatus: 'ONLINE',
         cashInHand: 4200,
@@ -548,15 +685,22 @@ async function main() {
     });
 
     if (o1) {
+      await prisma.order.update({
+        where: { id: o1.id },
+        data: { hubId: dhakaHub.id }
+      });
+
       await prisma.deliveryAssignment.create({
         data: {
           orderId: o1.id,
           deliveryManId: courierUser.id,
+          hubId: dhakaHub.id,
           status: 'DELIVERED',
           deliveryOtp: '1234',
           codAmount: seededProducts[0].price + 50,
           codCollected: true,
           deliveryFee: 150,
+          specialInstructions: 'Fragile electronic item - handle with extra care.',
           pickedUpAt: new Date(Date.now() - 3600000 * 2),
           deliveredAt: new Date(Date.now() - 3600000),
           proofNotes: 'Handed over directly to customer at door.'
@@ -565,19 +709,110 @@ async function main() {
     }
 
     if (o2) {
+      await prisma.order.update({
+        where: { id: o2.id },
+        data: { hubId: dhakaHub.id }
+      });
+
       await prisma.deliveryAssignment.create({
         data: {
           orderId: o2.id,
           deliveryManId: courierUser.id,
+          hubId: dhakaHub.id,
           status: 'IN_TRANSIT',
           deliveryOtp: '8492',
           codAmount: seededProducts[1].price + 100,
           codCollected: false,
           deliveryFee: 120,
+          specialInstructions: 'Call customer 10 minutes prior to arrival.',
           pickedUpAt: new Date(Date.now() - 1800000)
         }
       });
     }
+  }
+
+  // Station Rider 2 (Uttara Dispatch Hub)
+  const rider2User = await prisma.user.create({
+    data: {
+      email: 'courier2@zibonbaba.com',
+      phone: '+8801777777778',
+      passwordHash,
+      role: 'DELIVERY_MAN',
+      status: 'ACTIVE',
+      walletBalance: 3200,
+      loyaltyPoints: 120,
+      profile: {
+        create: {
+          fullName: 'Tanvir Hasan (Uttara Fleet)',
+          bio: 'Express motorcycle courier for Northern Dhaka zones'
+        }
+      },
+      deliveryProfile: {
+        create: {
+          hubId: uttaraHub.id,
+          vehicleType: 'MOTORCYCLE',
+          vehicleNumber: 'DHAKA-METRO-LA-44-8899',
+          drivingLicense: 'DL-77382910',
+          nidNumber: '1996283746192',
+          emergencyContact: '+8801711002233',
+          preferredZone: 'Uttara, Airport, Tongi',
+          isOnline: true,
+          availabilityStatus: 'ONLINE',
+          cashInHand: 2400,
+          totalEarnings: 6200,
+          completedDeliveries: 19,
+          failedDeliveries: 0,
+          status: 'APPROVED'
+        }
+      }
+    }
+  });
+  if (createdRoles['DELIVERY_MAN']) {
+    await prisma.userRole.create({
+      data: { userId: rider2User.id, roleId: createdRoles['DELIVERY_MAN'] }
+    }).catch(() => {});
+  }
+
+  // Station Rider 3 (Chattogram Port Hub)
+  const rider3User = await prisma.user.create({
+    data: {
+      email: 'courier3@zibonbaba.com',
+      phone: '+8801811223344',
+      passwordHash,
+      role: 'DELIVERY_MAN',
+      status: 'ACTIVE',
+      walletBalance: 4800,
+      loyaltyPoints: 210,
+      profile: {
+        create: {
+          fullName: 'Rasel Mia (CTG Express)',
+          bio: 'Senior parcel delivery rider stationed at Agrabad Port Hub'
+        }
+      },
+      deliveryProfile: {
+        create: {
+          hubId: ctgHub.id,
+          vehicleType: 'VAN',
+          vehicleNumber: 'CHATTO-METRO-CHA-11-2233',
+          drivingLicense: 'DL-99482019',
+          nidNumber: '1994726152839',
+          emergencyContact: '+8801811009988',
+          preferredZone: 'Agrabad, GEC, Halishahar',
+          isOnline: true,
+          availabilityStatus: 'ONLINE',
+          cashInHand: 5600,
+          totalEarnings: 11400,
+          completedDeliveries: 42,
+          failedDeliveries: 2,
+          status: 'APPROVED'
+        }
+      }
+    }
+  });
+  if (createdRoles['DELIVERY_MAN']) {
+    await prisma.userRole.create({
+      data: { userId: rider3User.id, roleId: createdRoles['DELIVERY_MAN'] }
+    }).catch(() => {});
   }
 
   // Withdrawal Requests

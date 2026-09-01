@@ -916,7 +916,8 @@ export default function SellerPortalPage() {
                     <p className="text-xs text-slate-400">No products registered in this store yet.</p>
                     <p className="text-[11px] text-slate-500">Fill in the form on the right to register your first product SKU.</p>
                   </div>
-                                    <div className="overflow-x-auto">
+                ) : (
+                  <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs border-collapse">
                       <thead>
                         <tr className="border-b border-white/10 bg-white/5 text-slate-400 font-bold">
@@ -1197,6 +1198,7 @@ export default function SellerPortalPage() {
                   </button>
                 </form>
               </div>
+            </div>
           </div>
         )}
 

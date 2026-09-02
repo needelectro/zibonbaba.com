@@ -11,10 +11,11 @@ export async function GET(request: Request) {
 
     const userId = context.user.id;
 
-    // Fetch user with delivery profile and stationed hub
+    // Fetch user with delivery profile, user profile, and stationed hub
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
+        profile: true,
         deliveryProfile: {
           include: { hub: true }
         }
@@ -22,6 +23,7 @@ export async function GET(request: Request) {
     });
 
     const dProfile = user?.deliveryProfile;
+    const deliveryManId = `DM-${userId.replace(/-/g, '').substring(0, 6).toUpperCase()}`;
 
     // Fetch all assignments for this delivery partner
     const assignments = await prisma.deliveryAssignment.findMany({
@@ -121,11 +123,16 @@ export async function GET(request: Request) {
     return NextResponse.json({
       success: true,
       profile: {
+        deliveryManId,
+        fullName: user?.profile?.fullName || user?.email.split('@')[0],
+        avatar: user?.avatar,
         isOnline: dProfile?.isOnline ?? false,
         availabilityStatus: dProfile?.availabilityStatus || 'OFFLINE',
-        vehicleType: dProfile?.vehicleType || 'BIKE',
+        vehicleType: dProfile?.vehicleType || 'MOTORCYCLE',
+        vehicleModel: dProfile?.vehicleModel || null,
         vehicleNumber: dProfile?.vehicleNumber || 'N/A',
         preferredZone: dProfile?.preferredZone || 'Dhaka Central',
+        serviceArea: dProfile?.serviceArea || dProfile?.preferredZone || 'Dhaka Metro',
         status: dProfile?.status || 'APPROVED',
         cashInHand: totalCashInHand,
         walletBalance: user?.walletBalance || 0,

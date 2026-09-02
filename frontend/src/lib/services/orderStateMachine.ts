@@ -9,9 +9,9 @@ import { OrderStatus, DeliveryStatus, UserRole } from '@/lib/constants/roles';
 export const ORDER_TRANSITION_GRAPH: Record<string, string[]> = {
   [OrderStatus.PENDING]: [OrderStatus.CONFIRMED, OrderStatus.CANCELLED],
   [OrderStatus.CONFIRMED]: [OrderStatus.PROCESSING, OrderStatus.CANCELLED],
-  [OrderStatus.PROCESSING]: [OrderStatus.READY_FOR_DELIVERY, OrderStatus.ASSIGNED, OrderStatus.SHIPPED, OrderStatus.IN_TRANSIT, OrderStatus.CANCELLED],
-  [OrderStatus.READY_FOR_DELIVERY]: [OrderStatus.ASSIGNED, OrderStatus.ACCEPTED, OrderStatus.SHIPPED, OrderStatus.IN_TRANSIT, OrderStatus.CANCELLED],
-  [OrderStatus.ASSIGNED]: [OrderStatus.ACCEPTED, DeliveryStatus.REJECTED, OrderStatus.PICKED_UP, OrderStatus.CANCELLED],
+  [OrderStatus.PROCESSING]: [OrderStatus.READY_FOR_DELIVERY, OrderStatus.ASSIGNED, OrderStatus.ACCEPTED, OrderStatus.SHIPPED, OrderStatus.IN_TRANSIT, OrderStatus.CANCELLED],
+  [OrderStatus.READY_FOR_DELIVERY]: [OrderStatus.ASSIGNED, OrderStatus.ACCEPTED, OrderStatus.PICKED_UP, OrderStatus.SHIPPED, OrderStatus.IN_TRANSIT, OrderStatus.CANCELLED],
+  [OrderStatus.ASSIGNED]: [OrderStatus.ACCEPTED, DeliveryStatus.REJECTED, OrderStatus.PICKED_UP, OrderStatus.IN_TRANSIT, OrderStatus.CANCELLED],
   [OrderStatus.ACCEPTED]: [OrderStatus.PICKED_UP, DeliveryStatus.REJECTED, OrderStatus.IN_TRANSIT, OrderStatus.CANCELLED],
   [OrderStatus.PICKED_UP]: [OrderStatus.IN_TRANSIT, OrderStatus.SHIPPED, OrderStatus.FAILED, OrderStatus.DELIVERED],
   [OrderStatus.SHIPPED]: [OrderStatus.IN_TRANSIT, OrderStatus.DELIVERED, OrderStatus.FAILED, OrderStatus.RETURNED],
@@ -131,9 +131,11 @@ export function canUserPerformTransition(
     }
 
     const allowedCourierTargets: Record<string, string[]> = {
-      [OrderStatus.ASSIGNED]: [OrderStatus.ACCEPTED, DeliveryStatus.REJECTED],
-      [OrderStatus.ACCEPTED]: [OrderStatus.PICKED_UP, DeliveryStatus.REJECTED],
-      [OrderStatus.PICKED_UP]: [OrderStatus.IN_TRANSIT, OrderStatus.SHIPPED, OrderStatus.FAILED],
+      [OrderStatus.PROCESSING]: [OrderStatus.ACCEPTED, OrderStatus.PICKED_UP],
+      [OrderStatus.READY_FOR_DELIVERY]: [OrderStatus.ACCEPTED, OrderStatus.PICKED_UP],
+      [OrderStatus.ASSIGNED]: [OrderStatus.ACCEPTED, DeliveryStatus.REJECTED, OrderStatus.PICKED_UP],
+      [OrderStatus.ACCEPTED]: [OrderStatus.PICKED_UP, DeliveryStatus.REJECTED, OrderStatus.IN_TRANSIT],
+      [OrderStatus.PICKED_UP]: [OrderStatus.IN_TRANSIT, OrderStatus.SHIPPED, OrderStatus.FAILED, OrderStatus.DELIVERED],
       [OrderStatus.SHIPPED]: [OrderStatus.IN_TRANSIT, OrderStatus.DELIVERED, OrderStatus.FAILED, OrderStatus.RETURNED],
       [OrderStatus.IN_TRANSIT]: [OrderStatus.DELIVERED, OrderStatus.FAILED, OrderStatus.RETURNED],
       [OrderStatus.FAILED]: [OrderStatus.IN_TRANSIT, OrderStatus.RETURNED]

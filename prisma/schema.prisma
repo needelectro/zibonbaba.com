@@ -704,6 +704,20 @@ model DeliveryProfile {
   failedDeliveries    Int      @default(0)
   cashInHand          Float    @default(0.0)
   totalEarnings       Float    @default(0.0)
+  unionWard           String?
+  area                String?
+  fullAddress         String?
+  postalCode          String?
+  vehicleModel        String?
+  vehicleColor        String?
+  vehicleOwnership    String?  @default("OWNED")
+  licenseStatus       String?  @default("ACTIVE")
+  verificationSubmittedAt DateTime?
+  verifiedAt          DateTime?
+  verificationRemarks String?
+  serviceArea         String?
+  deliveryType        String?  @default("EXPRESS")
+  approvalDate        DateTime?
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 }

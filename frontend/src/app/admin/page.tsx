@@ -2735,11 +2735,17 @@ export default function AdminDashboardPage() {
                         </p>
                       </div>
 
-                      <div className="pt-2 border-t border-white/5 flex gap-2">
+                      <div className="pt-2 border-t border-white/5 flex flex-wrap gap-2">
+                        <Link
+                          href={`/admin/delivery-men/${cour.id}`}
+                          className="flex-1 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 text-amber-400 text-[10px] font-bold py-1.5 rounded-lg transition-colors text-center cursor-pointer"
+                        >
+                          Manage Profile →
+                        </Link>
                         {cour.status !== 'APPROVED' && (
                           <button
                             onClick={() => handleUpdateDeliveryManStatus(cour.id, 'APPROVED')}
-                            className="flex-1 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 text-[10px] font-bold py-1.5 rounded-lg transition-colors cursor-pointer"
+                            className="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 text-[10px] font-bold py-1.5 px-3 rounded-lg transition-colors cursor-pointer"
                           >
                             Approve
                           </button>
@@ -2747,7 +2753,7 @@ export default function AdminDashboardPage() {
                         {cour.status !== 'SUSPENDED' && (
                           <button
                             onClick={() => handleUpdateDeliveryManStatus(cour.id, 'SUSPENDED')}
-                            className="flex-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-[10px] font-bold py-1.5 rounded-lg transition-colors cursor-pointer"
+                            className="bg-red-500/10 hover:bg-red-500/20 text-red-400 text-[10px] font-bold py-1.5 px-3 rounded-lg transition-colors cursor-pointer"
                           >
                             Suspend
                           </button>

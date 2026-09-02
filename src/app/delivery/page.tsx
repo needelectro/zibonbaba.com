@@ -489,6 +489,14 @@ export default function DeliveryPortalPage() {
             {isOnline ? 'ONLINE' : 'OFFLINE'}
           </button>
 
+          <Link
+            href="/delivery/profile"
+            className="text-gray-400 hover:text-primary p-1.5 rounded-lg hover:bg-white/5 cursor-pointer transition-colors"
+            title="Full Profile Center & Settings"
+          >
+            <User size={16} />
+          </Link>
+
           <button
             onClick={() => { logout(); router.push('/delivery/login'); }}
             className="text-gray-400 hover:text-red-400 p-1.5 rounded-lg hover:bg-white/5 cursor-pointer"
@@ -1094,13 +1102,20 @@ export default function DeliveryPortalPage() {
                 </div>
 
                 {/* Header Action Buttons */}
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Link
+                    href="/delivery/profile"
+                    className="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-primary text-black text-xs font-black transition-all flex items-center justify-center gap-1.5 shadow-lg hover:bg-amber-400 cursor-pointer"
+                  >
+                    <User size={13} /> Full Profile Center →
+                  </Link>
+
                   <button
                     type="button"
                     onClick={openEditProfileModal}
                     className="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-gray-200 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                   >
-                    <Edit3 size={13} className="text-primary" /> Edit Profile
+                    <Edit3 size={13} className="text-primary" /> Edit
                   </button>
 
                   <button

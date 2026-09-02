@@ -143,7 +143,35 @@ export function usePlatformSync() {
         } catch (_) {}
       });
 
-      // 5. Notifications
+      // 5. Delivery Ecosystem Sync (Availability, Profile, Assignments)
+      es.addEventListener(PlatformEventType.DELIVERY_AVAILABILITY_CHANGED, (e: MessageEvent) => {
+        try {
+          const payload = JSON.parse(e.data) as RealtimeSyncEvent;
+          setLastEvent(payload);
+          window.dispatchEvent(new CustomEvent('zibonbaba:sync', { detail: payload }));
+          window.dispatchEvent(new CustomEvent('zibonbaba:delivery-sync', { detail: payload }));
+        } catch (_) {}
+      });
+
+      es.addEventListener(PlatformEventType.DELIVERY_PROFILE_UPDATED, (e: MessageEvent) => {
+        try {
+          const payload = JSON.parse(e.data) as RealtimeSyncEvent;
+          setLastEvent(payload);
+          window.dispatchEvent(new CustomEvent('zibonbaba:sync', { detail: payload }));
+          window.dispatchEvent(new CustomEvent('zibonbaba:delivery-sync', { detail: payload }));
+        } catch (_) {}
+      });
+
+      es.addEventListener(PlatformEventType.DELIVERY_STATUS_CHANGED, (e: MessageEvent) => {
+        try {
+          const payload = JSON.parse(e.data) as RealtimeSyncEvent;
+          setLastEvent(payload);
+          window.dispatchEvent(new CustomEvent('zibonbaba:sync', { detail: payload }));
+          window.dispatchEvent(new CustomEvent('zibonbaba:delivery-sync', { detail: payload }));
+        } catch (_) {}
+      });
+
+      // 6. Notifications
       es.addEventListener(PlatformEventType.NOTIFICATION_CREATED, (e: MessageEvent) => {
         try {
           const payload = JSON.parse(e.data) as RealtimeSyncEvent;

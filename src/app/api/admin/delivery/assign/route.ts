@@ -86,11 +86,28 @@ export async function POST(request: Request) {
       }
     });
 
+    const nextVersion = (order.version || 1) + 1;
+
     await prisma.order.update({
       where: { id: orderId },
       data: {
-        status: 'PROCESSING',
+        status: 'ASSIGNED',
+        version: nextVersion,
         ...(resolvedHubId ? { hubId: resolvedHubId } : {})
+      }
+    });
+
+    // Record Status History
+    await prisma.orderStatusHistory.create({
+      data: {
+        orderId,
+        previousStatus: order.status,
+        newStatus: 'ASSIGNED',
+        changedById: user.id,
+        changedByRole: user.role,
+        changedByName: user.email?.split('@')[0] || 'Admin',
+        reason: `Assigned to rider ${rider.profile?.fullName || rider.email}`,
+        version: nextVersion
       }
     });
 
@@ -122,6 +139,36 @@ export async function POST(request: Request) {
         }
       });
     }
+
+    // Broadcast Real-time event across channels
+    try {
+      const { realtimeEngine } = await import('@/lib/services/realtimeEngine');
+      const { PlatformEventType } = await import('@/lib/constants/events');
+      await realtimeEngine.broadcast({
+        eventId: `evt_assign_${Date.now()}`,
+        eventType: PlatformEventType.ORDER_ASSIGNED,
+        aggregateType: 'ORDER',
+        aggregateId: orderId,
+        timestamp: new Date().toISOString(),
+        version: nextVersion,
+        channels: [
+          `order:${orderId}`,
+          `user:${deliveryManId}`,
+          `role:ADMIN`,
+          `role:SUPER_ADMIN`,
+          ...(order.customerId ? [`user:${order.customerId}`] : []),
+          ...(order.resellerOrder ? [`user:${order.resellerOrder.resellerId}`] : [])
+        ],
+        data: {
+          orderId,
+          orderCode: orderId.slice(0, 8).toUpperCase(),
+          deliveryManId,
+          riderName: rider.profile?.fullName || rider.email,
+          status: 'ASSIGNED',
+          version: nextVersion
+        }
+      });
+    } catch (_) {}
 
     return NextResponse.json({
       success: true,

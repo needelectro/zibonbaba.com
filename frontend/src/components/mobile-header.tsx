@@ -82,11 +82,6 @@ export default function MobileHeader() {
     markNotificationAsRead(id);
   };
 
-  const toggleLang = () => {
-    const nextLang = language === 'en' ? 'bn' : 'en';
-    setLanguage(nextLang);
-  };
-
   return (
     <>
       <header className="sticky top-0 z-40 bg-white border-b border-neutral-light/70 shadow-sm h-14 flex items-center justify-between px-3 md:hidden">
@@ -269,7 +264,7 @@ export default function MobileHeader() {
                   <button
                     type="button"
                     onClick={() => setLanguage('en')}
-                    className={`flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-black transition-all cursor-pointer select-none ${
+                    className={`flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-black transition-all cursor-pointer select-none active:scale-95 ${
                       language === 'en'
                         ? 'bg-amber-500 text-slate-950 shadow-sm'
                         : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
@@ -281,7 +276,7 @@ export default function MobileHeader() {
                   <button
                     type="button"
                     onClick={() => setLanguage('bn')}
-                    className={`flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-black transition-all cursor-pointer select-none ${
+                    className={`flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-black transition-all cursor-pointer select-none active:scale-95 ${
                       language === 'bn'
                         ? 'bg-amber-500 text-slate-950 shadow-sm'
                         : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'

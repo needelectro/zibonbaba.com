@@ -1,21 +1,18 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, use } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import {
   ArrowLeft, ShieldCheck, ShieldAlert, CheckCircle2, XCircle, Clock,
   Bike, User, MapPin, Phone, Mail, DollarSign, Wallet, History, AlertCircle,
   FileText, Check, Save, Compass, Building, Calendar, Star, RefreshCw
 } from 'lucide-react';
 
-export default function AdminDeliveryManDetailPage({
-  params
-}: {
-  params: Promise<{ id: string }>
-}) {
+export default function AdminDeliveryManDetailPage() {
   const router = useRouter();
-  const { id } = use(params);
+  const routeParams = useParams();
+  const id = typeof routeParams?.id === 'string' ? routeParams.id : Array.isArray(routeParams?.id) ? routeParams.id[0] : '';
 
   const [loading, setLoading] = useState(true);
   const [riderData, setRiderData] = useState<any>(null);

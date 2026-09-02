@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { useStore } from '../store/useStore';
+import { useStore } from '@/store/useStore';
 import {
   Search, ShoppingCart, Heart, User, LogOut,
   Package, LayoutDashboard, Settings, X, Eye, EyeOff,
@@ -10,8 +10,8 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { translations } from '../utils/translations';
-import { getDashboardForRole } from '../utils/roleRoutes';
+import { translations } from '@/utils/translations';
+import { getDashboardForRole } from '@/utils/roleRoutes';
 
 // ─────────────────────────────────────────────
 // Auth Modal Component

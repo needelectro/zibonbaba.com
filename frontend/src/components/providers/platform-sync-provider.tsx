@@ -58,12 +58,12 @@ export function PlatformSyncProvider({ children }: { children: React.ReactNode }
       }
     };
 
-    window.addEventListener('zibonbaba:order-sync', handleOrderSync);
-    window.addEventListener('zibonbaba:product-sync', handleProductSync);
+    window.addEventListener('sync:orders', handleOrderSync);
+    window.addEventListener('sync:products', handleProductSync);
 
     return () => {
-      window.removeEventListener('zibonbaba:order-sync', handleOrderSync);
-      window.removeEventListener('zibonbaba:product-sync', handleProductSync);
+      window.removeEventListener('sync:orders', handleOrderSync);
+      window.removeEventListener('sync:products', handleProductSync);
     };
   }, []);
 
@@ -71,30 +71,31 @@ export function PlatformSyncProvider({ children }: { children: React.ReactNode }
     <SyncContext.Provider value={{ isConnected }}>
       {children}
 
-      {/* Floating Real-Time Synchronization Toast Stack */}
-      <div className="fixed bottom-4 right-4 z-[9999] flex flex-col gap-2 pointer-events-none max-w-sm w-full">
-        {toasts.map((toast) => (
+      {/* Floating Live Sync Toast Notifications Container */}
+      <div className="fixed bottom-5 right-5 z-[9995] flex flex-col gap-2.5 max-w-sm w-full pointer-events-none">
+        {toasts.map((t) => (
           <div
-            key={toast.id}
-            className="pointer-events-auto flex items-start gap-3 p-3.5 bg-slate-900/95 border border-emerald-500/30 text-white rounded-xl shadow-2xl backdrop-blur-md animate-in slide-in-from-bottom-5 duration-300"
+            key={t.id}
+            className={`pointer-events-auto p-4 rounded-2xl shadow-modal border backdrop-blur-xl flex items-start gap-3 animate-slide-up transition-all ${
+              t.type === 'success'
+                ? 'bg-emerald-950/80 border-emerald-500/30 text-emerald-100'
+                : t.type === 'warning'
+                ? 'bg-amber-950/80 border-amber-500/30 text-amber-100'
+                : 'bg-slate-900/85 border-slate-700 text-slate-100'
+            }`}
           >
-            {toast.type === 'success' ? (
-              <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-            ) : toast.type === 'warning' ? (
-              <AlertCircle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-            ) : (
-              <Sparkles className="w-5 h-5 text-indigo-400 shrink-0 mt-0.5" />
-            )}
-            <div className="flex-1 text-xs">
-              <div className="font-semibold text-slate-100 flex items-center justify-between">
-                <span>{toast.title}</span>
-                <span className="text-[10px] text-emerald-400 font-normal">Real-time sync</span>
-              </div>
-              <p className="text-slate-300 mt-0.5 leading-snug">{toast.message}</p>
+            <div className="mt-0.5 shrink-0">
+              {t.type === 'success' && <CheckCircle2 className="w-5 h-5 text-emerald-400" />}
+              {t.type === 'warning' && <AlertCircle className="w-5 h-5 text-amber-400" />}
+              {t.type === 'info' && <Sparkles className="w-5 h-5 text-amber-400" />}
+            </div>
+            <div className="flex-grow">
+              <h4 className="text-xs font-black tracking-tight">{t.title}</h4>
+              <p className="text-[11px] opacity-80 mt-0.5 leading-snug">{t.message}</p>
             </div>
             <button
-              onClick={() => removeToast(toast.id)}
-              className="text-slate-400 hover:text-white p-0.5"
+              onClick={() => removeToast(t.id)}
+              className="p-1 opacity-60 hover:opacity-100 rounded transition"
             >
               <X className="w-3.5 h-3.5" />
             </button>

@@ -453,12 +453,15 @@ model Order {
   discount   Float
   total      Float
   status     String      @default("PENDING")
+  version    Int         @default(1)
   items      OrderItem[]
   resellerOrder      ResellerOrder?
   deliveryAssignment DeliveryAssignment?
   hubId              String?
   hub                DeliveryHub?        @relation("HubOrders", fields: [hubId], references: [id])
+  statusHistory      OrderStatusHistory[]
   createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @default(now()) @updatedAt
 
   @@index([customerId, storeId])
 }
@@ -792,3 +795,44 @@ model WithdrawalRequest {
   @@index([status])
   @@index([role])
 }
+
+// =============================================================================
+// ORDER STATUS HISTORY & AUDIT TIMELINE
+// =============================================================================
+
+model OrderStatusHistory {
+  id             String   @id @default(uuid())
+  orderId        String
+  order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  previousStatus String
+  newStatus      String
+  changedById    String?
+  changedByRole  String?
+  changedByName  String?
+  reason         String?
+  version        Int      @default(1)
+  createdAt      DateTime @default(now())
+
+  @@index([orderId])
+  @@index([createdAt])
+}
+
+// =============================================================================
+// OUTBOX EVENT DISPATCHER
+// =============================================================================
+
+model OutboxEvent {
+  id            String    @id @default(uuid())
+  eventType     String
+  aggregateType String
+  aggregateId   String
+  payload       String    // JSON string
+  processed     Boolean   @default(false)
+  processedAt   DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@index([processed])
+  @@index([aggregateId])
+  @@index([createdAt])
+}
+

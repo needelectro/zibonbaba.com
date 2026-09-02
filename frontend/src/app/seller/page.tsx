@@ -228,6 +228,26 @@ export default function SellerPortalPage() {
     }
   }, [fetchStoreProfile, fetchSellerProducts, fetchSellerOrders, fetchSellerWallet, fetchSellerAnalytics, fetchSellerStaff]);
 
+  // Real-Time Cross-Portal Synchronization Listener
+  useEffect(() => {
+    const handleSync = () => {
+      fetchSellerOrders();
+      fetchSellerProducts();
+      fetchSellerWallet();
+      fetchSellerAnalytics();
+    };
+
+    window.addEventListener('zibonbaba:order-sync', handleSync);
+    window.addEventListener('zibonbaba:product-sync', handleSync);
+    window.addEventListener('zibonbaba:sync', handleSync);
+
+    return () => {
+      window.removeEventListener('zibonbaba:order-sync', handleSync);
+      window.removeEventListener('zibonbaba:product-sync', handleSync);
+      window.removeEventListener('zibonbaba:sync', handleSync);
+    };
+  }, [fetchSellerOrders, fetchSellerProducts, fetchSellerWallet, fetchSellerAnalytics]);
+
   if (!isMounted) return null;
 
   // Strict Role & Auth Guard

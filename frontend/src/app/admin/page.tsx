@@ -387,6 +387,37 @@ export default function AdminDashboardPage() {
     }
   }, []);
 
+  // Real-time Platform Synchronization Listener
+  useEffect(() => {
+    const handleSync = () => {
+      fetchOrders();
+      fetchProducts();
+      fetchAdminSellers();
+      fetchAdminCustomers();
+      fetchAdminResellers();
+      fetchAdminDeliveryMen();
+      fetchAdminUnassignedOrders();
+      fetchAdminWithdrawals();
+      const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null);
+      if (activeToken) {
+        fetch('/api/admin/platform-stats', { headers: { Authorization: `Bearer ${activeToken}` } })
+          .then(res => res.json())
+          .then(data => setPlatformStats(data))
+          .catch(() => {});
+      }
+    };
+
+    window.addEventListener('zibonbaba:order-sync', handleSync);
+    window.addEventListener('zibonbaba:product-sync', handleSync);
+    window.addEventListener('zibonbaba:sync', handleSync);
+
+    return () => {
+      window.removeEventListener('zibonbaba:order-sync', handleSync);
+      window.removeEventListener('zibonbaba:product-sync', handleSync);
+      window.removeEventListener('zibonbaba:sync', handleSync);
+    };
+  }, [fetchOrders, fetchProducts, token]);
+
   useEffect(() => {
     if (products.length > 0) setLocalProducts(products);
     if (orders.length > 0) setLocalOrders(orders);

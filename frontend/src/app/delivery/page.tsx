@@ -135,6 +135,39 @@ export default function DeliveryPortalPage() {
     } catch (_) {}
   }, []);
 
+  // Master Initial Load
+  useEffect(() => {
+    setIsMounted(true);
+    const token = getAuthToken();
+    if (token) {
+      Promise.all([
+        fetchDashboard(),
+        fetchOrders(),
+        fetchEarnings(),
+        fetchProfile()
+      ]).finally(() => setLoading(false));
+    } else {
+      setLoading(false);
+    }
+  }, [fetchDashboard, fetchOrders, fetchEarnings, fetchProfile]);
+
+  // Real-Time Cross-Portal Synchronization Listener
+  useEffect(() => {
+    const handleSync = () => {
+      fetchDashboard();
+      fetchOrders();
+      fetchEarnings();
+    };
+
+    window.addEventListener('zibonbaba:order-sync', handleSync);
+    window.addEventListener('zibonbaba:sync', handleSync);
+
+    return () => {
+      window.removeEventListener('zibonbaba:order-sync', handleSync);
+      window.removeEventListener('zibonbaba:sync', handleSync);
+    };
+  }, [fetchDashboard, fetchOrders, fetchEarnings]);
+
   // Open Edit Profile Modal and Pre-populate Form
   const openEditProfileModal = () => {
     const user = profileData?.user || {};

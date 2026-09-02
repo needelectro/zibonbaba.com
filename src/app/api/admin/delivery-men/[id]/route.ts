@@ -205,7 +205,7 @@ export async function PATCH(
         deliveryType: deliveryType !== undefined ? deliveryType : undefined,
         availabilityStatus: availabilityStatus !== undefined ? availabilityStatus : undefined,
         ...(verificationStatus === 'APPROVED' ? { verifiedAt: new Date(), approvalDate: new Date() } : {})
-      },
+      } as any,
       create: {
         userId: id,
         status: verificationStatus ? verificationStatus.toUpperCase().trim() : 'APPROVED',
@@ -215,7 +215,7 @@ export async function PATCH(
         serviceArea: serviceArea || 'Dhaka Metro',
         deliveryType: deliveryType || 'EXPRESS',
         availabilityStatus: availabilityStatus || 'OFFLINE'
-      }
+      } as any
     });
 
     // 3. Immutable audit log

@@ -126,30 +126,6 @@ export default function MobileHeader() {
 
         {/* Action Icons */}
         <div className="flex items-center gap-1.5 shrink-0">
-          {/* Mobile Segmented Language Switcher */}
-          <div className="flex items-center bg-neutral-100 border border-neutral-200 rounded-lg p-0.5 shadow-xs shrink-0">
-            <button
-              onClick={() => setLanguage('en')}
-              className={`px-2 py-0.5 text-[10px] font-black rounded-md transition-all select-none ${
-                language === 'en'
-                  ? 'bg-amber-500 text-slate-950 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              EN
-            </button>
-            <button
-              onClick={() => setLanguage('bn')}
-              className={`px-2 py-0.5 text-[10px] font-black rounded-md transition-all select-none ${
-                language === 'bn'
-                  ? 'bg-amber-500 text-slate-950 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              বাং
-            </button>
-          </div>
-
           {/* Notifications */}
           <div className="relative">
             <button
@@ -275,7 +251,48 @@ export default function MobileHeader() {
             </div>
 
             {/* Drawer Body Links */}
-            <div className="p-4 space-y-5 flex-1 overflow-y-auto">
+            <div className="p-4 space-y-4 flex-1 overflow-y-auto">
+              {/* Language Selection System in Slidebar */}
+              <div className="bg-slate-50 border border-slate-200/70 rounded-2xl p-3 shadow-xs">
+                <div className="flex items-center justify-between mb-2 px-1">
+                  <div className="flex items-center gap-1.5 text-slate-800">
+                    <Globe className="w-3.5 h-3.5 text-amber-500" />
+                    <span className="text-xs font-black">
+                      {language === 'en' ? 'Language' : 'ভাষা'}
+                    </span>
+                  </div>
+                  <span className="text-[9px] font-extrabold text-amber-600 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-md uppercase tracking-wider">
+                    {language === 'en' ? 'English (EN)' : 'বাংলা (BN)'}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-1.5 p-1 bg-white border border-slate-200 rounded-xl shadow-inner">
+                  <button
+                    type="button"
+                    onClick={() => setLanguage('en')}
+                    className={`flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-black transition-all cursor-pointer select-none ${
+                      language === 'en'
+                        ? 'bg-amber-500 text-slate-950 shadow-sm'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                    }`}
+                  >
+                    <span>English</span>
+                    {language === 'en' && <span className="w-1.5 h-1.5 rounded-full bg-slate-950"></span>}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLanguage('bn')}
+                    className={`flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-black transition-all cursor-pointer select-none ${
+                      language === 'bn'
+                        ? 'bg-amber-500 text-slate-950 shadow-sm'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                    }`}
+                  >
+                    <span>বাংলা</span>
+                    {language === 'bn' && <span className="w-1.5 h-1.5 rounded-full bg-slate-950"></span>}
+                  </button>
+                </div>
+              </div>
+
               {/* User Greeting / Login Status */}
               <div className="bg-slate-50 border border-slate-100 rounded-2xl p-3.5 flex items-center justify-between">
                 {isLoggedIn ? (

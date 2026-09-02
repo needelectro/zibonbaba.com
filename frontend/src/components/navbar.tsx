@@ -617,7 +617,7 @@ export default function Navbar() {
     <>
       <header className="sticky top-0 z-50 w-full border-b border-slate-200/50 bg-white/90 backdrop-blur-lg shadow-sm">
         {/* Top Utility Bar */}
-        <div className="w-full bg-[#0f172a] text-slate-300 py-1.5 px-3 sm:px-4 text-xs font-semibold flex items-center justify-between border-b border-slate-800 overflow-x-auto no-scrollbar text-nowrap">
+        <div className="w-full bg-[#0f172a] text-slate-300 py-1.5 px-3 sm:px-4 text-xs font-semibold flex items-center justify-between border-b border-slate-800 text-nowrap relative z-50">
           <div className="flex items-center gap-3 sm:gap-4 shrink-0">
             {/* Language Dropdown Selector */}
             <div className="relative" ref={langDropdownRef}>

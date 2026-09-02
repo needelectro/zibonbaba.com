@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useStore } from '../store/useStore';
+import { useStore } from '@/store/useStore';
 import {
   Search, Bell, ShoppingCart, ArrowLeft, X, HelpCircle, Globe, User,
   Menu, Sparkles, Store, Heart, Package, Phone, ChevronRight, ArrowRight

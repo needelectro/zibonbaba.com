@@ -619,59 +619,35 @@ export default function Navbar() {
         {/* Top Utility Bar */}
         <div className="w-full bg-[#0f172a] text-slate-300 py-1.5 px-3 sm:px-4 text-xs font-semibold flex items-center justify-between border-b border-slate-800 text-nowrap relative z-50">
           <div className="flex items-center gap-3 sm:gap-4 shrink-0">
-            {/* Language Dropdown Selector */}
-            <div className="relative" ref={langDropdownRef}>
+            {/* Always-Visible Segmented Language Switcher */}
+            <div className="flex items-center bg-slate-900/90 border border-slate-700/80 rounded-lg p-0.5 shadow-inner shrink-0">
               <button
                 type="button"
-                onClick={() => setShowLanguageDropdown((prev) => !prev)}
-                className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-slate-800 text-slate-200 hover:text-white transition-all text-xs font-semibold select-none cursor-pointer border border-transparent hover:border-slate-700/60"
-                title={language === 'en' ? 'Switch Language (English / বাংলা)' : 'ভাষা পরিবর্তন করুন (বাংলা / English)'}
+                id="lang-btn-en"
+                onClick={() => setLanguage('en')}
+                className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-bold transition-all select-none cursor-pointer ${
+                  language === 'en'
+                    ? 'bg-amber-500 text-slate-950 shadow-sm font-black'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
+                }`}
+                title="Switch platform language to English"
               >
-                <Globe className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                <span className="font-medium text-slate-200 text-xs tracking-normal">
-                  {language === 'en' ? 'English' : 'বাংলা'}
-                </span>
-                <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform duration-200 ${showLanguageDropdown ? 'rotate-180 text-amber-400' : ''}`} />
+                <Globe className={`w-3.5 h-3.5 ${language === 'en' ? 'text-slate-950' : 'text-amber-400'}`} />
+                <span>English</span>
               </button>
-
-              {/* Language Dropdown Menu */}
-              {showLanguageDropdown && (
-                <div className="absolute top-full left-0 mt-1.5 bg-slate-900 text-slate-200 shadow-2xl border border-slate-700/80 rounded-xl py-1.5 w-36 z-50 animate-slide-up backdrop-blur-md">
-                  <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 mb-1">
-                    {language === 'en' ? 'Select Language' : 'ভাষা নির্বাচন করুন'}
-                  </div>
-                  <button
-                    onClick={() => {
-                      setLanguage('en');
-                      setShowLanguageDropdown(false);
-                    }}
-                    className={`w-full flex items-center justify-between px-3 py-1.5 text-xs font-medium hover:bg-slate-800 transition-colors ${
-                      language === 'en' ? 'text-amber-400 bg-amber-400/10 font-bold' : 'text-slate-300'
-                    }`}
-                  >
-                    <span className="flex items-center gap-2">
-                      <span className="text-xs">🇺🇸</span>
-                      <span>English</span>
-                    </span>
-                    {language === 'en' && <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setLanguage('bn');
-                      setShowLanguageDropdown(false);
-                    }}
-                    className={`w-full flex items-center justify-between px-3 py-1.5 text-xs font-medium hover:bg-slate-800 transition-colors ${
-                      language === 'bn' ? 'text-amber-400 bg-amber-400/10 font-bold' : 'text-slate-300'
-                    }`}
-                  >
-                    <span className="flex items-center gap-2">
-                      <span className="text-xs">🇧🇩</span>
-                      <span>বাংলা</span>
-                    </span>
-                    {language === 'bn' && <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
-                  </button>
-                </div>
-              )}
+              <button
+                type="button"
+                id="lang-btn-bn"
+                onClick={() => setLanguage('bn')}
+                className={`flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-bold transition-all select-none cursor-pointer ${
+                  language === 'bn'
+                    ? 'bg-amber-500 text-slate-950 shadow-sm font-black'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/80'
+                }`}
+                title="প্ল্যাটফর্মের ভাষা বাংলায় পরিবর্তন করুন"
+              >
+                <span>বাংলা</span>
+              </button>
             </div>
             {/* Seller Center Menu with Direct Access & Popover */}
             <div className="relative group flex items-center">

@@ -72,27 +72,6 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
     return () => window.removeEventListener('zibonbaba-notification-toast', handleToast);
   }, []);
 
-  // Premium App Splash Screen
-  if (!isMounted) {
-    return (
-      <div className="fixed inset-0 z-[9999] bg-neutral-dark flex flex-col items-center justify-center text-white">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 rounded-xl bg-primary flex items-center justify-center font-black text-neutral-dark text-4xl shadow-glow animate-pulse-glow">
-            Z
-          </div>
-          <div className="text-center space-y-1">
-            <h1 className="text-2xl font-black tracking-tight">
-              Zibon<span className="text-primary-accent">baba</span>
-            </h1>
-          </div>
-        </div>
-        <div className="absolute bottom-16 w-36 bg-neutral-body/30 h-1 rounded-full overflow-hidden">
-          <div className="bg-primary h-full rounded-full w-20 animate-pulse"></div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <>
       <CommandPalette />
@@ -122,23 +101,28 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
               {children}
             </main>
           </div>
-        ) : isMobile ? (
-          <div className="flex flex-col min-h-screen bg-neutral-light text-neutral-dark overflow-x-hidden pb-16">
-            <PWARegister />
-            <MobileHeader />
-            <main className="flex-grow flex flex-col w-full relative">
-              {children}
-            </main>
-            <Footer />
-            <MobileBottomNavigation />
-          </div>
         ) : (
-          <div className="flex flex-col min-h-screen bg-neutral-light">
-            <Navbar />
-            <main className="flex-grow flex flex-col w-full">
+          <div className="flex flex-col min-h-screen bg-neutral-light text-neutral-dark overflow-x-hidden">
+            <PWARegister />
+            {/* Desktop Navbar - visible only on md+ screens */}
+            <div className="hidden md:block">
+              <Navbar />
+            </div>
+            {/* Mobile Header - visible only below md screens */}
+            <div className="block md:hidden">
+              <MobileHeader />
+            </div>
+
+            <main className="flex-grow flex flex-col w-full relative pb-16 md:pb-0">
               {children}
             </main>
+
             <Footer />
+
+            {/* Mobile Bottom Navigation - visible only below md screens */}
+            <div className="block md:hidden">
+              <MobileBottomNavigation />
+            </div>
           </div>
         )}
       </PlatformSyncProvider>

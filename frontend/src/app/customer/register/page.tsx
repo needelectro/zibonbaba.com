@@ -58,8 +58,10 @@ function Field({ id, label, type = 'text', value, onChange, placeholder, icon, r
             type="button"
             onClick={() => setShow(!show)}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors p-1"
+            tabIndex={-1}
+            aria-label={show ? 'Hide password' : 'Show password'}
           >
-            {show ? <EyeOff size={15} /> : <Eye size={15} />}
+            {show ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
         )}
       </div>
@@ -69,13 +71,15 @@ function Field({ id, label, type = 'text', value, onChange, placeholder, icon, r
 
 export default function CustomerRegisterPage() {
   const router = useRouter();
+
+  // Form States
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [referralCode, setReferralCode] = useState('');
-  const [agreeTerms, setAgreeTerms] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -84,8 +88,12 @@ export default function CustomerRegisterPage() {
     e.preventDefault();
     setError('');
 
-    if (!agreeTerms) {
-      setError('Please agree to the Terms of Service & Privacy Policy.');
+    if (!fullName.trim()) {
+      setError('Please enter your full name.');
+      return;
+    }
+    if (!email.trim() || !email.includes('@')) {
+      setError('Please enter a valid email address.');
       return;
     }
     if (password !== confirmPassword) {
@@ -96,227 +104,297 @@ export default function CustomerRegisterPage() {
       setError('Password must be at least 6 characters.');
       return;
     }
+    if (!termsAccepted) {
+      setError('Please accept the Terms of Service and Privacy Policy to continue.');
+      return;
+    }
 
     setLoading(true);
+
     try {
+      // Clear old session credentials first to guarantee clean account isolation
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('zibonbaba_token');
+        localStorage.removeItem('zibonbaba_user');
+        localStorage.removeItem('zibonbaba_role');
+        sessionStorage.clear();
+      }
+
+      const body: Record<string, any> = {
+        fullName: fullName.trim(),
+        email: email.trim().toLowerCase(),
+        phone: phone.trim() || undefined,
+        password,
+        role: 'CUSTOMER',
+      };
+
+      if (referralCode.trim()) {
+        body.referralCode = referralCode.trim();
+      }
+
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fullName,
-          email,
-          phone,
-          password,
-          role: 'CUSTOMER',
-          referralCode: referralCode.trim() || undefined,
-        }),
+        body: JSON.stringify(body),
       });
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || 'Registration failed. Please try again.');
+        setError(data.error || data.message || 'Registration failed. Please try again.');
+        return;
+      }
+
+      // Establish fresh isolated session
+      if (data.accessToken && typeof window !== 'undefined') {
+        localStorage.setItem('zibonbaba_token', data.accessToken);
+        localStorage.setItem('zibonbaba_user', JSON.stringify(data.user));
+        localStorage.setItem('zibonbaba_role', data.user.role || 'CUSTOMER');
+        document.cookie = `zibonbaba_token=${data.accessToken}; path=/; max-age=604800; SameSite=Lax`;
+        document.cookie = `zibonbaba_role=${data.user.role || 'CUSTOMER'}; path=/; max-age=604800; SameSite=Lax`;
+        document.cookie = `zibonbaba_user=${encodeURIComponent(JSON.stringify(data.user))}; path=/; max-age=604800; SameSite=Lax`;
+
+        useStore.setState({
+          isLoggedIn: true,
+          token: data.accessToken,
+          role: 'customer',
+          username: data.user?.fullName || data.user?.email || 'Customer',
+          userEmail: data.user?.email || '',
+          cart: [],
+          orders: []
+        });
       }
 
       setSuccess(true);
-      setTimeout(() => {
-        router.push('/customer/login?registered=1');
-      }, 1500);
-    } catch (err: any) {
-      setError(err.message || 'Something went wrong. Please try again.');
+    } catch {
+      setError('Could not connect to the server. Please try again later.');
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gray-950 text-white flex flex-col justify-between relative overflow-hidden font-sans">
-      {/* Background glow effects */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-primary/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 right-0 w-[400px] h-[300px] bg-yellow-500/5 rounded-full blur-3xl pointer-events-none" />
-
-      {/* Top Navbar */}
-      <header className="px-6 py-5 flex items-center justify-between border-b border-white/5 relative z-10">
-        <Link href="/" className="flex items-center gap-2 group">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-primary to-yellow-400 flex items-center justify-center font-extrabold text-gray-950 text-base shadow-glow">
-            Z
-          </div>
-          <span className="font-extrabold text-lg text-white tracking-tight">
-            Zibon<span className="text-primary">baba</span>
-          </span>
-        </Link>
+  if (success) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-950 text-white relative overflow-hidden px-4">
         <Link
-          href="/customer/login"
-          className="text-xs text-gray-400 hover:text-white flex items-center gap-1 transition-colors"
+          href="/"
+          className="absolute top-4 left-4 z-50 p-2.5 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors border border-white/10 backdrop-blur-sm"
         >
-          <span>Already have an account?</span>
-          <span className="text-primary font-bold">Sign in</span>
+          <ArrowLeft size={20} />
         </Link>
-      </header>
 
-      {/* Main Container */}
-      <main className="flex-1 flex items-center justify-center px-4 py-10 relative z-10">
-        <div className="w-full max-w-md">
-          {/* Card */}
-          <div className="bg-gray-900/80 border border-white/10 rounded-3xl p-8 backdrop-blur-xl shadow-2xl">
-            {/* Header */}
-            <div className="text-center mb-6">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 text-primary mb-3">
-                <User size={22} />
-              </div>
-              <h1 className="text-xl font-black text-white">Create Customer Account</h1>
-              <p className="text-xs text-gray-400 mt-1">Join Zibonbaba for seamless multi-vendor shopping</p>
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900" />
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-primary/10 blur-[130px] pointer-events-none" />
+
+        <div className="relative z-10 w-full max-w-md text-center backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl p-8 sm:p-10 shadow-2xl">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-green-500/20 border border-green-500/30 rounded-2xl flex items-center justify-center mx-auto mb-5 text-green-400 shadow-glow">
+            <CheckCircle2 size={36} />
+          </div>
+          <h2 className="text-xl sm:text-2xl font-black text-white mb-2">
+            Welcome to Zibonbaba! 🎉
+          </h2>
+          <p className="text-gray-400 text-xs sm:text-sm mb-4 leading-relaxed">
+            Your customer account has been created with <strong className="text-primary font-bold">100 welcome bonus loyalty points</strong>!
+          </p>
+
+          <div className="bg-white/5 border border-white/10 rounded-xl p-3.5 mb-6 text-xs text-gray-300 flex items-center gap-3">
+            <Gift size={20} className="text-amber-400 shrink-0" />
+            <span className="text-left">Use your points during checkout for exclusive discounts on your first order.</span>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <Link
+              href="/"
+              className="w-full inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-accent text-gray-950 font-black px-6 py-3.5 rounded-xl transition-all shadow-glow text-sm"
+            >
+              Start Shopping <ArrowRight size={16} />
+            </Link>
+            <Link
+              href="/customer/login"
+              className="w-full inline-flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 font-bold px-6 py-3 rounded-xl transition-all text-sm"
+            >
+              Sign In to Account
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-gray-950 text-white py-10 px-4 sm:px-6">
+      {/* Back Button */}
+      <Link
+        href="/"
+        className="absolute top-4 left-4 z-50 p-2.5 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors border border-white/10 backdrop-blur-sm"
+        aria-label="Back to Home"
+      >
+        <ArrowLeft size={20} />
+      </Link>
+
+      {/* Background Gradients */}
+      <div className="absolute inset-0 z-0">
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900" />
+        <div className="absolute top-1/4 left-1/4 w-[450px] h-[450px] rounded-full bg-primary/10 blur-[130px] pointer-events-none" />
+        <div className="absolute bottom-1/4 right-1/4 w-[450px] h-[450px] rounded-full bg-amber-500/10 blur-[130px] pointer-events-none" />
+      </div>
+
+      <div className="relative z-10 w-full max-w-lg">
+        {/* Branding & Header */}
+        <div className="text-center mb-6">
+          <Link href="/" className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary shadow-glow mb-3 hover:scale-105 transition-transform">
+            <span className="text-2xl font-black text-gray-950">Z</span>
+          </Link>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-bold text-primary mb-2">
+            <Sparkles size={13} /> 100 Loyalty Points on Signup
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">Create Customer Account</h1>
+          <p className="text-gray-400 text-xs sm:text-sm mt-1">
+            Join Zibonbaba to discover thousands of deals and fast express shipping
+          </p>
+        </div>
+
+        {/* Card Container */}
+        <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl shadow-2xl p-6 sm:p-8 space-y-6">
+          {/* Error Message */}
+          {error && (
+            <div className="flex items-center gap-2.5 bg-red-500/10 border border-red-500/30 text-red-400 rounded-xl p-3 text-xs sm:text-sm animate-fade-in">
+              <AlertCircle size={16} className="shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Field
+              id="customer-reg-fullname"
+              label="Full Name"
+              value={fullName}
+              onChange={setFullName}
+              placeholder="e.g. Sarah Jenkins"
+              icon={<User size={16} />}
+            />
+
+            <Field
+              id="customer-reg-email"
+              label="Email Address"
+              type="email"
+              value={email}
+              onChange={setEmail}
+              placeholder="sarah@example.com"
+              icon={<Mail size={16} />}
+            />
+
+            <Field
+              id="customer-reg-phone"
+              label="Phone Number"
+              type="tel"
+              value={phone}
+              onChange={setPhone}
+              placeholder="+880 1XXX-XXXXXX"
+              icon={<Phone size={16} />}
+              required={false}
+            />
+
+            {/* Customer Referral Code Field */}
+            <Field
+              id="customer-reg-referral"
+              label="Referral Code"
+              value={referralCode}
+              onChange={setReferralCode}
+              placeholder="e.g. ZB8X9K2 (Optional)"
+              icon={<Tag size={16} />}
+              required={false}
+            />
+
+            <Field
+              id="customer-reg-password"
+              label="Password"
+              type="password"
+              value={password}
+              onChange={setPassword}
+              placeholder="Min. 6 characters"
+              icon={<Lock size={16} />}
+            />
+
+            <Field
+              id="customer-reg-confirm-password"
+              label="Confirm Password"
+              type="password"
+              value={confirmPassword}
+              onChange={setConfirmPassword}
+              placeholder="Re-enter your password"
+              icon={<Lock size={16} />}
+            />
+
+            {/* Terms Checkbox */}
+            <div className="pt-1">
+              <label htmlFor="customer-reg-terms" className="flex items-start gap-2.5 cursor-pointer group">
+                <div className="relative mt-0.5 shrink-0">
+                  <input
+                    id="customer-reg-terms"
+                    type="checkbox"
+                    checked={termsAccepted}
+                    onChange={(e) => setTermsAccepted(e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-4 h-4 border border-white/20 rounded bg-white/5 peer-checked:bg-primary peer-checked:border-primary transition-all flex items-center justify-center">
+                    {termsAccepted && <CheckCircle2 size={11} className="text-gray-950" />}
+                  </div>
+                </div>
+                <span className="text-xs text-gray-400 leading-relaxed select-none">
+                  I agree to the{' '}
+                  <span className="text-primary font-bold hover:underline cursor-pointer">Terms of Service</span>
+                  {' '}and{' '}
+                  <span className="text-primary font-bold hover:underline cursor-pointer">Privacy Policy</span>
+                </span>
+              </label>
             </div>
 
-            {/* Error Message */}
-            {error && (
-              <div className="mb-5 p-3.5 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-2.5 text-xs text-red-400 font-semibold animate-fade-in">
-                <AlertCircle size={16} className="shrink-0 text-red-400" />
-                <span>{error}</span>
-              </div>
-            )}
+            {/* Submit Button */}
+            <button
+              id="customer-register-submit-btn"
+              type="submit"
+              disabled={loading}
+              className="w-full bg-primary hover:bg-primary-accent text-gray-950 font-black py-3.5 rounded-xl transition-all shadow-glow hover:shadow-[0_0_25px_rgba(255,193,7,0.4)] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base mt-2"
+            >
+              {loading ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  <span>Creating Customer Account...</span>
+                </>
+              ) : (
+                <>
+                  <span>Create Customer Account</span>
+                  <ArrowRight size={16} />
+                </>
+              )}
+            </button>
+          </form>
 
-            {/* Success Message */}
-            {success && (
-              <div className="mb-5 p-3.5 bg-green-500/10 border border-green-500/20 rounded-2xl flex items-center gap-2.5 text-xs text-green-400 font-semibold animate-fade-in">
-                <CheckCircle2 size={16} className="shrink-0 text-green-400" />
-                <span>Account created! Redirecting to login...</span>
-              </div>
-            )}
-
-            {/* Registration Form */}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <Field
-                id="fullName"
-                label="Full Name"
-                value={fullName}
-                onChange={setFullName}
-                placeholder="e.g. Tanvir Ahmed"
-                icon={<User size={15} />}
-              />
-
-              <Field
-                id="email"
-                label="Email Address"
-                type="email"
-                value={email}
-                onChange={setEmail}
-                placeholder="you@example.com"
-                icon={<Mail size={15} />}
-              />
-
-              <Field
-                id="phone"
-                label="Phone Number"
-                type="tel"
-                value={phone}
-                onChange={setPhone}
-                placeholder="+880 1700-000000"
-                icon={<Phone size={15} />}
-                required={false}
-              />
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <Field
-                  id="password"
-                  label="Password"
-                  type="password"
-                  value={password}
-                  onChange={setPassword}
-                  placeholder="Min 6 chars"
-                  icon={<Lock size={15} />}
-                />
-                <Field
-                  id="confirmPassword"
-                  label="Confirm Password"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={setConfirmPassword}
-                  placeholder="Repeat password"
-                  icon={<Lock size={15} />}
-                />
-              </div>
-
-              {/* Referral Code (Optional) */}
-              <div>
-                <label htmlFor="referralCode" className="block text-xs font-semibold text-gray-300 mb-1.5 flex items-center gap-1">
-                  <Tag size={12} className="text-yellow-400" />
-                  <span>Referral Code</span>
-                  <span className="text-gray-500 text-xs">(optional)</span>
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500">
-                    <Gift size={15} />
-                  </span>
-                  <input
-                    id="referralCode"
-                    type="text"
-                    value={referralCode}
-                    onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
-                    placeholder="e.g. ZB-REF-100"
-                    className="w-full bg-white/5 border border-white/10 text-white placeholder-gray-600 rounded-xl pl-10 pr-4 py-3 text-xs sm:text-sm uppercase tracking-wider font-mono focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all"
-                  />
-                </div>
-              </div>
-
-              {/* Terms Agreement */}
-              <div className="flex items-start gap-2.5 pt-1">
-                <input
-                  id="terms"
-                  type="checkbox"
-                  checked={agreeTerms}
-                  onChange={(e) => setAgreeTerms(e.target.checked)}
-                  className="mt-0.5 w-4 h-4 rounded border-gray-700 bg-gray-800 text-primary focus:ring-primary/30 accent-primary cursor-pointer"
-                />
-                <label htmlFor="terms" className="text-xs text-gray-400 leading-relaxed cursor-pointer">
-                  I agree to the{' '}
-                  <span className="text-primary hover:underline">Terms of Service</span> and{' '}
-                  <span className="text-primary hover:underline">Privacy Policy</span>.
-                </label>
-              </div>
-
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={loading || success}
-                className="w-full bg-primary hover:bg-primary-accent text-gray-950 font-extrabold text-sm py-3.5 rounded-xl transition-all duration-200 shadow-glow flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+          {/* Login Link & Merchant Switch */}
+          <div className="pt-2 border-t border-white/10 space-y-3">
+            <p className="text-center text-xs sm:text-sm text-gray-400">
+              Already have an account?{' '}
+              <Link
+                href="/customer/login"
+                className="text-primary hover:text-yellow-300 font-bold transition-colors"
               >
-                {loading ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin" />
-                    <span>Creating Account...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Create Customer Account</span>
-                    <ArrowRight size={16} />
-                  </>
-                )}
-              </button>
-            </form>
+                Sign In
+              </Link>
+            </p>
 
-            {/* Merchant / Reseller registration link */}
-            <div className="mt-6 pt-5 border-t border-white/10 flex flex-col gap-2 text-center text-xs text-gray-400">
-              <p>
-                Want to sell products on Zibonbaba?{' '}
-                <Link href="/seller/register" className="text-primary hover:underline font-bold">
-                  Open a Seller Store
-                </Link>
-              </p>
-              <p>
-                Earn commissions by sharing products?{' '}
-                <Link href="/reseller/register" className="text-yellow-400 hover:underline font-bold">
-                  Join as Reseller
-                </Link>
-              </p>
+            <div className="text-center">
+              <Link
+                href="/seller/register"
+                className="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-300 transition-colors"
+              >
+                <Store size={14} className="text-amber-400" />
+                <span>Want to sell on Zibonbaba? <strong className="text-gray-300">Open a Seller Store</strong></span>
+              </Link>
             </div>
           </div>
         </div>
-      </main>
-
-      {/* Footer */}
-      <footer className="py-4 text-center text-[11px] text-gray-600 relative z-10">
-        © {new Date().getFullYear()} Zibonbaba.com — All rights reserved.
-      </footer>
+      </div>
     </div>
   );
 }

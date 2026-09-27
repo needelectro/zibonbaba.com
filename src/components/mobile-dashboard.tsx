@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useStore, Order } from '../store/useStore';
+import { useStore, Order } from '@/store/useStore';
 import {
   Package,
   Heart,

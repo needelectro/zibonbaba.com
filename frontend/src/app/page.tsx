@@ -37,6 +37,7 @@ import MobileHomepage from '@/components/mobile-homepage';
 import MobileCategoryPage from '@/components/mobile-category-page';
 import MobileCart from '@/components/mobile-cart';
 import MobileDashboard from '@/components/mobile-dashboard';
+import CustomerReviewsSection from '@/components/customer-reviews-section';
 import { translations } from '@/utils/translations';
 
 export default function HomePage() {
@@ -228,6 +229,7 @@ export default function HomePage() {
                 <img
                   src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&auto=format&fit=crop&q=80"
                   alt="New Arrivals Campaign"
+                  decoding="async"
                   className="absolute right-0 bottom-0 h-full w-2/3 object-cover object-top select-none group-hover:scale-[1.03] transition-transform duration-700 pointer-events-none"
                 />
                 <div className="relative z-20 pl-10 lg:pl-16 max-w-sm text-slate-900">
@@ -258,6 +260,7 @@ export default function HomePage() {
                 <img
                   src="https://images.unsplash.com/photo-1556228720-195a672e8a03?w=600&auto=format&fit=crop&q=80"
                   alt="Skincare Special"
+                  decoding="async"
                   className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-700 pointer-events-none"
                 />
                 <div className="relative z-20">
@@ -289,6 +292,7 @@ export default function HomePage() {
                 <img
                   src="https://images.unsplash.com/photo-1509631179647-0177331693ae?w=400&auto=format&fit=crop&q=80"
                   alt="Your Style"
+                  decoding="async"
                   className="absolute right-0 bottom-0 h-full w-1/2 object-cover object-center group-hover:scale-[1.03] transition-transform duration-700 pointer-events-none"
                 />
                 <div className="relative z-20 max-w-[50%]">
@@ -315,6 +319,7 @@ export default function HomePage() {
                 <img
                   src="https://images.unsplash.com/photo-1483985988355-763728e1935b?w=400&auto=format&fit=crop&q=80"
                   alt="Your Outfit"
+                  decoding="async"
                   className="absolute right-0 bottom-0 h-full w-1/2 object-cover object-center group-hover:scale-[1.03] transition-transform duration-700 pointer-events-none"
                 />
                 <div className="relative z-20 max-w-[50%]">
@@ -384,6 +389,8 @@ export default function HomePage() {
                       <img
                         src={item.img}
                         alt={item.name}
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover"
                         onError={(e) => {
                           (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=200&auto=format&fit=crop&q=80';
@@ -437,7 +444,7 @@ export default function HomePage() {
                     <div key={p.id} className="bg-slate-50 border border-slate-200/60 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between group">
                       <div className="relative">
                         <Link href={`/product/${p.id}`} className="block relative aspect-[16/10] bg-white rounded-2xl overflow-hidden mb-4 border border-slate-100">
-                          <img src={p.image} alt={p.name} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
+                          <img src={p.image} alt={p.name} loading="lazy" decoding="async" className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
                         </Link>
                         {/* Tags */}
                         <div className="absolute top-3 left-3 flex flex-col gap-1.5">
@@ -533,7 +540,7 @@ export default function HomePage() {
                       
                       <div className="relative aspect-square bg-slate-100 overflow-hidden border-b border-slate-100">
                         <Link href={`/product/${p.id}`}>
-                          <img src={p.image} alt={p.name} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
+                          <img src={p.image} alt={p.name} loading="lazy" decoding="async" className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
                         </Link>
                         {/* Wishlist triggers */}
                         <button
@@ -615,7 +622,7 @@ export default function HomePage() {
                       </span>
                       <div className="relative aspect-video bg-white overflow-hidden border-b border-slate-100">
                         <Link href={`/product/${p.id}`}>
-                          <img src={p.image} alt={p.name} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
+                          <img src={p.image} alt={p.name} loading="lazy" decoding="async" className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
                         </Link>
                         <button
                           onClick={() => toggleWishlist(p.id)}
@@ -693,7 +700,7 @@ export default function HomePage() {
                     <div key={p.id} className="group bg-white rounded-3xl overflow-hidden border border-slate-200/50 hover:border-amber-500 hover:shadow-lg transition-all duration-300 flex flex-col justify-between h-full relative">
                       <div className="relative aspect-[4/3] bg-slate-100 overflow-hidden border-b border-slate-100">
                         <Link href={`/product/${p.id}`}>
-                          <img src={p.image} alt={p.name} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
+                          <img src={p.image} alt={p.name} loading="lazy" decoding="async" className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
                         </Link>
                         <button
                           onClick={() => toggleWishlist(p.id)}
@@ -762,7 +769,7 @@ export default function HomePage() {
                       
                       <div className="relative aspect-video bg-white overflow-hidden border-b border-slate-100">
                         <Link href={`/product/${p.id}`}>
-                          <img src={p.image} alt={p.name} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
+                          <img src={p.image} alt={p.name} loading="lazy" decoding="async" className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
                         </Link>
                         <button
                           onClick={() => toggleWishlist(p.id)}
@@ -923,7 +930,7 @@ export default function HomePage() {
                     <div key={p.id} className="bg-white border border-slate-200/50 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:border-amber-500 transition-all duration-300 flex flex-col justify-between h-full relative">
                       <div className="relative aspect-[16/10] bg-slate-100 overflow-hidden border-b border-slate-100">
                         <Link href={`/product/${p.id}`}>
-                          <img src={p.image} alt={p.name} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
+                          <img src={p.image} alt={p.name} loading="lazy" decoding="async" className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
                         </Link>
                         <button
                           onClick={() => toggleWishlist(p.id)}
@@ -1159,6 +1166,8 @@ export default function HomePage() {
                         <img
                           src={p.image}
                           alt={p.name}
+                          loading="lazy"
+                          decoding="async"
                           className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
                         />
                         {/* Wishlist Trigger */}
@@ -1246,7 +1255,7 @@ export default function HomePage() {
                       className="w-24 shrink-0 flex flex-col items-center cursor-pointer select-none active:scale-95 transition-transform"
                     >
                       <div className="w-20 h-20 rounded-2xl bg-slate-50 overflow-hidden shadow-sm border border-slate-100 hover:border-amber-500 transition-colors">
-                        <img src={p.image} alt={p.name} className="object-cover w-full h-full" />
+                        <img src={p.image} alt={p.name} loading="lazy" decoding="async" className="object-cover w-full h-full" />
                       </div>
                       <span className="text-[10px] text-slate-500 truncate w-full text-center mt-2 font-bold uppercase tracking-wide">
                         {p.name}
@@ -1282,44 +1291,8 @@ export default function HomePage() {
             </div>
           </section>
 
-          {/* Customer Testimonials section */}
-          <section id="testimonials" className="py-12 px-4 lg:px-8 border-b border-slate-100 bg-white">
-            <div className="max-w-[1440px] mx-auto">
-              <div className="mb-8 text-center">
-                <h2 className="text-2xl font-black text-slate-850 uppercase tracking-wider">What Our Customers Say</h2>
-                <p className="text-xs text-slate-400 mt-1">Real reviews and experiences logs verified from our checkout pipeline.</p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {[
-                  { name: 'Kazi A. Rakib', role: 'Business Owner', text: 'Zibonbaba SaaS ERP tools saved us hours of barcode POS scanning! Multi-vendor checkout operates seamlessly.', rating: 5, avatar: 'R' },
-                  { name: 'Nusrat Jahan', role: 'Online Consumer', text: 'Prompt shipping and highly secure bKash checkout gateway. Very satisfied with the customer service dispatch support.', rating: 5, avatar: 'N' },
-                  { name: 'Mahbub Alam', role: 'Wholesale Buyer', text: 'Direct delivery from verified warehouses works perfectly. Real-time stock alerts prevent out-of-stock situations.', rating: 5, avatar: 'M' }
-                ].map((t, idx) => (
-                  <div key={idx} className="bg-slate-50 p-6 rounded-3xl border border-slate-200/50 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
-                    <div>
-                      <div className="flex items-center gap-0.5 text-amber-400 mb-4">
-                        {[...Array(t.rating)].map((_, i) => (
-                          <Star key={i} className="w-3.5 h-3.5 fill-current" />
-                        ))}
-                      </div>
-                      <p className="text-xs text-slate-655 italic leading-relaxed">"{t.text}"</p>
-                    </div>
-                    
-                    <div className="flex items-center gap-3 mt-6 border-t border-slate-200/50 pt-4">
-                      <div className="w-9 h-9 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-xs shrink-0">
-                        {t.avatar}
-                      </div>
-                      <div>
-                        <h4 className="text-xs font-black text-slate-800">{t.name}</h4>
-                        <p className="text-[10px] text-slate-400 font-bold">{t.role}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
+          {/* Customer Testimonials section with Live Database Fetch & Review Submission */}
+          <CustomerReviewsSection />
 
           {/* Newsletter Form */}
           <section id="newsletter" className="py-16 px-4 lg:px-8 bg-slate-900 text-white relative overflow-hidden">

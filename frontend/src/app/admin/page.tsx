@@ -61,7 +61,8 @@ import {
   Hash,
   RefreshCw,
   EyeOff,
-  Menu
+  Menu,
+  Star
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -72,7 +73,7 @@ type AdminModule =
   | 'dashboard' | 'marketplace' | 'orders' | 'customers' | 'sellers'
   | 'resellers' | 'delivery' | 'inventory' | 'warehouse' | 'pos'
   | 'crm' | 'erp' | 'hrm' | 'wallet' | 'finance' | 'reports'
-  | 'notifications' | 'rbac' | 'settings' | 'audit' | 'ai' | 'superadmin';
+  | 'notifications' | 'rbac' | 'settings' | 'audit' | 'ai' | 'superadmin' | 'reviews';
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -226,6 +227,58 @@ export default function AdminDashboardPage() {
     } catch (_) {}
   };
 
+  const [adminReviews, setAdminReviews] = useState<any[]>([]);
+  const [isLoadingReviews, setIsLoadingReviews] = useState(false);
+
+  const fetchAdminReviews = async () => {
+    setIsLoadingReviews(true);
+    try {
+      const res = await fetch('/api/reviews?limit=100');
+      const data = await res.json();
+      if (res.ok && Array.isArray(data.reviews)) {
+        setAdminReviews(data.reviews);
+      }
+    } catch (_) {}
+    finally {
+      setIsLoadingReviews(false);
+    }
+  };
+
+  const handleToggleReviewFeatured = async (reviewId: string, currentFeatured: boolean) => {
+    const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null);
+    if (!activeToken) return;
+    try {
+      const res = await fetch(`/api/reviews/${reviewId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${activeToken}`
+        },
+        body: JSON.stringify({ isFeatured: !currentFeatured })
+      });
+      if (res.ok) {
+        setAdminReviews(prev =>
+          prev.map(r => (r.id === reviewId ? { ...r, isFeatured: !currentFeatured } : r))
+        );
+      }
+    } catch (_) {}
+  };
+
+  const handleDeleteReview = async (reviewId: string) => {
+    if (!confirm('Are you sure you want to delete this customer review?')) return;
+    const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null);
+    if (!activeToken) return;
+    try {
+      const res = await fetch(`/api/reviews/${reviewId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${activeToken}` }
+      });
+      if (res.ok) {
+        setAdminReviews(prev => prev.filter(r => r.id !== reviewId));
+      }
+    } catch (_) {}
+  };
+
   const handleUpdateResellerStatus = async (resellerId: string, newStatus: string) => {
     const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null);
     if (!activeToken) return;
@@ -318,6 +371,7 @@ export default function AdminDashboardPage() {
     fetchAdminDeliveryMen();
     fetchAdminUnassignedOrders();
     fetchAdminWithdrawals();
+    fetchAdminReviews();
 
     const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null);
     if (activeToken) {
@@ -1302,6 +1356,7 @@ export default function AdminDashboardPage() {
       items: [
         { id: 'marketplace', label: 'Products & Category', icon: ShoppingBag },
         { id: 'orders', label: 'Orders & Shipments', icon: CreditCard, badge: localOrders.length },
+        { id: 'reviews', label: 'Customer Reviews', icon: Star, badge: adminReviews.length || undefined },
         { id: 'pos', label: 'POS Terminal Sales', icon: Monitor }
       ]
     },
@@ -1357,6 +1412,7 @@ export default function AdminDashboardPage() {
     { label: 'Open POS Register', action: () => { setActiveModule('pos'); setCommandPaletteOpen(false); } },
     { label: 'Check Warehouse Capacities', action: () => { setActiveModule('warehouse'); setCommandPaletteOpen(false); } },
     { label: 'Access System Settings', action: () => { setActiveModule('settings'); setCommandPaletteOpen(false); } },
+    { label: 'System Diagnostics & Health Auditor', action: () => { router.push('/admin/system-health'); setCommandPaletteOpen(false); } },
     { label: 'Create SKU Product', action: () => { setShowQuickActionModal(true); setQuickActionType('product'); setCommandPaletteOpen(false); } }
   ];
 
@@ -1497,6 +1553,16 @@ export default function AdminDashboardPage() {
               <span className="hidden lg:inline">Search Command...</span>
               <span className="bg-slate-950 px-1.5 py-0.5 rounded text-[9px] border border-white/5">Ctrl+K</span>
             </button>
+
+            {/* Diagnostics Link */}
+            <Link
+              href="/admin/system-health"
+              className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-[11px] font-bold px-2.5 sm:px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
+              title="Real-Time System Diagnostics"
+            >
+              <Activity className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+              <span className="hidden xl:inline">Diagnostics</span>
+            </Link>
 
             {/* Quick action triggers */}
             <button
@@ -1858,6 +1924,94 @@ export default function AdminDashboardPage() {
                   </div>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* ================================================= */}
+          {/* VIEW: CUSTOMER REVIEWS & TESTIMONIALS MODERATION */}
+          {/* ================================================= */}
+          {activeModule === 'reviews' && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/[0.02] border border-white/5 p-6 rounded-2xl shadow-xl">
+                <div>
+                  <h3 className="text-sm font-black text-white flex items-center gap-2 uppercase tracking-wider">
+                    <Star className="w-5 h-5 text-amber-500 fill-amber-500" />
+                    Customer Reviews & Experiences Moderation
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Manage buyer ratings, feature real customer testimonials on the homepage, or moderate inappropriate comments.
+                  </p>
+                </div>
+                <button
+                  onClick={fetchAdminReviews}
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl flex items-center gap-2 self-start sm:self-auto cursor-pointer"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isLoadingReviews ? 'animate-spin' : ''}`} />
+                  Refresh Reviews ({adminReviews.length})
+                </button>
+              </div>
+
+              {adminReviews.length === 0 ? (
+                <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-12 text-center text-slate-400">
+                  <Star className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+                  <p className="text-sm font-bold">No customer reviews recorded yet.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {adminReviews.map((rev) => (
+                    <div key={rev.id} className="bg-white/[0.02] border border-white/5 rounded-2xl p-5 flex flex-col justify-between hover:border-white/10 transition-colors">
+                      <div>
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-1 text-amber-400">
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`w-3.5 h-3.5 ${i < rev.rating ? 'fill-amber-400 text-amber-400' : 'text-slate-700'}`}
+                              />
+                            ))}
+                          </div>
+                          <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full ${rev.isFeatured ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-slate-800 text-slate-400'}`}>
+                            {rev.isFeatured ? '★ Featured on Home' : 'Standard'}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-300 italic mb-4 leading-relaxed font-medium">"{rev.comment}"</p>
+                        {rev.product && (
+                          <p className="text-[10px] text-amber-400 font-bold mb-3 truncate">
+                            Item: {rev.product.name}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="border-t border-white/5 pt-3.5 flex items-center justify-between">
+                        <div>
+                          <p className="text-xs font-black text-white">{rev.name}</p>
+                          <p className="text-[10px] text-slate-500 font-bold">{rev.role || 'Verified Buyer'}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleToggleReviewFeatured(rev.id, rev.isFeatured)}
+                            title={rev.isFeatured ? "Unfeature from homepage" : "Feature on homepage"}
+                            className={`px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors cursor-pointer ${
+                              rev.isFeatured
+                                ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30'
+                                : 'bg-slate-800 text-slate-400 hover:text-white'
+                            }`}
+                          >
+                            {rev.isFeatured ? 'Unfeature' : 'Feature'}
+                          </button>
+                          <button
+                            onClick={() => handleDeleteReview(rev.id)}
+                            title="Delete review"
+                            className="p-1.5 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition-colors cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 

@@ -119,134 +119,145 @@ export default function SuperAdminDashboard() {
       title="Executive Overview Dashboard"
       subtitle="Real-time KPI metrics, System Health Monitor & Quick Admin Controls"
     >
-      <div className="space-y-8">
-        {/* Toast Alert */}
-        {toastMessage && (
-          <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs px-4 py-3 rounded-2xl flex items-center justify-between animate-slide-up">
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 shrink-0" />
-              <span>{toastMessage}</span>
-            </div>
-            <button onClick={() => setToastMessage(null)}>
-              <XCircle className="w-4 h-4" />
-            </button>
+      {toastMessage && (
+        <div className="mb-6 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 p-4 rounded-2xl text-xs font-bold flex items-center justify-between animate-fade-in shadow-xl">
+          <div className="flex items-center gap-2">
+            <CheckCircle size={16} />
+            <span>{toastMessage}</span>
           </div>
-        )}
+          <button onClick={() => setToastMessage(null)} className="text-emerald-500 hover:text-white">✕</button>
+        </div>
+      )}
 
-        {/* KPI Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {INITIAL_STATS.map((stat, idx) => {
-            const Icon = stat.icon;
-            return (
-              <Link
-                key={idx}
-                href={stat.link}
-                className="bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-2xl p-5 flex flex-col justify-between transition-all hover:scale-[1.02] group"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-400">{stat.label}</span>
-                  <div className={`p-2 rounded-xl border ${stat.color}`}>
-                    <Icon className="w-4 h-4" />
-                  </div>
-                </div>
-                <div className="mt-4">
-                  <div className="text-2xl font-black text-white">{stat.value}</div>
-                  <div className="flex items-center gap-1.5 mt-1">
-                    {stat.positive ? (
-                      <ArrowUpRight className="w-3.5 h-3.5 text-emerald-400" />
-                    ) : (
-                      <ArrowDownRight className="w-3.5 h-3.5 text-rose-400" />
-                    )}
-                    <span
-                      className={`text-[11px] font-bold ${
-                        stat.positive ? 'text-emerald-400' : 'text-rose-400'
-                      }`}
-                    >
-                      {stat.change}
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            );
-          })}
+      {/* ── KPI Stat Cards (All Clickable) ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+        {INITIAL_STATS.map((stat, idx) => {
+          const Icon = stat.icon;
+          return (
+            <Link
+              key={idx}
+              href={stat.link}
+              className={`bg-slate-950 p-5 rounded-3xl border ${stat.color} hover:border-amber-500/50 transition-all shadow-xl group cursor-pointer`}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider group-hover:text-amber-400 transition-colors">
+                  {stat.label}
+                </span>
+                <Icon size={18} />
+              </div>
+              <p className="text-2xl font-black text-white">{stat.value}</p>
+              <div className="flex items-center justify-between mt-2 text-xs font-bold text-emerald-400">
+                <span>{stat.change}</span>
+                <ChevronRight size={14} className="text-slate-600 group-hover:text-amber-400 group-hover:translate-x-1 transition-all" />
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* ── Quick Action Hub Bar ── */}
+      <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6 shadow-xl mb-8">
+        <h2 className="text-xs font-black text-slate-400 uppercase tracking-wider mb-4">Quick Executive Actions</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <Link
+            href="/superadmin/accounts?action=create"
+            className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs p-4 rounded-2xl transition-all shadow-md flex items-center justify-center gap-2 text-center"
+          >
+            <Plus size={16} /> Create User Account
+          </Link>
+          <Link
+            href="/superadmin/roles"
+            className="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-white font-bold text-xs p-4 rounded-2xl transition-all flex items-center justify-center gap-2 text-center"
+          >
+            <Key size={16} className="text-amber-400" /> Manage Permissions
+          </Link>
+          <Link
+            href="/superadmin/security"
+            className="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-white font-bold text-xs p-4 rounded-2xl transition-all flex items-center justify-center gap-2 text-center"
+          >
+            <Lock size={16} className="text-rose-400" /> View Security Audit
+          </Link>
+          <Link
+            href="/superadmin/reports"
+            className="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-white font-bold text-xs p-4 rounded-2xl transition-all flex items-center justify-center gap-2 text-center"
+          >
+            <BarChart2 size={16} className="text-emerald-400" /> Export Reports
+          </Link>
+        </div>
+      </div>
+
+      {/* ── Accounts Management Table Preview ── */}
+      <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6 shadow-xl mb-8">
+        <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-5">
+          <div>
+            <h2 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+              <Users className="w-4 h-4 text-amber-400" /> Core System Accounts
+            </h2>
+            <p className="text-xs text-slate-400 mt-0.5">Direct quick status toggling and account management</p>
+          </div>
+          <Link
+            href="/superadmin/accounts"
+            className="text-xs font-black text-amber-400 hover:text-amber-300 flex items-center gap-1"
+          >
+            View All Accounts ({accounts.length}) <ChevronRight size={14} />
+          </Link>
         </div>
 
-        {/* Quick Accounts Table */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
-          <div className="p-5 border-b border-slate-800 flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-black text-white">Privileged Accounts Directory</h3>
-              <p className="text-xs text-slate-400">All administrative, managerial, and operator roles</p>
-            </div>
-            <Link
-              href="/superadmin/accounts"
-              className="text-xs font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1"
-            >
-              <span>Manage All</span>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-slate-300">
-              <thead className="bg-slate-950/50 text-slate-400 uppercase font-black text-[10px] tracking-wider border-b border-slate-800">
-                <tr>
-                  <th className="p-4">Account Name</th>
-                  <th className="p-4">Role Clearance</th>
-                  <th className="p-4">Status</th>
-                  <th className="p-4">Registered</th>
-                  <th className="p-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800">
-                {accounts.map((acc) => (
-                  <tr key={acc.id} className="hover:bg-slate-800/40 transition">
-                    <td className="p-4 font-bold text-white">
-                      <div>{acc.name}</div>
-                      <div className="text-[11px] text-slate-400 font-normal">{acc.email}</div>
-                    </td>
-                    <td className="p-4">
-                      <span className="font-mono text-[10px] bg-slate-800 text-amber-400 px-2 py-0.5 rounded border border-slate-700 font-bold">
-                        {acc.role}
-                      </span>
-                    </td>
-                    <td className="p-4">
-                      <span
-                        className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${
-                          acc.status === 'ACTIVE'
-                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                            : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                        }`}
-                      >
-                        {acc.status}
-                      </span>
-                    </td>
-                    <td className="p-4 text-slate-400">{acc.joined}</td>
-                    <td className="p-4 text-right space-x-2">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-slate-900 text-slate-400 font-extrabold uppercase text-[9px] tracking-wider border-b border-slate-800">
+              <tr>
+                <th className="py-3 px-4">User Name</th>
+                <th className="py-3 px-4">Email Address</th>
+                <th className="py-3 px-4">System Role</th>
+                <th className="py-3 px-4">Status</th>
+                <th className="py-3 px-4 text-right">Quick Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-800/60 font-medium">
+              {accounts.map((acc) => (
+                <tr key={acc.id} className="hover:bg-slate-900/60 transition-colors">
+                  <td className="py-3.5 px-4 font-bold text-white flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 font-black flex items-center justify-center text-[10px]">
+                      {acc.name.charAt(0)}
+                    </div>
+                    {acc.name}
+                  </td>
+                  <td className="py-3.5 px-4 font-mono text-slate-300 text-[11px]">{acc.email}</td>
+                  <td className="py-3.5 px-4">
+                    <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black border bg-slate-900 text-amber-400 border-slate-700">
+                      {acc.role}
+                    </span>
+                  </td>
+                  <td className="py-3.5 px-4">
+                    <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-extrabold border ${
+                      acc.status === 'ACTIVE' ? 'bg-emerald-950 text-emerald-400 border-emerald-800' : 'bg-rose-950 text-rose-400 border-rose-800'
+                    }`}>
+                      {acc.status}
+                    </span>
+                  </td>
+                  <td className="py-3.5 px-4 text-right">
+                    <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => handleToggleStatus(acc.id, acc.status)}
-                        className={`p-1.5 rounded-lg border transition ${
-                          acc.status === 'ACTIVE'
-                            ? 'border-rose-500/30 text-rose-400 hover:bg-rose-500/10'
-                            : 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10'
-                        }`}
-                        title={acc.status === 'ACTIVE' ? 'Suspend Account' : 'Activate Account'}
+                        className="px-2.5 py-1 rounded-xl text-[10px] font-bold border transition-colors bg-slate-900 text-slate-300 border-slate-800 hover:border-amber-500/50"
+                        title="Toggle Active/Suspended status"
                       >
-                        {acc.status === 'ACTIVE' ? <UserX className="w-3.5 h-3.5" /> : <UserCheck className="w-3.5 h-3.5" />}
+                        {acc.status === 'ACTIVE' ? 'Suspend' : 'Activate'}
                       </button>
                       <button
                         onClick={() => handleDeleteAccount(acc.id, acc.email)}
-                        className="p-1.5 rounded-lg border border-slate-700 text-slate-400 hover:text-rose-400 hover:border-rose-500/40 hover:bg-rose-500/10 transition"
-                        title="Delete Account"
+                        className="p-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition-colors"
+                        title="Delete account"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <Trash2 size={13} />
                       </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </SuperAdminLayout>

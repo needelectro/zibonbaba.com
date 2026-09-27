@@ -73,6 +73,7 @@ model User {
   loyaltyPoints       Int       @default(0)
   referralCode        String?   @unique
   passwordResetTokens PasswordResetToken[]
+  reviews             Review[]
 }
 
 model Session {
@@ -384,6 +385,7 @@ model Product {
   status      String           @default("PUBLISHED")
   variants    ProductVariant[]
   resellerProducts ResellerProduct[]
+  reviews     Review[]
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
 
@@ -847,6 +849,31 @@ model OutboxEvent {
 
   @@index([processed])
   @@index([aggregateId])
+  @@index([createdAt])
+}
+
+// =============================================================================
+// CUSTOMER REVIEWS & TESTIMONIALS
+// =============================================================================
+
+model Review {
+  id         String   @id @default(uuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  productId  String?
+  product    Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name       String
+  role       String   @default("Verified Buyer")
+  rating     Int      @default(5)
+  comment    String
+  isApproved Boolean  @default(true)
+  isFeatured Boolean  @default(true)
+  avatar     String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
+
+  @@index([productId])
+  @@index([isFeatured])
   @@index([createdAt])
 }
 

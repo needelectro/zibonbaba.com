@@ -195,6 +195,9 @@ const getHeaders = () => {
   };
 };
 
+let isFetchingHomepageInProgress = false;
+let lastHomepageFetchTimestamp = 0;
+
 export const useStore = create<StoreState>((set, get) => {
   // Restore session from localStorage if a token exists
   let initialToken: string | null = null;
@@ -237,17 +240,16 @@ export const useStore = create<StoreState>((set, get) => {
     }
   }
 
-  // Auto-initiate catalog fetches on store creation (Client-side only)
+  // Auto-initiate user data fetches on store creation (Client-side only)
   if (typeof window !== 'undefined') {
     setTimeout(() => {
-      get().fetchHomepage();
       if (get().isLoggedIn) {
         get().fetchOrders();
         get().fetchWarehousesAndBranches();
         get().fetchCrmCustomers();
         get().fetchWishlist();
       }
-    }, 100);
+    }, 150);
   }
 
   return {
@@ -401,9 +403,107 @@ export const useStore = create<StoreState>((set, get) => {
     },
 
     // Catalog
-    products: [],
-    categories: ['All', 'Electronics', 'Home & Kitchen', 'Apparel'],
-    banners: [],
+    products: [
+      {
+        id: 'init-1',
+        name: 'Active Noise Cancelling Wireless Headphones',
+        price: 3499,
+        category: 'Electronics',
+        rating: 4.9,
+        image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&auto=format&fit=crop&q=80',
+        sku: 'TECH-ANC-01',
+        stock: 45,
+        vendor: 'ElectroZone Official',
+        description: 'High fidelity audio with 40-hour battery life and spatial audio.'
+      },
+      {
+        id: 'init-2',
+        name: 'Smart Watch Fitness Tracker Pro',
+        price: 2899,
+        category: 'Electronics',
+        rating: 4.8,
+        image: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=600&auto=format&fit=crop&q=80',
+        sku: 'TECH-SW-02',
+        stock: 60,
+        vendor: 'GadgetSphere',
+        description: 'AMOLED display with SpO2 and 24/7 heart rate monitoring.'
+      },
+      {
+        id: 'init-3',
+        name: 'Hydrating Botanical Facial Serum',
+        price: 1250,
+        category: 'Beauty',
+        rating: 4.9,
+        image: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=600&auto=format&fit=crop&q=80',
+        sku: 'BEAUTY-SERUM-01',
+        stock: 80,
+        vendor: 'GlowOrganics',
+        description: 'Natural organic formula for radiant and nourished skin.'
+      },
+      {
+        id: 'init-4',
+        name: 'Stainless Steel Electric Kettle 1.8L',
+        price: 1850,
+        category: 'Home & Kitchen',
+        rating: 4.7,
+        image: 'https://images.unsplash.com/photo-1570222094114-d054a817e56b?w=600&auto=format&fit=crop&q=80',
+        sku: 'HOME-KETTLE-01',
+        stock: 35,
+        vendor: 'HomeCrafters',
+        description: 'Rapid boil technology with auto shut-off protection.'
+      },
+      {
+        id: 'init-5',
+        name: 'Premium Oxford Cotton Casual Shirt',
+        price: 1650,
+        category: 'Apparel',
+        rating: 4.8,
+        image: 'https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=600&auto=format&fit=crop&q=80',
+        sku: 'FASH-SHIRT-01',
+        stock: 50,
+        vendor: 'UrbanVibe Store',
+        description: '100% breathable organic cotton with modern tailored fit.'
+      },
+      {
+        id: 'init-6',
+        name: 'Ergonomic Wireless Mechanical Keyboard',
+        price: 4500,
+        category: 'Electronics',
+        rating: 4.9,
+        image: 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=600&auto=format&fit=crop&q=80',
+        sku: 'TECH-KB-03',
+        stock: 25,
+        vendor: 'ElectroZone Official',
+        description: 'Hot-swappable RGB mechanical switches with dual Bluetooth 5.2.'
+      }
+    ],
+    categories: ['All', 'Electronics', 'Home & Kitchen', 'Apparel', 'Beauty', 'Grocery'],
+    banners: [
+      {
+        id: 1,
+        image: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=1200&auto=format&fit=crop&q=80',
+        title: 'Grand Seasonal Campaign 2026',
+        desc: 'Up to 50% discount on gadgets, health & apparel',
+        linkText: 'Shop Now',
+        cat: 'Electronics & Gadgets'
+      },
+      {
+        id: 2,
+        image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=1200&auto=format&fit=crop&q=80',
+        title: 'Tech & Lifestyle Festival',
+        desc: 'Extra 10% instant cashback with Zibonbaba Wallet',
+        linkText: 'Explore Tech',
+        cat: 'Electronics & Gadgets'
+      },
+      {
+        id: 3,
+        image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&auto=format&fit=crop&q=80',
+        title: 'Exclusive Fashion Collection',
+        desc: 'New arrivals from verified multi-vendor stores',
+        linkText: 'View Outfits',
+        cat: 'Apparel & Fashion'
+      }
+    ],
     searchQuery: '',
     selectedCategory: 'All',
 
@@ -435,18 +535,26 @@ export const useStore = create<StoreState>((set, get) => {
     },
 
     fetchHomepage: async () => {
+      const now = Date.now();
+      if (isFetchingHomepageInProgress || (now - lastHomepageFetchTimestamp < 10000)) {
+        return;
+      }
+      isFetchingHomepageInProgress = true;
       try {
         const res = await fetch(`${API_BASE}/homepage`);
         const data = await res.json();
         if (res.ok) {
+          lastHomepageFetchTimestamp = Date.now();
           set({
-            banners: data.banners || [],
-            categories: data.categories || ['All', 'Electronics', 'Home & Kitchen', 'Apparel'],
-            products: data.products || []
+            banners: data.banners && data.banners.length > 0 ? data.banners : get().banners,
+            categories: data.categories && data.categories.length > 0 ? data.categories : get().categories,
+            products: data.products && data.products.length > 0 ? data.products : get().products
           });
         }
       } catch (err) {
         console.error('Homepage fetch error:', err);
+      } finally {
+        isFetchingHomepageInProgress = false;
       }
     },
 

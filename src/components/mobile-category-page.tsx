@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useStore } from '../store/useStore';
+import { useStore } from '@/store/useStore';
 import { ChevronRight, ArrowRight, Layers } from 'lucide-react';
 import Link from 'next/link';
 

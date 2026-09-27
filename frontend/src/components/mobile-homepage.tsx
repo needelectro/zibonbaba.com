@@ -139,7 +139,7 @@ export default function MobileHomepage() {
               className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${idx === activeSlide ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
             >
               <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent z-10"></div>
-              <img src={slide.image} alt={displayTitle} className="w-full h-full object-cover" />
+              <img src={slide.image} alt={displayTitle} decoding="async" className="w-full h-full object-cover" />
               
               <div className="absolute inset-x-5 inset-y-0 z-20 flex flex-col justify-center text-white">
                 <span className="bg-amber-500 text-slate-950 text-[9px] font-black uppercase px-2.5 py-1 rounded-full w-fit mb-2 shadow-sm tracking-wider">
@@ -199,7 +199,7 @@ export default function MobileHomepage() {
               className="flex flex-col items-center cursor-pointer select-none shrink-0"
             >
               <div className="w-14 h-14 rounded-full overflow-hidden shadow-sm border border-slate-100 relative bg-slate-50 flex items-center justify-center">
-                <img src={item.img} alt={item.name} className="w-full h-full object-cover" />
+                <img src={item.img} alt={item.name} loading="lazy" decoding="async" className="w-full h-full object-cover" />
               </div>
               <span className="text-[10px] font-extrabold text-slate-650 mt-2 leading-tight">
                 {item.name}
@@ -234,7 +234,7 @@ export default function MobileHomepage() {
               <div key={p.id} className="w-[145px] shrink-0 bg-slate-50 border border-slate-200/60 rounded-2xl p-3 snap-start shadow-sm flex flex-col justify-between">
                 <div className="relative">
                   <Link href={`/product/${p.id}`} className="block relative aspect-square bg-white rounded-xl overflow-hidden mb-2 border border-slate-100">
-                    <img src={p.image} alt={p.name} className="object-cover w-full h-full" />
+                    <img src={p.image} alt={p.name} loading="lazy" decoding="async" className="object-cover w-full h-full" />
                   </Link>
                   <span className="absolute top-1.5 left-1.5 bg-red-500 text-white font-black text-[8px] px-2 py-0.5 rounded-full shadow-sm">
                     -20% OFF
@@ -296,7 +296,7 @@ export default function MobileHomepage() {
                 
                 <div className="relative aspect-square bg-white rounded-xl overflow-hidden mb-2 border border-slate-100">
                   <Link href={`/product/${p.id}`}>
-                    <img src={p.image} alt={p.name} className="object-cover w-full h-full" />
+                    <img src={p.image} alt={p.name} loading="lazy" decoding="async" className="object-cover w-full h-full" />
                   </Link>
                   <button
                     onClick={() => toggleWishlist(p.id)}
@@ -351,7 +351,7 @@ export default function MobileHomepage() {
                 
                 <div className="relative aspect-square bg-white rounded-xl overflow-hidden mb-2 border border-slate-100">
                   <Link href={`/product/${p.id}`}>
-                    <img src={p.image} alt={p.name} className="object-cover w-full h-full" />
+                    <img src={p.image} alt={p.name} loading="lazy" decoding="async" className="object-cover w-full h-full" />
                   </Link>
                   <button
                     onClick={() => toggleWishlist(p.id)}
@@ -431,7 +431,7 @@ export default function MobileHomepage() {
               <div key={p.id} className="bg-slate-50 border border-slate-200/50 rounded-2xl p-3 flex flex-col justify-between shadow-sm">
                 <div className="relative aspect-square bg-white rounded-xl overflow-hidden mb-2 border border-slate-100">
                   <Link href={`/product/${p.id}`}>
-                    <img src={p.image} alt={p.name} className="object-cover w-full h-full" />
+                    <img src={p.image} alt={p.name} loading="lazy" decoding="async" className="object-cover w-full h-full" />
                   </Link>
                   <button
                     onClick={() => toggleWishlist(p.id)}
@@ -476,7 +476,7 @@ export default function MobileHomepage() {
                 
                 <div className="relative aspect-square bg-white rounded-xl overflow-hidden mb-2 border border-slate-100">
                   <Link href={`/product/${p.id}`}>
-                    <img src={p.image} alt={p.name} className="object-cover w-full h-full" />
+                    <img src={p.image} alt={p.name} loading="lazy" decoding="async" className="object-cover w-full h-full" />
                   </Link>
                   <button
                     onClick={() => toggleWishlist(p.id)}
@@ -523,7 +523,7 @@ export default function MobileHomepage() {
                 
                 <div className="relative aspect-square bg-white rounded-xl overflow-hidden mb-2 border border-slate-100">
                   <Link href={`/product/${p.id}`}>
-                    <img src={p.image} alt={p.name} className="object-cover w-full h-full" />
+                    <img src={p.image} alt={p.name} loading="lazy" decoding="async" className="object-cover w-full h-full" />
                   </Link>
                   <button
                     onClick={() => toggleWishlist(p.id)}
@@ -562,7 +562,7 @@ export default function MobileHomepage() {
                 className="w-14 shrink-0 flex flex-col items-center cursor-pointer select-none active:scale-95 transition-transform"
               >
                 <div className="w-12 h-12 rounded-xl bg-slate-50 overflow-hidden shadow-sm border border-slate-100">
-                  <img src={p.image} alt={p.name} className="object-cover w-full h-full" />
+                  <img src={p.image} alt={p.name} loading="lazy" decoding="async" className="object-cover w-full h-full" />
                 </div>
                 <span className="text-[8px] text-slate-505 truncate w-full text-center mt-1 leading-tight font-black uppercase tracking-wide">
                   {p.name}

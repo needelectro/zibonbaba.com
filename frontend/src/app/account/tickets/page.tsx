@@ -1,5 +1,13 @@
-import { redirect } from 'next/navigation';
+'use client';
 
-export default function AccountTicketsPage() {
-  redirect('/customer');
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+
+export default function TicketsRedirect() {
+  const router = useRouter();
+  useEffect(() => {
+    router.replace('/dashboard');
+  }, [router]);
+
+  return null;
 }

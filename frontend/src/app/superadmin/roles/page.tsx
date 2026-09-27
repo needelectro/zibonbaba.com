@@ -61,257 +61,295 @@ const DEFAULT_CATEGORIES: PermissionCategory[] = [
     ],
   },
   {
-    moduleName: 'Orders & Deliveries',
+    moduleName: 'Order Processing & Tracking',
+    icon: FileText,
+    items: [
+      { id: 'orders.view', label: 'View Customer Orders', enabled: true },
+      { id: 'orders.process', label: 'Dispatch & Ship Orders', enabled: true },
+      { id: 'orders.cancel', label: 'Cancel Customer Orders', enabled: true },
+      { id: 'orders.refund', label: 'Issue Order Refunds', enabled: true },
+    ],
+  },
+  {
+    moduleName: 'Multi-Warehouse & Inventory',
     icon: Package,
     items: [
-      { id: 'orders.view', label: 'Access Order Book', enabled: true },
-      { id: 'orders.status', label: 'Change Dispatch Status', enabled: true },
-      { id: 'orders.assign', label: 'Assign Couriers to Orders', enabled: true },
-      { id: 'orders.cancel', label: 'Cancel & Refund Orders', enabled: true },
+      { id: 'inventory.view', label: 'View Warehouse Stock', enabled: true },
+      { id: 'inventory.transfer', label: 'Transfer Stock Across Branches', enabled: true },
+      { id: 'inventory.adjust', label: 'Adjust Audit Quantities', enabled: true },
     ],
   },
   {
-    moduleName: 'Financial Ledger & Payouts',
+    moduleName: 'Finance, ERP & Payouts',
     icon: DollarSign,
     items: [
-      { id: 'finance.view', label: 'View Revenue & Balance Sheets', enabled: true },
+      { id: 'finance.view', label: 'View Financial Ledger', enabled: true },
       { id: 'finance.payout', label: 'Approve Merchant Withdrawals', enabled: true },
-      { id: 'finance.commission', label: 'Configure Commission Rates', enabled: true },
+      { id: 'finance.export', label: 'Export Tax & Accounting Logs', enabled: true },
     ],
   },
   {
-    moduleName: 'Security & System Settings',
-    icon: Shield,
+    moduleName: 'System Security & Firewall',
+    icon: Lock,
     items: [
-      { id: 'system.audit', label: 'View Audit Logs & IP History', enabled: true },
-      { id: 'system.roles', label: 'Manage Roles & Permissions', enabled: true },
-      { id: 'system.backup', label: 'Export Database & Backup Snapshots', enabled: true },
+      { id: 'security.logs', label: 'View System Audit Logs', enabled: true },
+      { id: 'security.sessions', label: 'Revoke Active Sessions', enabled: true },
+      { id: 'security.blacklist', label: 'Manage IP Blacklist', enabled: true },
     ],
   },
 ];
 
 const INITIAL_ROLES: RoleConfig[] = [
-  {
-    id: 'superadmin',
-    name: 'Super Administrator',
-    description: 'Root access with unrestricted platform capabilities across all modules.',
-    isSystem: true,
-    color: 'border-amber-500/40 text-amber-400 bg-amber-500/10',
-    matrix: DEFAULT_CATEGORIES.map((c) => ({
-      ...c,
-      items: c.items.map((i) => ({ ...i, enabled: true })),
-    })),
-  },
-  {
-    id: 'admin',
-    name: 'Platform Administrator',
-    description: 'General system administration, customer support, and catalog management.',
-    isSystem: true,
-    color: 'border-blue-500/40 text-blue-400 bg-blue-500/10',
-    matrix: DEFAULT_CATEGORIES.map((c) => ({
-      ...c,
-      items: c.items.map((i) => ({ ...i, enabled: !i.id.startsWith('system.roles') })),
-    })),
-  },
-  {
-    id: 'manager',
-    name: 'Operations Manager',
-    description: 'Oversees day-to-day warehouse operations, order logistics, and staff actions.',
-    isSystem: false,
-    color: 'border-emerald-500/40 text-emerald-400 bg-emerald-500/10',
-    matrix: DEFAULT_CATEGORIES.map((c) => ({
-      ...c,
-      items: c.items.map((i) => ({
-        ...i,
-        enabled: i.id.startsWith('orders.') || i.id.startsWith('catalog.'),
-      })),
-    })),
-  },
-  {
-    id: 'accountant',
-    name: 'Financial Accountant',
-    description: 'Manages ledger, audits withdrawals, and processes merchant settlements.',
-    isSystem: false,
-    color: 'border-purple-500/40 text-purple-400 bg-purple-500/10',
-    matrix: DEFAULT_CATEGORIES.map((c) => ({
-      ...c,
-      items: c.items.map((i) => ({
-        ...i,
-        enabled: i.id.startsWith('finance.') || i.id === 'orders.view',
-      })),
-    })),
-  },
+  { id: 'SUPER_ADMIN', name: 'Super Admin', description: 'Unrestricted full platform control across all system modules', isSystem: true, color: 'bg-rose-500/20 text-rose-400 border-rose-500/30', matrix: DEFAULT_CATEGORIES },
+  { id: 'ADMIN', name: 'Platform Admin', description: 'Platform operations, vendor approvals and moderation', isSystem: true, color: 'bg-purple-500/20 text-purple-400 border-purple-500/30', matrix: DEFAULT_CATEGORIES },
+  { id: 'MANAGER', name: 'Operations Manager', description: 'Operations oversight, support escalation and fulfillment', isSystem: true, color: 'bg-blue-500/20 text-blue-400 border-blue-500/30', matrix: DEFAULT_CATEGORIES },
+  { id: 'ACCOUNTANT', name: 'Chief Accountant', description: 'Financial ledger, merchant payouts and tax compliance', isSystem: true, color: 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30', matrix: DEFAULT_CATEGORIES },
+  { id: 'CUSTOMER_SUPPORT', name: 'Support Agent', description: 'Customer tickets, order tracking assistance', isSystem: true, color: 'bg-pink-500/20 text-pink-400 border-pink-500/30', matrix: DEFAULT_CATEGORIES },
+  { id: 'MARKETING', name: 'Marketing Manager', description: 'Banners, promotions, campaigns and SEO', isSystem: true, color: 'bg-lime-500/20 text-lime-400 border-lime-500/30', matrix: DEFAULT_CATEGORIES },
+  { id: 'WAREHOUSE_MANAGER', name: 'Warehouse Supervisor', description: 'Stock replenishment, transfers and barcode POS', isSystem: true, color: 'bg-teal-500/20 text-teal-400 border-teal-500/30', matrix: DEFAULT_CATEGORIES },
+  { id: 'DELIVERY_MANAGER', name: 'Delivery Manager', description: 'Rider dispatch, route tracking and logistics', isSystem: true, color: 'bg-orange-500/20 text-orange-400 border-orange-500/30', matrix: DEFAULT_CATEGORIES },
+  { id: 'VENDOR_ADMIN', name: 'Vendor Admin', description: 'Store products, inventory, orders and branch POS', isSystem: true, color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30', matrix: DEFAULT_CATEGORIES },
+  { id: 'VENDOR_STAFF', name: 'Vendor Staff', description: 'Store cashier and inventory stock updating', isSystem: true, color: 'bg-sky-500/20 text-sky-400 border-sky-500/30', matrix: DEFAULT_CATEGORIES },
+  { id: 'RESELLER', name: 'Reseller Agent', description: 'Affiliate product links and sales commissions', isSystem: true, color: 'bg-amber-500/20 text-amber-400 border-amber-500/30', matrix: DEFAULT_CATEGORIES },
+  { id: 'DELIVERY_MAN', name: 'Courier / Rider', description: 'Order delivery updates and OTP confirmation', isSystem: true, color: 'bg-orange-500/20 text-orange-400 border-orange-500/30', matrix: DEFAULT_CATEGORIES },
 ];
 
-export default function RoleManagementPage() {
+export default function RolesPermissionsPage() {
   const [roles, setRoles] = useState<RoleConfig[]>(INITIAL_ROLES);
-  const [activeRole, setActiveRole] = useState<RoleConfig>(INITIAL_ROLES[0]);
+  const [selectedRoleId, setSelectedRoleId] = useState<string>('SUPER_ADMIN');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const handleToggle = (moduleName: string, permissionId: string) => {
-    if (activeRole.id === 'superadmin') return;
+  // New Role Modal
+  const [showAddRoleModal, setShowAddRoleModal] = useState(false);
+  const [newRoleName, setNewRoleName] = useState('');
+  const [newRoleDesc, setNewRoleDesc] = useState('');
 
-    const updated = {
-      ...activeRole,
-      matrix: activeRole.matrix.map((cat) => {
-        if (cat.moduleName !== moduleName) return cat;
-        return {
-          ...cat,
-          items: cat.items.map((item) => {
-            if (item.id !== permissionId) return item;
-            return { ...item, enabled: !item.enabled };
-          }),
-        };
-      }),
-    };
-
-    setActiveRole(updated);
-    setRoles((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
   };
 
-  const handleSave = () => {
-    setToastMessage(`Permissions saved for role "${activeRole.name}"`);
-    setTimeout(() => setToastMessage(null), 4000);
+  const activeRole = roles.find((r) => r.id === selectedRoleId) || roles[0];
+
+  const handleTogglePermission = (catIdx: number, itemIdx: number) => {
+    setRoles((prev) =>
+      prev.map((role) => {
+        if (role.id === selectedRoleId) {
+          const newMatrix = JSON.parse(JSON.stringify(role.matrix));
+          newMatrix[catIdx].items[itemIdx].enabled = !newMatrix[catIdx].items[itemIdx].enabled;
+          return { ...role, matrix: newMatrix };
+        }
+        return role;
+      })
+    );
+  };
+
+  const handleToggleGroup = (catIdx: number, enable: boolean) => {
+    setRoles((prev) =>
+      prev.map((role) => {
+        if (role.id === selectedRoleId) {
+          const newMatrix = JSON.parse(JSON.stringify(role.matrix));
+          newMatrix[catIdx].items.forEach((item: any) => (item.enabled = enable));
+          return { ...role, matrix: newMatrix };
+        }
+        return role;
+      })
+    );
+  };
+
+  const handleSaveMatrix = () => {
+    showToast(`Permission matrix for role "${activeRole.name}" saved successfully!`);
+  };
+
+  const handleCreateRole = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newRoleName.trim()) return;
+    const roleId = newRoleName.trim().toUpperCase().replace(/\s+/g, '_');
+    const newRoleObj: RoleConfig = {
+      id: roleId,
+      name: newRoleName,
+      description: newRoleDesc || 'Custom RBAC Role',
+      isSystem: false,
+      color: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+      matrix: JSON.parse(JSON.stringify(DEFAULT_CATEGORIES)),
+    };
+    setRoles((prev) => [...prev, newRoleObj]);
+    setSelectedRoleId(roleId);
+    showToast(`Custom Role "${newRoleName}" created successfully!`);
+    setShowAddRoleModal(false);
+    setNewRoleName('');
+    setNewRoleDesc('');
   };
 
   return (
     <SuperAdminLayout
-      activeNav="/superadmin/roles"
-      title="Role-Based Access Control (RBAC)"
-      subtitle="Define roles, granular permissions, and security matrix across platform subsystems"
+      activeNav="roles"
+      title="Role-Based Access Control (RBAC) & Permission Matrix"
+      subtitle="Configure Granular Granular Module Permissions Across All 14 System Roles"
     >
-      <div className="space-y-6">
-        {/* Toast Alert */}
-        {toastMessage && (
-          <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs px-4 py-3 rounded-2xl flex items-center justify-between animate-slide-up">
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 shrink-0" />
-              <span>{toastMessage}</span>
-            </div>
-            <button onClick={() => setToastMessage(null)}>
-              <X className="w-4 h-4 text-emerald-400" />
-            </button>
+      {toastMessage && (
+        <div className="mb-6 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 p-4 rounded-2xl text-xs font-bold flex items-center justify-between animate-fade-in shadow-xl">
+          <div className="flex items-center gap-2">
+            <CheckCircle size={16} />
+            <span>{toastMessage}</span>
           </div>
-        )}
+          <button onClick={() => setToastMessage(null)} className="text-emerald-500 hover:text-white">✕</button>
+        </div>
+      )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Roles Selector Sidebar */}
-          <div className="space-y-4">
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-extrabold text-slate-100 flex items-center gap-2">
-                  <Key className="w-4 h-4 text-amber-500" />
-                  Configured Roles
-                </h3>
-                <span className="text-[10px] text-slate-500 font-bold uppercase">
-                  {roles.length} Active
+      {/* ── Top Bar Controls ── */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-sm font-black text-white uppercase tracking-wider">Configure System Roles</h2>
+          <p className="text-xs text-slate-400">Select a role below to customize its authorization matrix</p>
+        </div>
+        <button
+          onClick={() => setShowAddRoleModal(true)}
+          className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs px-5 py-2.5 rounded-2xl transition-all shadow-md flex items-center gap-1.5"
+        >
+          <Plus size={16} /> Create Custom Role
+        </button>
+      </div>
+
+      {/* ── Horizontal Role Selector Pills ── */}
+      <div className="flex gap-2 border-b border-slate-800 pb-4 mb-8 overflow-x-auto scrollbar-none">
+        {roles.map((r) => {
+          const isSelected = r.id === selectedRoleId;
+          return (
+            <button
+              key={r.id}
+              onClick={() => setSelectedRoleId(r.id)}
+              className={`px-4 py-2.5 rounded-2xl text-xs font-black whitespace-nowrap transition-all flex items-center gap-2 border ${
+                isSelected
+                  ? 'bg-amber-500 text-slate-950 border-amber-500 shadow-lg'
+                  : 'bg-slate-950 text-slate-300 border-slate-800 hover:border-slate-700'
+              }`}
+            >
+              <span>{r.name}</span>
+              {r.isSystem && (
+                <span className={`text-[8px] uppercase px-1.5 py-0.5 rounded-full font-black ${
+                  isSelected ? 'bg-slate-950 text-amber-400' : 'bg-slate-900 text-slate-400'
+                }`}>
+                  System
                 </span>
-              </div>
+              )}
+            </button>
+          );
+        })}
+      </div>
 
-              <div className="space-y-2">
-                {roles.map((r) => (
+      {/* ── Selected Role Detail Banner & Save Button ── */}
+      <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6 shadow-xl mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-3">
+            <h2 className="text-lg font-black text-white">{activeRole.name}</h2>
+            <span className={`px-3 py-1 rounded-full text-xs font-black border ${activeRole.color}`}>
+              {activeRole.id}
+            </span>
+          </div>
+          <p className="text-xs text-slate-400 mt-1">{activeRole.description}</p>
+        </div>
+
+        <button
+          onClick={handleSaveMatrix}
+          className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs px-6 py-3 rounded-2xl transition-all shadow-lg flex items-center justify-center gap-2 self-start md:self-auto"
+        >
+          <Save size={16} /> Save Permission Matrix
+        </button>
+      </div>
+
+      {/* ── Permission Matrix Categories ── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        {activeRole.matrix.map((category, catIdx) => {
+          const Icon = category.icon;
+          const allEnabled = category.items.every((i) => i.enabled);
+
+          return (
+            <div key={category.moduleName} className="bg-slate-950 border border-slate-800 rounded-3xl p-5 shadow-xl flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+                  <div className="flex items-center gap-2">
+                    <Icon size={16} className="text-amber-400" />
+                    <h3 className="font-extrabold text-xs text-white uppercase tracking-wider">{category.moduleName}</h3>
+                  </div>
                   <button
-                    key={r.id}
-                    onClick={() => setActiveRole(r)}
-                    className={`w-full text-left p-3.5 rounded-xl border transition-all ${
-                      activeRole.id === r.id
-                        ? 'bg-slate-800 border-amber-500/40 shadow-sm'
-                        : 'bg-slate-950/40 border-slate-800/80 hover:bg-slate-800/40 hover:border-slate-700'
-                    }`}
+                    onClick={() => handleToggleGroup(catIdx, !allEnabled)}
+                    className="text-[10px] font-black text-slate-400 hover:text-amber-400 transition-colors"
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="font-extrabold text-xs text-slate-200">{r.name}</span>
-                      <span
-                        className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md border ${r.color}`}
-                      >
-                        {r.isSystem ? 'System' : 'Custom'}
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-slate-400 mt-1 leading-snug line-clamp-2">
-                      {r.description}
-                    </p>
+                    {allEnabled ? 'Disable All' : 'Enable All'}
                   </button>
-                ))}
+                </div>
+
+                <div className="space-y-3">
+                  {category.items.map((perm, itemIdx) => (
+                    <label key={perm.id} className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/60 hover:bg-slate-900 border border-slate-800/80 cursor-pointer transition-colors">
+                      <span className="text-xs font-bold text-slate-300">{perm.label}</span>
+                      <input
+                        type="checkbox"
+                        checked={perm.enabled}
+                        onChange={() => handleTogglePermission(catIdx, itemIdx)}
+                        className="w-4 h-4 accent-amber-500 cursor-pointer"
+                      />
+                    </label>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
+          );
+        })}
+      </div>
 
-          {/* Granular Permission Matrix */}
-          <div className="lg:col-span-2 space-y-4">
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
-                <div>
-                  <div className="flex items-center gap-2.5">
-                    <h2 className="text-base font-black text-slate-100">{activeRole.name}</h2>
-                    <span
-                      className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md border ${activeRole.color}`}
-                    >
-                      {activeRole.isSystem ? 'Built-in System Role' : 'Custom Role'}
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-400 mt-1">{activeRole.description}</p>
-                </div>
+      {/* ── Create Role Modal ── */}
+      {showAddRoleModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl animate-fade-in text-white">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-5">
+              <h3 className="font-black text-sm uppercase tracking-wider text-white">Create Custom RBAC Role</h3>
+              <button onClick={() => setShowAddRoleModal(false)} className="text-slate-500 hover:text-white">
+                <X size={18} />
+              </button>
+            </div>
+            <form onSubmit={handleCreateRole} className="space-y-4 text-xs">
+              <div>
+                <label className="block font-bold text-slate-300 mb-1">Role Display Name</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Audit Auditor"
+                  value={newRoleName}
+                  onChange={(e) => setNewRoleName(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 outline-none focus:border-amber-500"
+                />
+              </div>
+              <div>
+                <label className="block font-bold text-slate-300 mb-1">Role Description</label>
+                <textarea
+                  rows={3}
+                  placeholder="Describe the access scope for this role..."
+                  value={newRoleDesc}
+                  onChange={(e) => setNewRoleDesc(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 outline-none focus:border-amber-500 resize-none"
+                />
+              </div>
+              <div className="pt-4 flex justify-end gap-2">
                 <button
-                  onClick={handleSave}
-                  className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs px-5 py-2.5 rounded-xl transition flex items-center gap-2 shadow-sm shrink-0"
+                  type="button"
+                  onClick={() => setShowAddRoleModal(false)}
+                  className="px-4 py-2.5 rounded-xl border border-slate-800 text-slate-400 font-bold hover:bg-slate-800"
                 >
-                  <Save className="w-4 h-4" />
-                  <span>Save Matrix</span>
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-5 py-2.5 rounded-xl transition-all shadow-md"
+                >
+                  Create Role
                 </button>
               </div>
-
-              {activeRole.id === 'superadmin' && (
-                <div className="bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs p-3.5 rounded-xl flex items-center gap-2 font-semibold">
-                  <Shield className="w-4 h-4 shrink-0" />
-                  <span>
-                    Super Administrator permissions are immutable and enforce 100% full-stack control.
-                  </span>
-                </div>
-              )}
-
-              {/* Modules List */}
-              <div className="space-y-6">
-                {activeRole.matrix.map((cat) => {
-                  const Icon = cat.icon;
-                  return (
-                    <div
-                      key={cat.moduleName}
-                      className="border border-slate-800/80 rounded-xl p-4 bg-slate-950/30 space-y-3"
-                    >
-                      <div className="flex items-center gap-2 border-b border-slate-800/60 pb-2.5 text-xs font-black text-slate-300">
-                        <Icon className="w-4 h-4 text-amber-500" />
-                        <span>{cat.moduleName}</span>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
-                        {cat.items.map((item) => (
-                          <label
-                            key={item.id}
-                            className={`flex items-center justify-between p-3 rounded-lg border text-xs transition cursor-pointer ${
-                              item.enabled
-                                ? 'bg-slate-800/60 border-amber-500/30 text-slate-100'
-                                : 'bg-slate-950/40 border-slate-800/60 text-slate-500 hover:border-slate-700'
-                            } ${activeRole.id === 'superadmin' ? 'cursor-not-allowed opacity-80' : ''}`}
-                          >
-                            <span className="font-bold">{item.label}</span>
-                            <input
-                              type="checkbox"
-                              checked={item.enabled}
-                              disabled={activeRole.id === 'superadmin'}
-                              onChange={() => handleToggle(cat.moduleName, item.id)}
-                              className="accent-amber-500 w-4 h-4 rounded cursor-pointer"
-                            />
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+            </form>
           </div>
         </div>
-      </div>
+      )}
     </SuperAdminLayout>
   );
 }

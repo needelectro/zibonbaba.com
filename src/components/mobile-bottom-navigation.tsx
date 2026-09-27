@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useStore } from '../store/useStore';
+import { useStore } from '@/store/useStore';
 import { Home, Grid, ShoppingCart, Package, User } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 

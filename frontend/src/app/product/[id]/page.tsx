@@ -43,28 +43,63 @@ export default function ProductDetailPage() {
         })
         .catch(() => {})
         .finally(() => setLoading(false));
+
+      fetch(`/api/reviews?productId=${id}`)
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data?.reviews && data.reviews.length > 0) {
+            setReviews(data.reviews.map((r: any) => ({
+              author: r.name,
+              rating: r.rating,
+              date: r.createdAt ? r.createdAt.split('T')[0] : 'Recent',
+              text: r.comment
+            })));
+          }
+        })
+        .catch(() => {});
     }
   }, [id, fetchProducts, products.length]);
 
   const product = liveProduct || products.find((p) => p.id === id);
 
-  const handleAddReview = (e: React.FormEvent) => {
+  const handleAddReview = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newAuthor || !newText) {
       alert('Please fill out name and review text.');
       return;
     }
-    const newRev = {
-      author: newAuthor,
-      rating: newRating,
-      date: new Date().toISOString().split('T')[0],
-      text: newText,
-    };
-    setReviews([newRev, ...reviews]);
-    setNewAuthor('');
-    setNewText('');
-    setReviewSuccess(true);
-    setTimeout(() => setReviewSuccess(false), 3000);
+    try {
+      const res = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newAuthor.trim(),
+          rating: newRating,
+          comment: newText.trim(),
+          productId: id,
+          role: 'Verified Buyer'
+        })
+      });
+
+      if (res.ok) {
+        const newRev = {
+          author: newAuthor,
+          rating: newRating,
+          date: new Date().toISOString().split('T')[0],
+          text: newText,
+        };
+        setReviews([newRev, ...reviews]);
+        setNewAuthor('');
+        setNewText('');
+        setReviewSuccess(true);
+        setTimeout(() => setReviewSuccess(false), 4000);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(err.error || 'Failed to submit review');
+      }
+    } catch (err) {
+      console.error('Add review error:', err);
+    }
   };
 
   if (!product) {

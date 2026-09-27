@@ -60,22 +60,47 @@ export default function SuperAdminLayout({
             Please log in to your account to access the Super Admin Panel.
           </p>
           <Link
-            href="/admin/login"
-            className="inline-block w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs py-3 rounded-xl transition"
+            href="/login"
+            className="bg-[#FFC107] text-slate-950 font-black text-xs px-6 py-3 rounded-2xl block w-full text-center shadow-lg hover:bg-amber-400 transition-colors"
           >
-            Go to Admin Login
+            Proceed to Login
           </Link>
         </div>
       </div>
     );
   }
 
-  const navItems = [
-    { label: 'System Overview', href: '/superadmin', icon: LayoutDashboard },
-    { label: 'Role Management', href: '/superadmin/roles', icon: Key },
-    { label: 'Security & Access', href: '/superadmin/security', icon: Shield },
-    { label: 'Audit & Reports', href: '/superadmin/reports', icon: BarChart2 },
-    { label: 'System Settings', href: '/superadmin/settings', icon: Settings },
+  // Strict role check
+  const normalizedRole = (role || '').toLowerCase();
+  if (normalizedRole !== 'superadmin' && normalizedRole !== 'super_admin' && normalizedRole !== 'admin') {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+        <div className="bg-slate-900 border border-white/10 rounded-3xl p-8 max-w-sm w-full text-center text-white">
+          <div className="w-16 h-16 bg-rose-500/10 rounded-2xl flex items-center justify-center text-rose-500 mx-auto mb-6 border border-rose-500/20">
+            <Shield size={24} className="text-rose-500" />
+          </div>
+          <h1 className="text-xl font-black mb-2">Access Denied</h1>
+          <p className="text-xs text-slate-400 mb-6">
+            Strict Dashboard Isolation is active. You do not have permission to view the Super Admin Hub.
+          </p>
+          <button
+            onClick={() => router.push('/')}
+            className="bg-white/5 border border-white/10 text-slate-300 hover:text-white font-black text-xs px-6 py-3 rounded-2xl block w-full"
+          >
+            Back to Homepage
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const NAV_ITEMS = [
+    { label: 'Dashboard', href: '/superadmin', icon: LayoutDashboard, key: 'dashboard' },
+    { label: 'Accounts', href: '/superadmin/accounts', icon: Users, key: 'accounts' },
+    { label: 'Roles & Permissions', href: '/superadmin/roles', icon: Key, key: 'roles' },
+    { label: 'Security Logs', href: '/superadmin/security', icon: Lock, key: 'security' },
+    { label: 'Reports', href: '/superadmin/reports', icon: BarChart2, key: 'reports' },
+    { label: 'Settings', href: '/superadmin/settings', icon: Settings, key: 'settings' },
   ];
 
   const handleLogout = async () => {
@@ -84,117 +109,130 @@ export default function SuperAdminLayout({
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
-      {/* Top Warning Banner */}
-      <div className="bg-amber-500 text-slate-950 text-[11px] font-black tracking-wider py-1.5 px-4 text-center flex items-center justify-center gap-2">
-        <Zap className="w-3.5 h-3.5" />
-        <span>SUPER ADMIN ENVIRONMENT — ALL CHANGES ARE LOGGED & AUDITED IN REAL-TIME</span>
-      </div>
-
-      <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
-        <aside
-          className={`${
-            sidebarOpen ? 'w-64' : 'w-20'
-          } bg-slate-900 border-r border-slate-800 flex flex-col justify-between transition-all duration-300 shrink-0`}
-        >
-          <div>
-            {/* Logo/Brand */}
-            <div className="p-4 border-b border-slate-800 flex items-center justify-between">
-              <Link href="/superadmin" className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-amber-500 flex items-center justify-center font-black text-slate-950 text-lg shadow-glow">
-                  Z
-                </div>
-                {sidebarOpen && (
-                  <div>
-                    <span className="font-black text-sm tracking-tight text-white block">Zibonbaba</span>
-                    <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest block -mt-1">
-                      Super Admin
-                    </span>
-                  </div>
-                )}
-              </Link>
-              <button
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition"
-              >
-                <Menu className="w-4 h-4" />
-              </button>
+    <div className="flex h-screen bg-slate-900 text-slate-100 font-sans overflow-hidden">
+      {/* ── Sidebar Navigation ── */}
+      <aside
+        className={`${
+          sidebarOpen ? 'w-64' : 'w-20'
+        } transition-all duration-300 flex-shrink-0 bg-slate-950 border-r border-slate-800 flex flex-col z-20 shadow-2xl`}
+      >
+        {/* Brand Logo */}
+        <div className="flex items-center justify-between px-5 py-5 border-b border-slate-800/80">
+          <Link href="/superadmin" className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-600 flex items-center justify-center flex-shrink-0 shadow-lg text-slate-950 font-black text-xl">
+              Z
             </div>
-
-            {/* Nav Menu */}
-            <nav className="p-3 space-y-1.5">
-              {navItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = pathname === item.href || activeNav === item.href;
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                      isActive
-                        ? 'bg-amber-500 text-slate-950 shadow-sm'
-                        : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-                    }`}
-                  >
-                    <Icon className="w-4 h-4 shrink-0" />
-                    {sidebarOpen && <span>{item.label}</span>}
-                  </Link>
-                );
-              })}
-            </nav>
-          </div>
-
-          {/* User info & Exit */}
-          <div className="p-3 border-t border-slate-800 space-y-2">
             {sidebarOpen && (
-              <div className="px-3 py-2 bg-slate-950/60 rounded-xl border border-slate-800/80">
-                <div className="text-[10px] text-slate-500 uppercase font-bold">Logged In Operator</div>
-                <div className="text-xs font-bold text-slate-200 truncate">{username || 'Super Administrator'}</div>
-                <div className="text-[10px] text-emerald-400 font-mono mt-0.5">● Level 5 Clearance</div>
+              <div className="min-w-0">
+                <p className="text-white font-black text-base tracking-tight leading-none truncate">Zibonbaba</p>
+                <span className="text-[10px] font-extrabold text-amber-500 uppercase tracking-widest block mt-0.5">
+                  Super Admin
+                </span>
               </div>
             )}
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold text-rose-400 hover:bg-rose-500/10 transition"
-            >
-              <LogOut className="w-4 h-4 shrink-0" />
-              {sidebarOpen && <span>Exit Super Admin</span>}
-            </button>
-          </div>
-        </aside>
+          </Link>
+        </div>
 
-        {/* Main Content Area */}
-        <main className="flex-1 flex flex-col overflow-y-auto bg-slate-950">
-          {/* Header */}
-          <header className="bg-slate-900/60 backdrop-blur-md border-b border-slate-800 px-8 py-5 flex items-center justify-between sticky top-0 z-20">
-            <div>
-              <h1 className="text-xl font-black text-white tracking-tight">{title}</h1>
-              <p className="text-xs text-slate-400 mt-0.5">{subtitle}</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  placeholder="Audit lookup, user ID, role..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500 w-64 transition"
-                />
-              </div>
+        {/* Navigation Items */}
+        <nav className="flex-1 px-3 py-5 space-y-1.5 overflow-y-auto scrollbar-none">
+          {NAV_ITEMS.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeNav ? activeNav === item.key : pathname === item.href || (item.href !== '/superadmin' && pathname.startsWith(item.href));
+
+            return (
               <Link
-                href="/admin"
-                className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold px-4 py-2 rounded-xl border border-slate-700 transition flex items-center gap-1.5"
+                key={item.label}
+                href={item.href}
+                className={`flex items-center gap-3 px-3.5 py-3 rounded-2xl transition-all duration-200 group ${
+                  isActive
+                    ? 'bg-amber-500 text-slate-950 font-black shadow-lg shadow-amber-500/20'
+                    : 'text-slate-400 hover:bg-slate-800/60 hover:text-white font-bold'
+                }`}
+                title={item.label}
               >
-                <span>Admin Dashboard</span>
-                <ChevronRight className="w-3.5 h-3.5" />
+                <Icon size={20} className={`flex-shrink-0 ${isActive ? 'text-slate-950' : 'text-slate-400 group-hover:text-amber-400'}`} />
+                {sidebarOpen && <span className="text-xs truncate">{item.label}</span>}
               </Link>
-            </div>
-          </header>
+            );
+          })}
+        </nav>
 
-          {/* Page Body */}
-          <div className="p-8 flex-1">{children}</div>
+        {/* User Info & Logout */}
+        <div className="p-3 border-t border-slate-800/80 bg-slate-950/60">
+          {sidebarOpen ? (
+            <div className="flex items-center justify-between p-2.5 rounded-2xl bg-slate-900 border border-slate-800 mb-2">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-400 font-black flex items-center justify-center text-xs shrink-0">
+                  {username ? username.charAt(0).toUpperCase() : 'S'}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-black text-white truncate">{username || 'Super Admin'}</p>
+                  <span className="text-[9px] text-emerald-400 font-extrabold uppercase">Verified Admin</span>
+                </div>
+              </div>
+            </div>
+          ) : null}
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-slate-400 hover:bg-rose-500/10 hover:text-rose-400 hover:border-rose-500/20 border border-transparent transition-all text-xs font-extrabold"
+          >
+            <LogOut size={18} />
+            {sidebarOpen && <span>Sign Out</span>}
+          </button>
+        </div>
+      </aside>
+
+      {/* ── Main Content Region ── */}
+      <div className="flex-1 flex flex-col overflow-hidden bg-slate-900">
+        {/* Top Header Bar */}
+        <header className="bg-slate-950/90 border-b border-slate-800/80 px-6 py-4 flex items-center justify-between shadow-md backdrop-blur-md shrink-0">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="p-2 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+              title="Toggle Navigation Menu"
+            >
+              <Menu size={18} />
+            </button>
+            <div>
+              <h1 className="text-base font-black text-white tracking-tight">{title}</h1>
+              <p className="text-[11px] text-slate-400 font-semibold">{subtitle}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {/* Quick Search */}
+            <div className="hidden sm:flex items-center bg-slate-900 border border-slate-800 rounded-2xl px-3 py-1.5 text-xs text-slate-300 focus-within:border-amber-500/50 w-64 transition-all">
+              <Search size={14} className="text-slate-500 mr-2" />
+              <input
+                type="text"
+                placeholder="Quick search accounts, logs..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="bg-transparent outline-none w-full text-xs placeholder:text-slate-500 font-medium"
+              />
+            </div>
+
+            {/* System Status Indicator */}
+            <div className="hidden md:flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-extrabold px-3 py-1.5 rounded-2xl">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+              <span>All Systems Operational</span>
+            </div>
+
+            {/* Back to Site Button */}
+            <Link
+              href="/customer"
+              className="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white font-bold text-xs px-3 py-2 rounded-2xl transition-colors flex items-center gap-1.5"
+            >
+              <span>Customer View</span>
+              <ChevronRight size={14} />
+            </Link>
+          </div>
+        </header>
+
+        {/* Page Content Body */}
+        <main className="flex-1 overflow-y-auto p-6 scrollbar-none">
+          {children}
         </main>
       </div>
     </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useStore } from '../store/useStore';
+import { useStore } from '@/store/useStore';
 import { ShoppingBag, Trash2, ArrowRight, Percent } from 'lucide-react';
 import Link from 'next/link';
 

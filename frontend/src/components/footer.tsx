@@ -270,12 +270,22 @@ export default function Footer() {
               <span>Built With <strong className="text-white font-semibold tracking-wide hover:text-amber-400 transition-colors">AMDADS GROUP</strong></span>
             </p>
           </div>
-          <div className="flex items-center gap-4 text-slate-400">
-            <Link href="/" className="hover:text-amber-400 transition-colors">Privacy Policy</Link>
+          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-slate-400 text-xs">
+            <Link href="/privacy-policy" className="hover:text-amber-400 transition-colors">Privacy Policy</Link>
             <span className="text-slate-700">•</span>
-            <Link href="/" className="hover:text-amber-400 transition-colors">Terms of Service</Link>
+            <Link href="/terms" className="hover:text-amber-400 transition-colors">Terms of Service</Link>
             <span className="text-slate-700">•</span>
-            <Link href="/" className="hover:text-amber-400 transition-colors">Return Policy</Link>
+            <Link href="/return-policy" className="hover:text-amber-400 transition-colors">Return & Refund</Link>
+            <span className="text-slate-700">•</span>
+            <Link href="/delivery-policy" className="hover:text-amber-400 transition-colors">Delivery Policy</Link>
+            <span className="text-slate-700">•</span>
+            <Link href="/payment-policy" className="hover:text-amber-400 transition-colors">Payment Policy</Link>
+            <span className="text-slate-700">•</span>
+            <Link href="/cancellation-policy" className="hover:text-amber-400 transition-colors">Cancellation</Link>
+            <span className="text-slate-700">•</span>
+            <Link href="/seller-agreement" className="hover:text-amber-400 transition-colors">Seller Agreement</Link>
+            <span className="text-slate-700">•</span>
+            <Link href="/contact" className="hover:text-amber-400 transition-colors">Contact Us</Link>
           </div>
         </div>
       </div>

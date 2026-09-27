@@ -240,6 +240,17 @@ export const useStore = create<StoreState>((set, get) => {
     }
   }
 
+  let initialCart: CartItem[] = [];
+  if (typeof window !== 'undefined') {
+    try {
+      const cStr = localStorage.getItem('zibonbaba_cart');
+      if (cStr) {
+        const parsed = JSON.parse(cStr);
+        if (Array.isArray(parsed)) initialCart = parsed;
+      }
+    } catch (_) {}
+  }
+
   // Auto-initiate user data fetches on store creation (Client-side only)
   if (typeof window !== 'undefined') {
     setTimeout(() => {
@@ -612,7 +623,7 @@ export const useStore = create<StoreState>((set, get) => {
     },
 
     // Shopping Cart & Wishlist
-    cart: [],
+    cart: initialCart,
     wishlist: [],
     wishlistProducts: [],
     orders: [],
@@ -620,24 +631,40 @@ export const useStore = create<StoreState>((set, get) => {
     addToCart: (product, qty = 1) => {
       set((state) => {
         const existingIndex = state.cart.findIndex(item => item.product.id === product.id);
+        let newCart: CartItem[];
         if (existingIndex >= 0) {
-          const newCart = [...state.cart];
-          newCart[existingIndex].quantity += qty;
-          return { cart: newCart };
+          newCart = [...state.cart];
+          newCart[existingIndex] = {
+            ...newCart[existingIndex],
+            quantity: newCart[existingIndex].quantity + qty
+          };
+        } else {
+          newCart = [...state.cart, { product, quantity: qty }];
         }
-        return { cart: [...state.cart, { product, quantity: qty }] };
+        if (typeof window !== 'undefined') {
+          try { localStorage.setItem('zibonbaba_cart', JSON.stringify(newCart)); } catch (_) {}
+        }
+        return { cart: newCart };
       });
     },
 
-    removeFromCart: (productId) => set((state) => ({
-      cart: state.cart.filter(item => item.product.id !== productId)
-    })),
+    removeFromCart: (productId) => set((state) => {
+      const newCart = state.cart.filter(item => item.product.id !== productId);
+      if (typeof window !== 'undefined') {
+        try { localStorage.setItem('zibonbaba_cart', JSON.stringify(newCart)); } catch (_) {}
+      }
+      return { cart: newCart };
+    }),
 
-    updateCartQty: (productId, qty) => set((state) => ({
-      cart: state.cart.map(item =>
+    updateCartQty: (productId, qty) => set((state) => {
+      const newCart = state.cart.map(item =>
         item.product.id === productId ? { ...item, quantity: Math.max(1, qty) } : item
-      )
-    })),
+      );
+      if (typeof window !== 'undefined') {
+        try { localStorage.setItem('zibonbaba_cart', JSON.stringify(newCart)); } catch (_) {}
+      }
+      return { cart: newCart };
+    }),
 
     fetchWishlist: async () => {
       const { isLoggedIn } = get();
@@ -692,7 +719,12 @@ export const useStore = create<StoreState>((set, get) => {
       }
     },
 
-    clearCart: () => set({ cart: [] }),
+    clearCart: () => {
+      if (typeof window !== 'undefined') {
+        try { localStorage.removeItem('zibonbaba_cart'); } catch (_) {}
+      }
+      set({ cart: [] });
+    },
 
     fetchOrders: async () => {
       try {

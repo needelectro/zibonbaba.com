@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   Store, Mail, Lock, Eye, EyeOff, Loader2, AlertCircle, ArrowRight,
-  TrendingUp, ShieldCheck, Headphones, CheckCircle2, ArrowLeft
+  TrendingUp, ShieldCheck, Headphones, CheckCircle2, ArrowLeft, Sparkles
 } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 
@@ -227,7 +227,47 @@ export default function SellerLoginPage() {
               </button>
             </form>
 
-            <div className="mt-6 pt-5 border-t border-white/10 space-y-3">
+            {/* Quick Demo Credentials Switcher */}
+            <div className="mt-5 p-3.5 rounded-xl bg-white/[0.03] border border-white/10 text-xs">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-black uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                  <Sparkles size={12} /> Demo Seller Accounts (Pass: Password123!)
+                </span>
+                <span className="text-[10px] text-gray-500 font-semibold">Click to fill</span>
+              </div>
+              <div className="grid grid-cols-2 gap-1.5 max-h-48 overflow-y-auto pr-1">
+                {[
+                  { name: 'Tech Baba Electronics', email: 'vendor@zibonbaba.com' },
+                  { name: 'Glamour Baba Beauty', email: 'seller2@zibonbaba.com' },
+                  { name: 'Kitchen Baba Hub', email: 'seller3@zibonbaba.com' },
+                  { name: 'Fashion Baba Outfitters', email: 'seller4@zibonbaba.com' },
+                  { name: 'Organic Baba Farm Fresh', email: 'seller5@zibonbaba.com' },
+                  { name: 'Book Baba Library', email: 'seller6@zibonbaba.com' },
+                  { name: 'Kids Baba Toys & Play', email: 'seller7@zibonbaba.com' },
+                  { name: 'Fit Baba Athletics', email: 'seller8@zibonbaba.com' },
+                  { name: 'Auto Baba Accessories', email: 'seller9@zibonbaba.com' },
+                  { name: 'Luxury Baba Jewels', email: 'seller10@zibonbaba.com' },
+                  { name: 'Laptop Shop', email: 'laptop@gmail.com' },
+                  { name: 'Vendor Staff Account', email: 'staff@zibonbaba.com' }
+                ].map((s) => (
+                  <button
+                    key={s.email}
+                    type="button"
+                    onClick={() => {
+                      setEmail(s.email);
+                      setPassword('Password123!');
+                    }}
+                    className="text-left px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-amber-500/20 hover:border-amber-500/40 border border-white/5 text-[11px] text-gray-300 hover:text-white transition-all cursor-pointer truncate"
+                    title={`${s.name} (${s.email})`}
+                  >
+                    <span className="block font-bold truncate text-white">{s.name}</span>
+                    <span className="block text-[9px] text-gray-400 truncate">{s.email}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-5 pt-4 border-t border-white/10 space-y-3">
               <p className="text-xs text-gray-400 text-center">
                 New merchant? Register your store to start selling:
               </p>

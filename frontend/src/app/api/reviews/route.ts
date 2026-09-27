@@ -9,11 +9,14 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const productId = searchParams.get('productId');
     const featured = searchParams.get('featured');
+    const platform = searchParams.get('platform');
     const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 100);
 
     const where: any = { isApproved: true };
 
-    if (productId && productId !== 'all' && productId !== 'general') {
+    if (platform === 'true' || productId === 'platform' || productId === 'none') {
+      where.productId = null;
+    } else if (productId && productId !== 'all' && productId !== 'general') {
       where.productId = productId;
     }
 

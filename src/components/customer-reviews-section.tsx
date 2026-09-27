@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Star, MessageSquarePlus, CheckCircle2, X, Send, Loader2, Sparkles, UserCheck } from 'lucide-react';
+import Link from 'next/link';
+import { Star, MessageSquarePlus, CheckCircle2, X, Send, Loader2, Sparkles, UserCheck, Lock, LogIn } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 
 interface ReviewItem {
@@ -28,7 +29,7 @@ const RATING_LABELS: Record<number, string> = {
 };
 
 export default function CustomerReviewsSection() {
-  const { username, products } = useStore();
+  const { isLoggedIn, username, userEmail, token } = useStore();
   const [mounted, setMounted] = useState(false);
 
   const [reviews, setReviews] = useState<ReviewItem[]>([
@@ -58,7 +59,7 @@ export default function CustomerReviewsSection() {
     }
   ]);
 
-  const [averageRating, setAverageRating] = useState<number>(4.9);
+  const [averageRating, setAverageRating] = useState<number>(5.0);
   const [totalReviews, setTotalReviews] = useState<number>(3);
 
   // Modal State
@@ -67,7 +68,6 @@ export default function CustomerReviewsSection() {
   const [hoverRating, setHoverRating] = useState(0);
   const [name, setName] = useState('');
   const [role, setRole] = useState('Verified Buyer');
-  const [selectedProductId, setSelectedProductId] = useState('general');
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -77,10 +77,10 @@ export default function CustomerReviewsSection() {
     setMounted(true);
   }, []);
 
-  // Fetch reviews on mount
+  // Fetch reviews on mount (fetching pure platform reviews)
   const fetchReviews = async () => {
     try {
-      const res = await fetch('/api/reviews?featured=true&limit=6');
+      const res = await fetch('/api/reviews?platform=true&limit=6');
       if (res.ok) {
         const data = await res.json();
         if (data.reviews && data.reviews.length > 0) {
@@ -90,7 +90,7 @@ export default function CustomerReviewsSection() {
         }
       }
     } catch (err) {
-      console.error('Failed to fetch reviews:', err);
+      console.error('Failed to fetch platform reviews:', err);
     }
   };
 
@@ -127,23 +127,28 @@ export default function CustomerReviewsSection() {
     setErrorMsg('');
 
     if (!comment || comment.trim().length < 3) {
-      setErrorMsg('Please write at least a few words about your experience.');
+      setErrorMsg('Please write at least a few words about your platform experience.');
       return;
     }
 
     setIsSubmitting(true);
     try {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json'
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const res = await fetch('/api/reviews', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers,
         body: JSON.stringify({
           name: name.trim() || username || 'Verified Customer',
           role: role.trim() || 'Verified Buyer',
           rating,
           comment: comment.trim(),
-          productId: selectedProductId !== 'general' ? selectedProductId : null,
+          productId: null, // Pure platform review
           avatar: (name || username || 'U').charAt(0).toUpperCase()
         })
       });
@@ -166,7 +171,7 @@ export default function CustomerReviewsSection() {
       setSuccessToast(true);
       setTimeout(() => setSuccessToast(false), 5000);
     } catch (err) {
-      console.error('Review submit error:', err);
+      console.error('Platform review submit error:', err);
       setErrorMsg('Network error. Please try again later.');
     } finally {
       setIsSubmitting(false);
@@ -250,11 +255,12 @@ export default function CustomerReviewsSection() {
                   "{t.comment}"
                 </p>
 
-                {t.product && (
-                  <p className="text-[11px] font-bold text-amber-600 mt-3 truncate">
-                    Item: {t.product.name}
-                  </p>
-                )}
+                {/* Platform Experience Badge */}
+                <div className="mt-3 flex items-center gap-1.5">
+                  <span className="text-[10px] font-bold text-amber-700 bg-amber-500/10 px-2.5 py-0.5 rounded-md border border-amber-500/20">
+                    Platform Experience
+                  </span>
+                </div>
               </div>
 
               {/* Author Info */}
@@ -295,13 +301,13 @@ export default function CustomerReviewsSection() {
             {/* Modal Header */}
             <div className="mb-6 text-left">
               <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200 inline-block mb-2">
-                Customer Feedback
+                Platform Feedback
               </span>
               <h3 className="text-xl sm:text-2xl font-black text-slate-900">
                 Share Your Experience
               </h3>
               <p className="text-xs text-slate-500 mt-1">
-                Your feedback helps thousands of shoppers and sellers across Bangladesh.
+                Your feedback helps thousands of shoppers across Bangladesh.
               </p>
             </div>
 
@@ -311,139 +317,169 @@ export default function CustomerReviewsSection() {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4 text-left">
-              {/* Star Rating Selector */}
-              <div>
-                <label className="block text-xs font-black text-slate-800 uppercase tracking-wider mb-2">
-                  Overall Rating *
-                </label>
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1">
-                    {[1, 2, 3, 4, 5].map(star => {
-                      const active = (hoverRating || rating) >= star;
-                      return (
-                        <button
-                          key={star}
-                          type="button"
-                          onClick={() => setRating(star)}
-                          onMouseEnter={() => setHoverRating(star)}
-                          onMouseLeave={() => setHoverRating(0)}
-                          className="p-1 focus:outline-none transition-transform hover:scale-125 cursor-pointer"
-                        >
-                          <Star
-                            className={`w-7 h-7 transition-colors ${
-                              active
-                                ? 'fill-amber-400 text-amber-400 drop-shadow-[0_2px_8px_rgba(245,158,11,0.4)]'
-                                : 'text-slate-300'
-                            }`}
-                          />
-                        </button>
-                      );
-                    })}
+            {!isLoggedIn ? (
+              <div className="text-center py-6 px-2">
+                <div className="w-16 h-16 rounded-3xl bg-amber-500/10 border border-amber-500/20 text-amber-600 flex items-center justify-center mx-auto mb-4">
+                  <Lock className="w-8 h-8" />
+                </div>
+                <h4 className="text-xl font-black text-slate-900 mb-2">
+                  User Sign In Required
+                </h4>
+                <p className="text-xs text-slate-500 max-w-sm mx-auto mb-6 leading-relaxed">
+                  Only registered users can submit a review for the Zibonbaba platform. Please sign in to your customer account to share your feedback.
+                </p>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                  <Link
+                    href="/login"
+                    className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-amber-500/25 transition-all text-center inline-flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <LogIn className="w-4 h-4" />
+                    <span>Sign In to Review</span>
+                  </Link>
+                  <Link
+                    href="/customer/register"
+                    className="w-full sm:w-auto px-6 py-3.5 rounded-2xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs uppercase tracking-wider transition-all text-center"
+                  >
+                    Create Account
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-4 text-left">
+                {/* Authenticated User Status Banner */}
+                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-full bg-slate-900 text-amber-400 font-black text-sm flex items-center justify-center shrink-0 border border-amber-500/30">
+                      {(username || userEmail || 'U').charAt(0).toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-black text-slate-900 truncate">
+                        {username || userEmail || 'Verified User'}
+                      </p>
+                      <p className="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" />
+                        Verified Platform User
+                      </p>
+                    </div>
                   </div>
-                  <span className="text-xs font-black text-amber-600 ml-2">
-                    {RATING_LABELS[hoverRating || rating]}
+                  <span className="text-[10px] font-black uppercase tracking-wider text-amber-700 bg-white px-3 py-1 rounded-full border border-amber-200 shrink-0">
+                    Platform Review
                   </span>
                 </div>
-              </div>
 
-              {/* Reviewer Name */}
-              <div>
-                <label className="block text-xs font-black text-slate-800 uppercase tracking-wider mb-1.5">
-                  Your Full Name *
-                </label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  placeholder="e.g. Tanvir Ahmed"
-                  required
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 font-medium"
-                />
-              </div>
-
-              {/* Customer Role / Badge */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Star Rating Selector */}
                 <div>
-                  <label className="block text-xs font-black text-slate-800 uppercase tracking-wider mb-1.5">
-                    Customer Profile Tag
+                  <label className="block text-xs font-black text-slate-800 uppercase tracking-wider mb-2">
+                    Overall Rating *
                   </label>
-                  <select
-                    value={role}
-                    onChange={e => setRole(e.target.value)}
-                    className="w-full px-3.5 py-3 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 focus:outline-none focus:border-amber-500 bg-white"
-                  >
-                    <option value="Verified Buyer">Verified Buyer</option>
-                    <option value="Online Consumer">Online Consumer</option>
-                    <option value="Business Owner">Business Owner</option>
-                    <option value="Wholesale Buyer">Wholesale Buyer</option>
-                    <option value="Frequent Shopper">Frequent Shopper</option>
-                  </select>
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map(star => {
+                        const active = (hoverRating || rating) >= star;
+                        return (
+                          <button
+                            key={star}
+                            type="button"
+                            onClick={() => setRating(star)}
+                            onMouseEnter={() => setHoverRating(star)}
+                            onMouseLeave={() => setHoverRating(0)}
+                            className="p-1 focus:outline-none transition-transform hover:scale-125 cursor-pointer"
+                          >
+                            <Star
+                              className={`w-7 h-7 transition-colors ${
+                                active
+                                  ? 'fill-amber-400 text-amber-400 drop-shadow-[0_2px_8px_rgba(245,158,11,0.4)]'
+                                  : 'text-slate-300'
+                              }`}
+                            />
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <span className="text-xs font-black text-amber-600 ml-2">
+                      {RATING_LABELS[hoverRating || rating]}
+                    </span>
+                  </div>
                 </div>
 
-                {/* Optional Product Selection */}
+                {/* Display Name & Customer Profile Tag in 2 columns */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-black text-slate-800 uppercase tracking-wider mb-1.5">
+                      Your Full Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={e => setName(e.target.value)}
+                      placeholder="e.g. Tanvir Ahmed"
+                      required
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 font-medium"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-black text-slate-800 uppercase tracking-wider mb-1.5">
+                      Customer Profile Tag
+                    </label>
+                    <select
+                      value={role}
+                      onChange={e => setRole(e.target.value)}
+                      className="w-full px-3.5 py-3 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 focus:outline-none focus:border-amber-500 bg-white"
+                    >
+                      <option value="Verified Buyer">Verified Buyer</option>
+                      <option value="Online Consumer">Online Consumer</option>
+                      <option value="Frequent Shopper">Frequent Shopper</option>
+                      <option value="Business Owner">Business Owner</option>
+                      <option value="Wholesale Buyer">Wholesale Buyer</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Review Comment Textarea */}
                 <div>
                   <label className="block text-xs font-black text-slate-800 uppercase tracking-wider mb-1.5">
-                    Item Purchased (Optional)
+                    Your Review & Feedback *
                   </label>
-                  <select
-                    value={selectedProductId}
-                    onChange={e => setSelectedProductId(e.target.value)}
-                    className="w-full px-3.5 py-3 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 focus:outline-none focus:border-amber-500 bg-white"
-                  >
-                    <option value="general">Overall Marketplace Experience</option>
-                    {products.slice(0, 10).map(p => (
-                      <option key={p.id} value={p.id}>
-                        {p.name.length > 30 ? p.name.substring(0, 30) + '...' : p.name}
-                      </option>
-                    ))}
-                  </select>
+                  <textarea
+                    rows={4}
+                    value={comment}
+                    onChange={e => setComment(e.target.value)}
+                    placeholder="Share details about your experience with Zibonbaba's platform, ordering process, delivery speed, website ease, or customer support..."
+                    required
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 font-medium resize-none leading-relaxed"
+                  />
                 </div>
-              </div>
 
-              {/* Review Comment Textarea */}
-              <div>
-                <label className="block text-xs font-black text-slate-800 uppercase tracking-wider mb-1.5">
-                  Your Review & Feedback *
-                </label>
-                <textarea
-                  rows={4}
-                  value={comment}
-                  onChange={e => setComment(e.target.value)}
-                  placeholder="Share details about the product quality, checkout speed, courier delivery, or seller customer support..."
-                  required
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 font-medium resize-none leading-relaxed"
-                />
-              </div>
-
-              {/* Submit Buttons */}
-              <div className="pt-2 flex items-center justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-5 py-3 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-amber-500/25 transition-all disabled:opacity-50 cursor-pointer"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin text-slate-950" />
-                      <span>Submitting...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Send className="w-4 h-4 text-slate-950" />
-                      <span>Post Review</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
+                {/* Submit Buttons */}
+                <div className="pt-2 flex items-center justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsModalOpen(false)}
+                    className="px-5 py-3 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-amber-500/25 transition-all disabled:opacity-50 cursor-pointer"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin text-slate-950" />
+                        <span>Submitting...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4 text-slate-950" />
+                        <span>Post Review</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>,
         document.body

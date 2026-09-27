@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Star, MessageSquarePlus, CheckCircle2, X, Send, ThumbsUp, Loader2, Sparkles, UserCheck } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { Star, MessageSquarePlus, CheckCircle2, X, Send, Loader2, Sparkles, UserCheck } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 
 interface ReviewItem {
@@ -27,7 +28,8 @@ const RATING_LABELS: Record<number, string> = {
 };
 
 export default function CustomerReviewsSection() {
-  const { isLoggedIn, username, products } = useStore();
+  const { username, products } = useStore();
+  const [mounted, setMounted] = useState(false);
 
   const [reviews, setReviews] = useState<ReviewItem[]>([
     {
@@ -58,7 +60,6 @@ export default function CustomerReviewsSection() {
 
   const [averageRating, setAverageRating] = useState<number>(4.9);
   const [totalReviews, setTotalReviews] = useState<number>(3);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -71,6 +72,10 @@ export default function CustomerReviewsSection() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successToast, setSuccessToast] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Fetch reviews on mount
   const fetchReviews = async () => {
@@ -86,8 +91,6 @@ export default function CustomerReviewsSection() {
       }
     } catch (err) {
       console.error('Failed to fetch reviews:', err);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -101,6 +104,23 @@ export default function CustomerReviewsSection() {
       setName(username);
     }
   }, [username, name]);
+
+  // Lock body scroll and listen for ESC key when modal is open
+  useEffect(() => {
+    if (isModalOpen) {
+      document.body.style.overflow = 'hidden';
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') setIsModalOpen(false);
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    } else {
+      document.body.style.overflow = '';
+    }
+  }, [isModalOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -155,15 +175,16 @@ export default function CustomerReviewsSection() {
 
   return (
     <section id="testimonials" className="py-16 px-4 lg:px-8 border-b border-slate-100 bg-white relative">
-      {/* Success Notification Toast */}
-      {successToast && (
-        <div className="fixed top-24 right-6 z-[99999] bg-emerald-600 text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 animate-slide-up border border-emerald-400/30">
+      {/* Success Notification Toast mounted directly to body */}
+      {mounted && successToast && typeof document !== 'undefined' && createPortal(
+        <div className="fixed top-24 right-6 z-[9999999] bg-emerald-600 text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 animate-slide-up border border-emerald-400/30">
           <CheckCircle2 className="w-5 h-5 text-emerald-100 shrink-0" />
           <div>
             <p className="text-xs font-black">Review Published Successfully!</p>
             <p className="text-[11px] text-emerald-100">Thank you for sharing your feedback with Zibonbaba.</p>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       <div className="max-w-[1440px] mx-auto">
@@ -192,7 +213,7 @@ export default function CustomerReviewsSection() {
             <button
               id="give-review-btn"
               onClick={() => setIsModalOpen(true)}
-              className="inline-flex items-center gap-2.5 px-5 py-3 rounded-2xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
+              className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
             >
               <MessageSquarePlus className="w-4 h-4 text-slate-950" />
               <span>Write a Review</span>
@@ -251,17 +272,21 @@ export default function CustomerReviewsSection() {
         </div>
       </div>
 
-      {/* Review Submission Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-fade-in">
+      {/* Review Submission Modal — Mounted directly to document.body via Portal to prevent parent transform clipping */}
+      {mounted && isModalOpen && typeof document !== 'undefined' && createPortal(
+        <div
+          className="fixed inset-0 z-[9999999] flex items-center justify-center p-4 sm:p-6 bg-slate-950/80 backdrop-blur-sm overflow-y-auto animate-fade-in"
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
+          onClick={() => setIsModalOpen(false)}
+        >
           <div
-            className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-100 relative animate-slide-up max-h-[92vh] overflow-y-auto"
+            className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 relative my-auto max-h-[90vh] overflow-y-auto z-[10000000] text-slate-900"
             onClick={e => e.stopPropagation()}
           >
             {/* Close Button */}
             <button
               onClick={() => setIsModalOpen(false)}
-              className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 p-2 rounded-full hover:bg-slate-100 transition-colors"
+              className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 p-2 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
               aria-label="Close"
             >
               <X className="w-5 h-5" />
@@ -303,7 +328,7 @@ export default function CustomerReviewsSection() {
                           onClick={() => setRating(star)}
                           onMouseEnter={() => setHoverRating(star)}
                           onMouseLeave={() => setHoverRating(0)}
-                          className="p-1 focus:outline-none transition-transform hover:scale-125"
+                          className="p-1 focus:outline-none transition-transform hover:scale-125 cursor-pointer"
                         >
                           <Star
                             className={`w-7 h-7 transition-colors ${
@@ -396,14 +421,14 @@ export default function CustomerReviewsSection() {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-5 py-3 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors"
+                  className="px-5 py-3 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-amber-500/25 transition-all disabled:opacity-50"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-amber-500/25 transition-all disabled:opacity-50 cursor-pointer"
                 >
                   {isSubmitting ? (
                     <>
@@ -420,7 +445,8 @@ export default function CustomerReviewsSection() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </section>
   );

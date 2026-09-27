@@ -218,7 +218,7 @@ export default function HomePage() {
         </div>
 
         {/* DESKTOP CUSTOMER STOREFRONT VIEW (CSS Responsive) */}
-        <div className="hidden md:block w-full pb-20 animate-slide-up">
+        <div className="hidden md:block w-full pb-20">
           
           {/* Asymmetric Campaign Banners Grid (Amazon / Alibaba / Shopify inspired) */}
           <section className="py-8 px-4 lg:px-8 bg-gradient-to-b from-white to-slate-50">

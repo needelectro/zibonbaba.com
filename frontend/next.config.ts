@@ -133,10 +133,6 @@ const nextConfig: NextConfig = {
       {
         source: '/api/notifications',
         destination: `${backendUrl}/api/notifications`
-      },
-      {
-        source: '/api/ai/:path*',
-        destination: `${backendUrl}/api/ai/:path*`
       }
     ];
   }

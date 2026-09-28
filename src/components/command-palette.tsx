@@ -15,7 +15,6 @@ import {
   ArrowRight,
   Command,
   X,
-  Sparkles,
   Zap
 } from 'lucide-react';
 import { useStore } from '@/store/useStore';
@@ -102,15 +101,6 @@ export default function CommandPalette() {
       icon: Plus,
       perform: () => {
         router.push('/seller');
-      }
-    },
-    {
-      id: 'ai-insights',
-      title: 'Ask AI Copilot for Sales Forecast',
-      category: 'AI Copilot',
-      icon: Sparkles,
-      perform: () => {
-        router.push(getDashboardPath());
       }
     }
   ];

@@ -13,7 +13,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: 'Zibonbaba.com - Premium Multi-Vendor E-Commerce & SaaS ERP',
-  description: 'Enterprise business management solution combining online multi-vendor retail market, barcode scanning POS, warehouse inventory syncing, CRM logs, and AI forecasting.',
+  description: 'Enterprise business management solution combining online multi-vendor retail market, barcode scanning POS, warehouse inventory syncing, and CRM logs.',
   keywords: 'Zibonbaba, E-commerce, SaaS, POS system, Enterprise, Inventory management, CRM, Multi-vendor marketplace, Bangladesh',
 };
 

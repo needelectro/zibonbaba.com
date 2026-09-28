@@ -163,7 +163,6 @@ export interface StoreState {
   updatePreferences: (pref: any) => Promise<void>;
   fetchRules: () => Promise<void>;
   saveRule: (rule: { triggerEvent: string; actionPayload: any; isActive: boolean }) => Promise<void>;
-  triggerAiAlert: (targetUserId: string, title: string, body: string, priority: string, module: string) => Promise<void>;
   initNotificationWebSocket: (userId: string) => () => void;
 
   // Dynamic RBAC Permission Cache
@@ -1090,18 +1089,6 @@ export const useStore = create<StoreState>((set, get) => {
         }
       } catch (err) {
         console.error('Save rule error:', err);
-      }
-    },
-
-    triggerAiAlert: async (targetUserId, title, body, priority, moduleName) => {
-      try {
-        await fetch(`${API_BASE}/admin/notifications/trigger-ai`, {
-          method: 'POST',
-          headers: getHeaders(),
-          body: JSON.stringify({ targetUserId, title, body, priority, module: moduleName })
-        });
-      } catch (err) {
-        console.error('Trigger AI alert error:', err);
       }
     },
 

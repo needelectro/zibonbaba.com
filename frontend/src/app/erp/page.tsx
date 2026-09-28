@@ -5,16 +5,11 @@ import { useStore } from '@/store/useStore';
 import {
   Building,
   Users,
-  TrendingUp,
   AlertTriangle,
-  Send,
   Plus,
   DollarSign,
   Briefcase,
-  CheckCircle,
-  Truck,
-  Sparkles,
-  Bot
+  Truck
 } from 'lucide-react';
 
 export default function ErpDashboardPage() {
@@ -26,7 +21,7 @@ export default function ErpDashboardPage() {
     branches,
   } = useStore();
 
-  const [activeTab, setActiveTab] = useState<'inventory' | 'crm' | 'suppliers' | 'expenses' | 'ai'>('inventory');
+  const [activeTab, setActiveTab] = useState<'inventory' | 'crm' | 'suppliers' | 'expenses'>('inventory');
 
   // CRM input states
   const [custName, setCustName] = useState('');
@@ -43,11 +38,7 @@ export default function ErpDashboardPage() {
   const [expCat, setExpCat] = useState('Infrastructure');
   const [expAmt, setExpAmt] = useState('');
 
-  // AI Chat Assistant States
-  const [chatInput, setChatInput] = useState('');
-  const [chatHistory, setChatHistory] = useState<Array<{ sender: 'user' | 'bot'; text: string }>>([
-    { sender: 'bot', text: 'Hello! I am your Zibonbaba AI Business Assistant. Ask me about stock forecasts, fraud indicators, or revenue velocities.' }
-  ]);
+
 
   const handleAddCustomer = (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,33 +72,7 @@ export default function ErpDashboardPage() {
     setExpAmt('');
   };
 
-  const handleSendChat = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!chatInput) return;
-    const userMsg = chatInput;
-    const history = [...chatHistory, { sender: 'user' as const, text: userMsg }];
-    setChatHistory(history);
-    setChatInput('');
 
-    // Simulated smart AI assistant answers based on keywords
-    setTimeout(() => {
-      let botResponse = 'I am scanning the Postgres database schema and Prisma models. Could you rephrase your business request?';
-      const lowercaseMsg = userMsg.toLowerCase();
-
-      if (lowercaseMsg.includes('forecast') || lowercaseMsg.includes('sales')) {
-        botResponse = 'AI FORECAST ENGINE: Based on the past 90 days of e-commerce data and POS logs, sales for the "SoundMax Wireless Headphones Pro" are projected to increase by 14.5% next month. Reorder point suggested at 15 units.';
-      } else if (lowercaseMsg.includes('fraud') || lowercaseMsg.includes('security')) {
-        botResponse = 'AI SECURITY ANALYTICS: No severe card trials or high-frequency automated checkout anomalies detected in the last 24 hours. Express rate limits are successfully filtering spam vectors.';
-      } else if (lowercaseMsg.includes('stock') || lowercaseMsg.includes('inventory') || lowercaseMsg.includes('warehouse')) {
-        const lowStockCount = products.filter(p => p.stock <= 10).length;
-        botResponse = `AI INVENTORY AUDIT: Central Warehouse is running at 85% capacity. We have ${lowStockCount} items currently below their reorder threshold. I recommend scheduling a restock order with Supplier FashionBox.`;
-      } else if (lowercaseMsg.includes('hello') || lowercaseMsg.includes('hi')) {
-        botResponse = 'Hi there! I am ready to evaluate branch metrics, supplier logs, or issue stock recommendation tables. What business unit should we look at?';
-      }
-
-      setChatHistory([...history, { sender: 'bot' as const, text: botResponse }]);
-    }, 1000);
-  };
 
   return (
     <div className="max-w-[1440px] mx-auto py-10 px-4 lg:px-8 animate-slide-up space-y-8">
@@ -115,7 +80,7 @@ export default function ErpDashboardPage() {
       <div className="border-b border-neutral-light pb-6">
         <h1 className="text-3xl font-extrabold text-neutral-dark">SaaS ERP Business Hub</h1>
         <p className="text-xs text-neutral-muted mt-1">
-          Manage inventory warehouses, client CRM lists, supplier pipelines, expenses, and AI recommendations.
+          Manage inventory warehouses, client CRM lists, supplier pipelines, and expenses.
         </p>
       </div>
 
@@ -125,8 +90,7 @@ export default function ErpDashboardPage() {
           { id: 'inventory', label: 'Inventory & Warehousing', icon: Building },
           { id: 'crm', label: 'CRM & Client Records', icon: Users },
           { id: 'suppliers', label: 'Suppliers & Procurement', icon: Truck },
-          { id: 'expenses', label: 'Expense Tracking', icon: DollarSign },
-          { id: 'ai', label: 'AI Analytics Assistant', icon: Sparkles }
+          { id: 'expenses', label: 'Expense Tracking', icon: DollarSign }
         ].map((tab) => {
           const Icon = tab.icon;
           return (
@@ -431,88 +395,7 @@ export default function ErpDashboardPage() {
         </div>
       )}
 
-      {/* 5. AI ANALYTICS & CHATBOT */}
-      {activeTab === 'ai' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-slide-up">
-          {/* AI Insights summaries */}
-          <div className="bg-white p-6 rounded-lg border border-neutral-light shadow-card space-y-6 lg:col-span-1">
-            <h2 className="text-xs font-bold text-neutral-dark uppercase tracking-wider border-b border-neutral-light pb-2 flex items-center gap-1">
-              <Sparkles className="w-4 h-4 text-primary-accent" />
-              AI Core Predictions
-            </h2>
-            <div className="space-y-4 text-xs">
-              <div className="p-3 bg-primary/10 border border-primary/30 rounded-md">
-                <h4 className="font-bold text-neutral-dark flex items-center gap-1">
-                  <TrendingUp className="w-4 h-4 text-primary-dark" />
-                  Forecasting Runout
-                </h4>
-                <p className="text-[10px] text-neutral-body mt-1 leading-relaxed">
-                  "Zibonbaba Smart Coffee Mug v2" is projected to run out of stock in **12 days** based on high seasonal purchase frequencies. Reorder now.
-                </p>
-              </div>
 
-              <div className="p-3 bg-success/10 border border-success/30 rounded-md">
-                <h4 className="font-bold text-success flex items-center gap-1">
-                  <CheckCircle className="w-4 h-4" />
-                  Fraud Audits
-                </h4>
-                <p className="text-[10px] text-neutral-body mt-1 leading-relaxed">
-                  No anomalous bot behaviors or IP credit trial spikes registered today. PCI checkout safety: **100%**.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* AI Chatbot Assistant */}
-          <div className="bg-white p-6 rounded-lg border border-neutral-light shadow-card lg:col-span-2 flex flex-col justify-between min-h-[400px]">
-            <div>
-              <h2 className="text-xs font-bold text-neutral-dark uppercase tracking-wider border-b border-neutral-light pb-2 mb-4 flex items-center gap-1.5">
-                <Bot className="w-5 h-5 text-primary-accent" />
-                AI Business Assistant Chat
-              </h2>
-              {/* Chat Thread */}
-              <div className="space-y-4 max-h-60 overflow-y-auto pr-2 mb-4">
-                {chatHistory.map((chat, i) => (
-                  <div
-                    key={i}
-                    className={`flex ${chat.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className={`max-w-xs p-3 rounded-lg text-xs leading-relaxed ${
-                        chat.sender === 'user'
-                          ? 'bg-neutral-dark text-white rounded-br-none'
-                          : 'bg-neutral-light border border-neutral-light text-neutral-dark rounded-bl-none'
-                      }`}
-                    >
-                      <p className="font-bold text-[9px] opacity-75 mb-0.5 uppercase">
-                        {chat.sender === 'user' ? 'You (Sarah)' : 'Zibonbaba AI'}
-                      </p>
-                      <p>{chat.text}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Input Form */}
-            <form onSubmit={handleSendChat} className="flex gap-2 border-t border-neutral-light pt-4">
-              <input
-                type="text"
-                placeholder="Ask e.g. 'Generate sales forecast' or 'Inventory audit'..."
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                className="w-full bg-neutral-light border border-neutral-light rounded-md p-2.5 text-xs text-neutral-dark outline-none focus:border-primary"
-              />
-              <button
-                type="submit"
-                className="bg-primary hover:bg-primary-dark text-neutral-dark text-xs font-bold px-5 rounded-md flex items-center justify-center transition-colors cursor-pointer"
-              >
-                <Send className="w-4 h-4" />
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

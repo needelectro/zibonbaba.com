@@ -24,7 +24,6 @@ import {
   ShieldAlert,
   KeyRound,
   Settings2,
-  BrainCircuit,
   Plus,
   Search,
   Filter,
@@ -46,7 +45,6 @@ import {
   MapPin,
   Clock,
   Printer,
-  Bot,
   Sparkles,
   Terminal,
   SlidersHorizontal,
@@ -73,7 +71,7 @@ type AdminModule =
   | 'dashboard' | 'marketplace' | 'orders' | 'customers' | 'sellers'
   | 'resellers' | 'delivery' | 'inventory' | 'warehouse' | 'pos'
   | 'crm' | 'erp' | 'hrm' | 'wallet' | 'finance' | 'reports'
-  | 'notifications' | 'rbac' | 'settings' | 'audit' | 'ai' | 'superadmin' | 'reviews';
+  | 'notifications' | 'rbac' | 'settings' | 'audit' | 'superadmin' | 'reviews';
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -98,7 +96,6 @@ export default function AdminDashboardPage() {
   const [activeModule, setActiveModule] = useState<AdminModule>('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
-  const [isAiPanelOpen, setIsAiPanelOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [commandSearch, setCommandSearch] = useState('');
   const [isMounted, setIsMounted] = useState(false);
@@ -490,11 +487,7 @@ export default function AdminDashboardPage() {
   const [newCategoryName, setNewCategoryName] = useState('');
   const [categorySuccess, setCategorySuccess] = useState('');
 
-  // AI chat states
-  const [aiPrompt, setAiPrompt] = useState('');
-  const [aiChat, setAiChat] = useState([
-    { role: 'assistant', text: 'Welcome Commander. I am Zibonbaba Core AI. Ask me for real-time sales forecasts, anomaly alerts, or inventory optimization details.' }
-  ]);
+
 
   const handleCreateCategory = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1301,54 +1294,12 @@ export default function AdminDashboardPage() {
     URL.revokeObjectURL(url);
   };
 
-  // AI chat submission via live AI analytics route
-  const handleSendAi = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!aiPrompt.trim()) return;
-    const currentPrompt = aiPrompt;
-    const newChat = [...aiChat, { role: 'user', text: currentPrompt }];
-    setAiChat(newChat);
-    setAiPrompt('');
-
-    try {
-      const activeToken = token || localStorage.getItem('zibonbaba_token');
-      const res = await fetch('/api/admin/ai', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': activeToken ? `Bearer ${activeToken}` : ''
-        },
-        body: JSON.stringify({ prompt: currentPrompt })
-      });
-      const data = await res.json();
-      if (res.ok && data.reply) {
-        setAiChat([...newChat, { role: 'assistant', text: data.reply }]);
-        return;
-      }
-    } catch (err) {
-      console.error('AI API error:', err);
-    }
-
-    // Fallback AI processing
-    const userQ = currentPrompt.toLowerCase();
-    let reply = "Processing data vectors. Our analytics show positive GMV growth across electronic categories (+12.4% over 7 days).";
-    if (userQ.includes('sales') || userQ.includes('revenue')) {
-      reply = `Monthly run-rate forecast is standing at ৳${(totalRevenue * 1.25).toFixed(2)} BDT based on current multi-channel POS checkouts.`;
-    } else if (userQ.includes('stock') || userQ.includes('inventory')) {
-      reply = "Caution: HP-PRO-WHT stock levels are predicted to reach 0 within 4 days. Suggest automated re-procurement request generation.";
-    } else if (userQ.includes('fraud') || userQ.includes('security')) {
-      reply = "Anomaly Shield active. Suspicious rapid auth triggers from node 203.82.19.4 have been fully blocked. Zero losses recorded.";
-    }
-    setAiChat([...newChat, { role: 'assistant', text: reply }]);
-  };
-
   // Navigation module mapping configs
   const navigationGroups = [
     {
       title: 'Real-time Operations',
       items: [
-        { id: 'dashboard', label: 'Dashboard Home', icon: LayoutDashboard },
-        { id: 'ai', label: 'AI Forecasting Hub', icon: BrainCircuit }
+        { id: 'dashboard', label: 'Dashboard Home', icon: LayoutDashboard }
       ]
     },
     {
@@ -1407,7 +1358,6 @@ export default function AdminDashboardPage() {
   // Command palette logic
   const allCommands = [
     { label: 'Go to Dashboard', action: () => { setActiveModule('dashboard'); setCommandPaletteOpen(false); } },
-    { label: 'View AI Intelligence', action: () => { setActiveModule('ai'); setCommandPaletteOpen(false); } },
     { label: 'Manage Orders Register', action: () => { setActiveModule('orders'); setCommandPaletteOpen(false); } },
     { label: 'Open POS Register', action: () => { setActiveModule('pos'); setCommandPaletteOpen(false); } },
     { label: 'Check Warehouse Capacities', action: () => { setActiveModule('warehouse'); setCommandPaletteOpen(false); } },
@@ -1572,18 +1522,7 @@ export default function AdminDashboardPage() {
               <Plus className="w-4 h-4 text-slate-950 stroke-[3px]" /> <span className="hidden xs:inline">ERP</span> Task
             </button>
 
-            {/* AI Assistant toggle */}
-            <button
-              onClick={() => setIsAiPanelOpen(!isAiPanelOpen)}
-              className={`p-2 rounded-xl border transition-all cursor-pointer relative shrink-0 ${
-                isAiPanelOpen 
-                  ? 'bg-blue-600/20 border-blue-500/50 text-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.3)]' 
-                  : 'bg-white/5 border-white/5 text-slate-400 hover:text-white'
-              }`}
-            >
-              <Bot className="w-4 h-4" />
-              <span className="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-            </button>
+
 
             {/* Global Sign Out Button */}
             <button
@@ -1870,62 +1809,7 @@ export default function AdminDashboardPage() {
             </div>
           )}
 
-          {/* ================================================= */}
-          {/* VIEW: AI FORECASTING HUB */}
-          {/* ================================================= */}
-          {activeModule === 'ai' && (
-            <div className="space-y-6 animate-fade-in">
-              <div className="bg-gradient-to-r from-blue-950 to-indigo-950 text-white p-6 rounded-2xl border border-blue-500/20 flex gap-4 items-center shadow-lg">
-                <BrainCircuit className="w-10 h-10 text-blue-400 animate-pulse shrink-0" />
-                <div>
-                  <h2 className="text-sm font-black uppercase tracking-wider">Automated Sales & Fraud Risk Anomaly Hub</h2>
-                  <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">
-                    Artificial Intelligence vectors modeling multi-store warehouse stocks, predicting customer retention indices, and flagging checkout anomalies.
-                  </p>
-                </div>
-              </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-white/[0.02] border border-white/5 p-5 rounded-2xl space-y-4">
-                  <h3 className="text-xs font-black text-slate-300 uppercase tracking-widest border-b border-white/5 pb-3">
-                    Predictive Stock Run-Out Alerts
-                  </h3>
-                  <div className="space-y-3">
-                    {[
-                      { sku: 'HP-PRO-WHT', name: 'SoundMax Headphones', stock: 45, daysLeft: 4, action: 'Reorder 30 Units' },
-                      { sku: 'MUG-SMART-YEL', name: 'Smart Coffee Mug', stock: 12, daysLeft: 2, action: 'Reorder 50 Units' }
-                    ].map((item, idx) => (
-                      <div key={idx} className="p-3 bg-white/5 border border-white/5 rounded-xl text-[10px] text-slate-300 flex justify-between items-center">
-                        <div>
-                          <span className="font-mono font-bold text-white block">{item.sku} // {item.name}</span>
-                          <span className="text-[9px] text-slate-400 mt-1 block">Units Left: {item.stock} | Predicted exhaust timeline: {item.daysLeft} Days</span>
-                        </div>
-                        <span className="bg-[#FFC107] text-slate-950 font-black px-2.5 py-1 rounded-lg text-[9px] uppercase tracking-wider">
-                          {item.action}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="bg-white/[0.02] border border-white/5 p-5 rounded-2xl space-y-4">
-                  <h3 className="text-xs font-black text-slate-300 uppercase tracking-widest border-b border-white/5 pb-3">
-                    Machine Learning Fraud Index
-                  </h3>
-                  <div className="space-y-2.5 font-mono text-[9px]">
-                    <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl flex items-center justify-between text-rose-400">
-                      <span>✓ Blocked checkout attempt from card BIN lookup conflict on IP 203.82.19.4.</span>
-                      <span className="font-black">98.4% Risk</span>
-                    </div>
-                    <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center justify-between text-emerald-400">
-                      <span>✓ Validated payment trace for order #ORD-982104. Verified geographic matches.</span>
-                      <span className="font-black">2.1% Risk</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* ================================================= */}
           {/* VIEW: CUSTOMER REVIEWS & TESTIMONIALS MODERATION */}
@@ -3658,62 +3542,7 @@ export default function AdminDashboardPage() {
         </main>
       </div>
 
-      {/* 3. COLLAPSIBLE FUTURISTIC AI COPILOT SIDE PANEL */}
-      <aside 
-        className={`bg-slate-950/95 backdrop-blur-2xl border-l border-white/5 shrink-0 transition-all duration-300 ${
-          isAiPanelOpen ? 'w-80' : 'w-0 border-l-0 overflow-hidden'
-        } hidden md:flex flex-col z-30 relative`}
-      >
-        <div className="h-16 flex items-center justify-between px-5 border-b border-white/5 shrink-0">
-          <div className="flex items-center gap-2 text-white">
-            <Bot className="w-5 h-5 text-blue-400 animate-pulse" />
-            <span className="font-extrabold text-xs tracking-wider uppercase">Zibonbaba AI Copilot</span>
-          </div>
-          <button 
-            onClick={() => setIsAiPanelOpen(false)}
-            className="p-1.5 hover:bg-white/5 rounded-lg text-slate-400 hover:text-white"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
 
-        {/* AI Chat Area */}
-        <div className="flex-grow overflow-y-auto p-4 space-y-4 scrollbar-thin">
-          {aiChat.map((chat, idx) => (
-            <div 
-              key={idx} 
-              className={`p-3 rounded-2xl text-[10.5px] leading-relaxed ${
-                chat.role === 'assistant' 
-                  ? 'bg-blue-600/10 border border-blue-500/20 text-slate-300' 
-                  : 'bg-white/5 border border-white/5 text-white font-medium ml-6'
-              }`}
-            >
-              <span className="font-bold block uppercase mb-1 text-[8.5px] tracking-wider text-slate-400">
-                {chat.role === 'assistant' ? '🤖 Zibonbaba Core AI' : '👤 Commander'}
-              </span>
-              {chat.text}
-            </div>
-          ))}
-        </div>
-
-        {/* AI Input Form */}
-        <form onSubmit={handleSendAi} className="p-4 border-t border-white/5 bg-slate-950/40 flex gap-2">
-          <input
-            type="text"
-            required
-            placeholder="Ask AI assistant..."
-            value={aiPrompt}
-            onChange={e => setAiPrompt(e.target.value)}
-            className="flex-grow bg-white/5 border border-white/5 rounded-xl px-3.5 py-2 text-xs text-white outline-none focus:border-blue-500"
-          />
-          <button 
-            type="submit" 
-            className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-xl transition-all cursor-pointer active:scale-95"
-          >
-            <Send className="w-4 h-4" />
-          </button>
-        </form>
-      </aside>
 
       {/* 4. MODAL OVERLAY: COMMAND PALETTE */}
       {commandPaletteOpen && (
@@ -4314,7 +4143,7 @@ export default function AdminDashboardPage() {
           { id: 'dashboard', label: 'Home', icon: LayoutDashboard },
           { id: 'marketplace', label: 'Catalog', icon: ShoppingBag },
           { id: 'orders', label: 'Orders', icon: CreditCard },
-          { id: 'ai', label: 'AI Hub', icon: BrainCircuit }
+          { id: 'settings', label: 'Settings', icon: Settings2 }
         ].map((item) => {
           const Icon = item.icon;
           const isActive = activeModule === item.id;

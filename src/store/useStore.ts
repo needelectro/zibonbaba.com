@@ -180,6 +180,12 @@ export interface StoreState {
   fetchSettings: () => Promise<void>;
   updateSettings: (newSettings: any) => Promise<void>;
 
+  // Admin & SuperAdmin Interface Appearance Theme
+  adminTheme: 'light' | 'dark';
+  setAdminTheme: (theme: 'light' | 'dark') => void;
+  toggleAdminTheme: () => void;
+  initAdminTheme: () => void;
+
   // Language Preferences
   language: 'en' | 'bn';
   setLanguage: (lang: 'en' | 'bn') => void;
@@ -1188,6 +1194,36 @@ export const useStore = create<StoreState>((set, get) => {
       }));
       // Instantly notify channels
       console.log('Global settings synchronized across client nodes:', newSettings);
+    },
+
+    // Admin & SuperAdmin Appearance Theme
+    adminTheme: 'dark',
+    initAdminTheme: () => {
+      if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem('zibonbaba_admin_theme') as 'light' | 'dark' | null;
+        if (saved === 'light' || saved === 'dark') {
+          set({ adminTheme: saved });
+          document.documentElement.setAttribute('data-admin-theme', saved);
+        } else {
+          document.documentElement.setAttribute('data-admin-theme', 'dark');
+        }
+      }
+    },
+    setAdminTheme: (theme: 'light' | 'dark') => {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('zibonbaba_admin_theme', theme);
+        document.documentElement.setAttribute('data-admin-theme', theme);
+      }
+      set({ adminTheme: theme });
+    },
+    toggleAdminTheme: () => {
+      const current = get().adminTheme;
+      const nextTheme = current === 'light' ? 'dark' : 'light';
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('zibonbaba_admin_theme', nextTheme);
+        document.documentElement.setAttribute('data-admin-theme', nextTheme);
+      }
+      set({ adminTheme: nextTheme });
     }
   };
 });

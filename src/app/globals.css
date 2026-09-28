@@ -179,3 +179,355 @@ html, body {
 .animate-in-scale {
   animation: fadeInScale 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* ========================================================================= */
+/* ADMIN & SUPERADMIN ENTERPRISE LIGHT THEME SYSTEM                          */
+/* ========================================================================= */
+
+.admin-light,
+[data-admin-theme="light"] {
+  color-scheme: light;
+}
+
+/* Root Viewport and Page Canvas */
+.admin-light,
+.admin-light.bg-slate-950,
+.admin-light.bg-slate-900,
+[data-admin-theme="light"].bg-slate-950,
+[data-admin-theme="light"].bg-slate-900,
+.admin-light > div.bg-slate-900,
+.admin-light > div.bg-slate-950 {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+/* Sidebar and Top Header Navigation */
+.admin-light aside,
+.admin-light .superadmin-sidebar,
+[data-admin-theme="light"] aside {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+.admin-light header,
+[data-admin-theme="light"] header {
+  background-color: rgba(255, 255, 255, 0.92) !important;
+  border-color: #e2e8f0 !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+}
+
+.admin-light header h1,
+.admin-light header span,
+[data-admin-theme="light"] header h1 {
+  color: #0f172a;
+}
+
+/* Card Surfaces and Panels */
+.admin-light .bg-slate-950,
+.admin-light .bg-slate-900,
+[data-admin-theme="light"] .bg-slate-950,
+[data-admin-theme="light"] .bg-slate-900 {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Translucent Dark Backdrops to Crisp Translucent White */
+.admin-light .bg-slate-950\/90,
+.admin-light .bg-slate-950\/80,
+.admin-light .bg-slate-950\/70,
+.admin-light .bg-slate-950\/60,
+.admin-light .bg-slate-950\/40,
+.admin-light .bg-slate-900\/90,
+.admin-light .bg-slate-900\/80,
+.admin-light .bg-slate-900\/60,
+.admin-light .bg-slate-900\/40,
+[data-admin-theme="light"] .bg-slate-950\/90,
+[data-admin-theme="light"] .bg-slate-950\/80,
+[data-admin-theme="light"] .bg-slate-950\/60 {
+  background-color: rgba(255, 255, 255, 0.94) !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Faint dark overlays -> Soft light surfaces */
+.admin-light .bg-white\/5,
+.admin-light .bg-white\/10,
+.admin-light .bg-white\/\[0\.02\],
+.admin-light .bg-white\/\[0\.03\],
+[data-admin-theme="light"] .bg-white\/5,
+[data-admin-theme="light"] .bg-white\/10,
+[data-admin-theme="light"] .bg-white\/\[0\.02\],
+[data-admin-theme="light"] .bg-white\/\[0\.03\] {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Glass Panels and Cards */
+.admin-light .glass-panel,
+.admin-light .glass-card,
+.admin-light .glassmorphism,
+[data-admin-theme="light"] .glass-panel,
+[data-admin-theme="light"] .glass-card {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Borders */
+.admin-light .border-slate-800,
+.admin-light .border-slate-800\/80,
+.admin-light .border-slate-800\/60,
+.admin-light .border-slate-700,
+.admin-light .border-white\/5,
+.admin-light .border-white\/10,
+.admin-light .border-white\/20,
+.admin-light .border-white\/\[0\.05\],
+[data-admin-theme="light"] .border-slate-800,
+[data-admin-theme="light"] .border-slate-800\/80,
+[data-admin-theme="light"] .border-slate-800\/60,
+[data-admin-theme="light"] .border-white\/5,
+[data-admin-theme="light"] .border-white\/10 {
+  border-color: #e2e8f0 !important;
+}
+
+.admin-light .divide-slate-800,
+.admin-light .divide-slate-800\/60,
+[data-admin-theme="light"] .divide-slate-800,
+[data-admin-theme="light"] .divide-slate-800\/60 {
+  border-color: #f1f5f9 !important;
+}
+
+/* Typography Overrides */
+.admin-light .text-white,
+.admin-light .text-slate-100,
+[data-admin-theme="light"] .text-white,
+[data-admin-theme="light"] .text-slate-100 {
+  color: #0f172a !important;
+}
+
+.admin-light .text-slate-200,
+[data-admin-theme="light"] .text-slate-200 {
+  color: #1e293b !important;
+}
+
+.admin-light .text-slate-300,
+[data-admin-theme="light"] .text-slate-300 {
+  color: #334155 !important;
+}
+
+.admin-light .text-slate-400,
+[data-admin-theme="light"] .text-slate-400 {
+  color: #64748b !important;
+}
+
+.admin-light .text-slate-500,
+[data-admin-theme="light"] .text-slate-500 {
+  color: #64748b !important;
+}
+
+/* Preserve White Text on Saturated Action Buttons */
+.admin-light [class*="bg-blue-600"],
+.admin-light [class*="bg-blue-500"],
+.admin-light [class*="bg-emerald-600"],
+.admin-light [class*="bg-emerald-500"],
+.admin-light [class*="bg-rose-600"],
+.admin-light [class*="bg-rose-500"],
+.admin-light [class*="bg-red-600"],
+.admin-light [class*="bg-red-500"],
+.admin-light [class*="bg-indigo-600"],
+.admin-light [class*="bg-purple-600"],
+.admin-light [class*="bg-blue-600"] *,
+.admin-light [class*="bg-blue-500"] *,
+.admin-light [class*="bg-emerald-600"] *,
+.admin-light [class*="bg-emerald-500"] *,
+.admin-light [class*="bg-rose-600"] *,
+.admin-light [class*="bg-rose-500"] *,
+.admin-light [class*="bg-indigo-600"] *,
+.admin-light [class*="bg-purple-600"] *,
+[data-admin-theme="light"] [class*="bg-blue-600"],
+[data-admin-theme="light"] [class*="bg-blue-500"],
+[data-admin-theme="light"] [class*="bg-emerald-600"],
+[data-admin-theme="light"] [class*="bg-emerald-500"],
+[data-admin-theme="light"] [class*="bg-rose-600"],
+[data-admin-theme="light"] [class*="bg-rose-500"] {
+  color: #ffffff !important;
+}
+
+/* Yellow / Amber Buttons maintain dark text */
+.admin-light .bg-amber-500,
+.admin-light .bg-\[\#FFC107\],
+.admin-light [class*="bg-amber-400"],
+.admin-light [class*="bg-amber-500"],
+[data-admin-theme="light"] .bg-amber-500,
+[data-admin-theme="light"] .bg-\[\#FFC107\] {
+  color: #0f172a !important;
+}
+
+/* Hover Backgrounds & Interactions */
+.admin-light .hover\:bg-white\/5:hover,
+.admin-light .hover\:bg-white\/10:hover,
+.admin-light .hover\:bg-slate-850:hover,
+.admin-light .hover\:bg-slate-900:hover,
+.admin-light .hover\:bg-slate-800:hover,
+.admin-light .hover\:bg-slate-800\/60:hover,
+[data-admin-theme="light"] .hover\:bg-slate-800:hover,
+[data-admin-theme="light"] .hover\:bg-slate-800\/60:hover {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+.admin-light .hover\:text-white:hover,
+[data-admin-theme="light"] .hover\:text-white:hover {
+  color: #0f172a !important;
+}
+
+/* Form Inputs, Textareas, and Selects */
+.admin-light input:not([type="checkbox"]):not([type="radio"]),
+.admin-light textarea,
+.admin-light select,
+[data-admin-theme="light"] input:not([type="checkbox"]):not([type="radio"]),
+[data-admin-theme="light"] textarea,
+[data-admin-theme="light"] select {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+.admin-light input::placeholder,
+.admin-light textarea::placeholder,
+[data-admin-theme="light"] input::placeholder,
+[data-admin-theme="light"] textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+.admin-light input:focus,
+.admin-light textarea:focus,
+.admin-light select:focus,
+[data-admin-theme="light"] input:focus,
+[data-admin-theme="light"] textarea:focus,
+[data-admin-theme="light"] select:focus {
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2) !important;
+}
+
+/* Tables in Light Mode */
+.admin-light thead,
+[data-admin-theme="light"] thead {
+  background-color: #f8fafc !important;
+  color: #475569 !important;
+  border-color: #e2e8f0 !important;
+}
+
+.admin-light thead th,
+[data-admin-theme="light"] thead th {
+  color: #475569 !important;
+  border-color: #e2e8f0 !important;
+}
+
+.admin-light tbody tr,
+[data-admin-theme="light"] tbody tr {
+  border-color: #f1f5f9 !important;
+  background-color: #ffffff;
+}
+
+.admin-light tbody tr:hover,
+[data-admin-theme="light"] tbody tr:hover {
+  background-color: #f8fafc !important;
+}
+
+.admin-light tbody td,
+[data-admin-theme="light"] tbody td {
+  color: #1e293b !important;
+}
+
+/* Slide-over Drawers and Modals */
+.admin-light .fixed .bg-slate-900,
+.admin-light .fixed .bg-slate-950,
+[data-admin-theme="light"] .fixed .bg-slate-900,
+[data-admin-theme="light"] .fixed .bg-slate-950 {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Card Shadows & Elevation */
+.admin-light .shadow-xl,
+.admin-light .shadow-2xl,
+[data-admin-theme="light"] .shadow-xl,
+[data-admin-theme="light"] .shadow-2xl {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Status Badges */
+.admin-light .bg-emerald-500\/10,
+.admin-light .bg-emerald-400\/10,
+[data-admin-theme="light"] .bg-emerald-500\/10 {
+  background-color: #ecfdf5 !important;
+  border-color: #a7f3d0 !important;
+  color: #047857 !important;
+}
+
+.admin-light .text-emerald-400,
+[data-admin-theme="light"] .text-emerald-400 {
+  color: #059669 !important;
+}
+
+.admin-light .bg-amber-500\/10,
+.admin-light .bg-amber-400\/10,
+[data-admin-theme="light"] .bg-amber-500\/10 {
+  background-color: #fffbeb !important;
+  border-color: #fde68a !important;
+  color: #b45309 !important;
+}
+
+.admin-light .text-amber-400,
+.admin-light .text-amber-500,
+[data-admin-theme="light"] .text-amber-400 {
+  color: #d97706 !important;
+}
+
+.admin-light .bg-rose-500\/10,
+.admin-light .bg-rose-400\/10,
+[data-admin-theme="light"] .bg-rose-500\/10 {
+  background-color: #fff1f2 !important;
+  border-color: #fecdd3 !important;
+  color: #be123c !important;
+}
+
+.admin-light .text-rose-400,
+.admin-light .text-rose-500,
+[data-admin-theme="light"] .text-rose-400 {
+  color: #e11d48 !important;
+}
+
+.admin-light .bg-blue-500\/10,
+.admin-light .bg-blue-400\/10,
+[data-admin-theme="light"] .bg-blue-500\/10 {
+  background-color: #eff6ff !important;
+  border-color: #bfdbfe !important;
+  color: #1d4ed8 !important;
+}
+
+.admin-light .text-blue-400,
+.admin-light .text-blue-500,
+[data-admin-theme="light"] .text-blue-400 {
+  color: #2563eb !important;
+}
+
+/* Light Scrollbar */
+.admin-light ::-webkit-scrollbar-track,
+[data-admin-theme="light"] ::-webkit-scrollbar-track {
+  background-color: #f8fafc !important;
+}
+
+.admin-light ::-webkit-scrollbar-thumb,
+[data-admin-theme="light"] ::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1 !important;
+}
+
+.admin-light ::-webkit-scrollbar-thumb:hover,
+[data-admin-theme="light"] ::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8 !important;
+}
+

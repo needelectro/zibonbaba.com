@@ -20,13 +20,15 @@ import {
   Users,
   ShoppingBag,
   Store,
-  AlertCircle
+  AlertCircle,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 
 export default function AdminSystemHealthPage() {
   const router = useRouter();
-  const { token, isLoggedIn, role } = useStore();
+  const { token, isLoggedIn, role, adminTheme, toggleAdminTheme, initAdminTheme } = useStore();
 
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
@@ -62,13 +64,19 @@ export default function AdminSystemHealthPage() {
   };
 
   useEffect(() => {
+    initAdminTheme();
     fetchHealth();
     const interval = setInterval(fetchHealth, 30000); // Auto-refresh every 30s
     return () => clearInterval(interval);
-  }, [token]);
+  }, [token, initAdminTheme]);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-4 sm:p-8">
+    <div
+      data-admin-theme={adminTheme}
+      className={`min-h-screen transition-colors duration-200 ${
+        adminTheme === 'light' ? 'admin-light bg-slate-50 text-slate-900' : 'admin-dark bg-slate-950 text-slate-100'
+      } p-4 sm:p-8`}
+    >
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header / Breadcrumbs */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-6">
@@ -95,6 +103,24 @@ export default function AdminSystemHealthPage() {
                 Last checked: {lastChecked}
               </span>
             )}
+            {/* Theme Toggle Button */}
+            <button
+              onClick={toggleAdminTheme}
+              className="p-2 sm:px-3 sm:py-2 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 hover:text-white transition-all text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
+              title={adminTheme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+            >
+              {adminTheme === 'light' ? (
+                <>
+                  <Moon className="w-3.5 h-3.5 text-indigo-500" />
+                  <span className="hidden sm:inline">Dark</span>
+                </>
+              ) : (
+                <>
+                  <Sun className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="hidden sm:inline">Light</span>
+                </>
+              )}
+            </button>
             <button
               onClick={fetchHealth}
               disabled={loading}

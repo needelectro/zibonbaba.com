@@ -15,9 +15,13 @@ import {
   Server,
   ToggleLeft,
   ToggleRight,
+  Sun,
+  Moon,
 } from 'lucide-react';
+import { useStore } from '@/store/useStore';
 
 export default function SystemSettingsPage() {
+  const { adminTheme, setAdminTheme } = useStore();
   const [platformName, setPlatformName] = useState('Zibonbaba.com');
   const [supportEmail, setSupportEmail] = useState('support@zibonbaba.com');
   const [supportPhone, setSupportPhone] = useState('+880 1711-000000');
@@ -149,6 +153,50 @@ export default function SystemSettingsPage() {
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white outline-none focus:border-amber-500 font-semibold"
               />
             </div>
+          </div>
+        </div>
+
+        {/* ── Interface Theme Appearance Policy ── */}
+        <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6 shadow-xl">
+          <div className="pb-4 border-b border-slate-800 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+                <Sun className="w-4 h-4 text-amber-400" /> Interface Theme Appearance
+              </h2>
+              <p className="text-xs text-slate-400 mt-0.5">Toggle between Enterprise Midnight Dark mode and Clean Daylight Light mode</p>
+            </div>
+            <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 p-1.5 rounded-2xl shrink-0">
+              <button
+                type="button"
+                onClick={() => setAdminTheme('light')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  adminTheme === 'light'
+                    ? 'bg-amber-500 text-slate-950 font-black shadow-md'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Sun size={15} /> Light Daylight
+              </button>
+              <button
+                type="button"
+                onClick={() => setAdminTheme('dark')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  adminTheme === 'dark'
+                    ? 'bg-slate-800 text-white font-black shadow-md border border-slate-700'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Moon size={15} /> Dark Midnight
+              </button>
+            </div>
+          </div>
+          <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800/80 text-xs flex items-center justify-between">
+            <span className="text-slate-300 font-medium">
+              Current active theme preference is saved across browser sessions for Superadmin and Admin consoles.
+            </span>
+            <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
+              {adminTheme} Mode Active
+            </span>
           </div>
         </div>
 

@@ -20,6 +20,8 @@ import {
   Menu,
   X,
   ChevronRight,
+  Sun,
+  Moon,
 } from 'lucide-react';
 
 interface SuperAdminLayoutProps {
@@ -37,14 +39,15 @@ export default function SuperAdminLayout({
 }: SuperAdminLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { isLoggedIn, role, logout, username } = useStore();
+  const { isLoggedIn, role, logout, username, adminTheme, toggleAdminTheme, initAdminTheme } = useStore();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     setIsMounted(true);
-  }, []);
+    initAdminTheme();
+  }, [initAdminTheme]);
 
   if (!isMounted) return null;
 
@@ -109,7 +112,12 @@ export default function SuperAdminLayout({
   };
 
   return (
-    <div className="flex h-screen bg-slate-900 text-slate-100 font-sans overflow-hidden">
+    <div
+      data-admin-theme={adminTheme}
+      className={`flex h-screen font-sans overflow-hidden transition-colors duration-200 ${
+        adminTheme === 'light' ? 'admin-light bg-slate-100 text-slate-900' : 'admin-dark bg-slate-900 text-slate-100'
+      }`}
+    >
       {/* ── Sidebar Navigation ── */}
       <aside
         className={`${
@@ -218,6 +226,25 @@ export default function SuperAdminLayout({
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
               <span>All Systems Operational</span>
             </div>
+
+            {/* Theme Switcher Toggle */}
+            <button
+              onClick={toggleAdminTheme}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 hover:text-white transition-all text-xs font-bold shrink-0 cursor-pointer shadow-sm active:scale-95"
+              title={adminTheme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+            >
+              {adminTheme === 'light' ? (
+                <>
+                  <Moon size={14} className="text-indigo-500" />
+                  <span className="hidden sm:inline">Dark</span>
+                </>
+              ) : (
+                <>
+                  <Sun size={14} className="text-amber-400" />
+                  <span className="hidden sm:inline">Light</span>
+                </>
+              )}
+            </button>
 
             {/* Back to Site Button */}
             <Link

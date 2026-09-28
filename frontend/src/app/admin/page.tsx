@@ -60,7 +60,9 @@ import {
   RefreshCw,
   EyeOff,
   Menu,
-  Star
+  Star,
+  Sun,
+  Moon
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -91,7 +93,11 @@ export default function AdminDashboardPage() {
     isLoggedIn,
     role,
     logout,
-    username
+    username,
+    adminTheme,
+    toggleAdminTheme,
+    setAdminTheme,
+    initAdminTheme
   } = useStore();
   const [activeModule, setActiveModule] = useState<AdminModule>('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -359,6 +365,7 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     setIsMounted(true);
+    initAdminTheme();
     fetchProducts();
     fetchOrders();
     fetchCrmCustomers();
@@ -1372,7 +1379,12 @@ export default function AdminDashboardPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-950 text-slate-100 font-sans relative overflow-hidden">
+    <div
+      data-admin-theme={adminTheme}
+      className={`flex min-h-screen font-sans relative overflow-hidden transition-colors duration-200 ${
+        adminTheme === 'light' ? 'admin-light bg-slate-50 text-slate-900' : 'admin-dark bg-slate-950 text-slate-100'
+      }`}
+    >
       {/* Dynamic Futuristic Background Glows */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#FFC107]/5 blur-[120px] rounded-full pointer-events-none z-0" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[45%] h-[45%] bg-blue-500/5 blur-[120px] rounded-full pointer-events-none z-0" />
@@ -1513,6 +1525,25 @@ export default function AdminDashboardPage() {
               <Activity className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
               <span className="hidden xl:inline">Diagnostics</span>
             </Link>
+
+            {/* Theme Switcher Toggle */}
+            <button
+              onClick={toggleAdminTheme}
+              className="bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/5 text-[11px] font-bold px-2.5 sm:px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer shrink-0 active:scale-95"
+              title={adminTheme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+            >
+              {adminTheme === 'light' ? (
+                <>
+                  <Moon className="w-3.5 h-3.5 text-indigo-500" />
+                  <span className="hidden sm:inline">Dark</span>
+                </>
+              ) : (
+                <>
+                  <Sun className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="hidden sm:inline">Light</span>
+                </>
+              )}
+            </button>
 
             {/* Quick action triggers */}
             <button
@@ -3342,6 +3373,56 @@ export default function AdminDashboardPage() {
           {/* ================================================= */}
           {activeModule === 'settings' && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in">
+              {/* Interface Theme Appearance */}
+              <div className="lg:col-span-2 bg-white/[0.02] border border-white/5 p-5 rounded-2xl shadow-xl space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/5 pb-3">
+                  <div>
+                    <h3 className="text-xs font-black text-slate-300 uppercase tracking-widest flex items-center gap-2">
+                      <Sun className="w-4 h-4 text-amber-400" /> Interface Theme & Display Appearance
+                    </h3>
+                    <p className="text-[10px] text-slate-400 mt-0.5">Toggle between Enterprise Midnight Dark mode and Clean Daylight Light mode</p>
+                  </div>
+                  <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full border bg-amber-400/10 text-amber-400 border-amber-400/20 capitalize self-start sm:self-auto">
+                    {adminTheme} Mode Active
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setAdminTheme('light')}
+                    className={`p-4 rounded-xl border flex items-center gap-3 transition-all cursor-pointer ${
+                      adminTheme === 'light'
+                        ? 'bg-amber-500/15 border-amber-500 text-amber-500 shadow-md font-black'
+                        : 'bg-white/5 border-white/5 text-slate-400 hover:text-white font-bold'
+                    }`}
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
+                      <Sun className="w-5 h-5" />
+                    </div>
+                    <div className="text-left">
+                      <div className="text-xs font-bold text-white">Light Daylight Mode</div>
+                      <div className="text-[10px] text-slate-400">High-contrast, clean white surfaces with crisp typography</div>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAdminTheme('dark')}
+                    className={`p-4 rounded-xl border flex items-center gap-3 transition-all cursor-pointer ${
+                      adminTheme === 'dark'
+                        ? 'bg-amber-500/15 border-amber-500 text-amber-500 shadow-md font-black'
+                        : 'bg-white/5 border-white/5 text-slate-400 hover:text-white font-bold'
+                    }`}
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
+                      <Moon className="w-5 h-5" />
+                    </div>
+                    <div className="text-left">
+                      <div className="text-xs font-bold text-white">Dark Midnight Mode</div>
+                      <div className="text-[10px] text-slate-400">Deep slate enterprise palette optimized for low light</div>
+                    </div>
+                  </button>
+                </div>
+              </div>
               <div className="bg-white/[0.02] border border-white/5 p-5 rounded-2xl shadow-xl space-y-4">
                 <h3 className="text-xs font-black text-slate-300 uppercase tracking-widest border-b border-white/5 pb-3">
                   General System Variables

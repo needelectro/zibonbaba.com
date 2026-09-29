@@ -1378,54 +1378,64 @@ export default function AdminDashboardPage() {
     window.location.href = '/admin/login';
   };
 
+  const isLight = adminTheme === 'light';
+
   return (
     <div
       data-admin-theme={adminTheme}
       className={`flex min-h-screen font-sans relative overflow-hidden transition-colors duration-200 ${
-        adminTheme === 'light' ? 'admin-light bg-slate-50 text-slate-900' : 'admin-dark bg-slate-950 text-slate-100'
+        isLight ? 'admin-light bg-slate-50 text-slate-900' : 'admin-dark bg-slate-950 text-slate-100'
       }`}
     >
       {/* Dynamic Futuristic Background Glows */}
-      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#FFC107]/5 blur-[120px] rounded-full pointer-events-none z-0" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[45%] h-[45%] bg-blue-500/5 blur-[120px] rounded-full pointer-events-none z-0" />
+      <div className={`absolute top-[-10%] left-[-10%] w-[50%] h-[50%] ${isLight ? 'bg-amber-400/5' : 'bg-[#FFC107]/5'} blur-[120px] rounded-full pointer-events-none z-0`} />
+      <div className={`absolute bottom-[-10%] right-[-10%] w-[45%] h-[45%] ${isLight ? 'bg-blue-500/5' : 'bg-blue-500/5'} blur-[120px] rounded-full pointer-events-none z-0`} />
 
       {/* 1. FUTURISTIC GLASS SIDEBAR NAVIGATION */}
       <aside 
-        className={`bg-slate-950/80 backdrop-blur-xl shrink-0 border-r border-white/5 transition-all duration-300 ${
+        className={`${
+          isLight
+            ? 'bg-white border-r border-slate-200 shadow-[2px_0_12px_rgba(0,0,0,0.03)]'
+            : 'bg-slate-950/80 backdrop-blur-xl border-r border-white/5'
+        } shrink-0 transition-all duration-300 ${
           isSidebarOpen ? 'w-64' : 'w-20'
         } hidden md:flex flex-col z-30 relative`}
       >
         {/* Sidebar Header */}
-        <div className="h-16 flex items-center justify-between px-5 border-b border-white/5 shrink-0">
+        <div className={`h-16 flex items-center justify-between px-5 border-b ${isLight ? 'border-slate-200' : 'border-white/5'} shrink-0`}>
           {isSidebarOpen ? (
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#FFC107] to-amber-500 flex items-center justify-center font-black text-slate-950 shadow-[0_0_15px_rgba(255,193,7,0.3)] animate-pulse">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#FFC107] to-amber-500 flex items-center justify-center font-black text-slate-950 shadow-md">
                 Z
               </div>
-              <span className="font-extrabold text-xs tracking-wider uppercase text-white">
-                Zibon<span className="text-[#FFC107]">baba</span> <span className="text-[10px] text-slate-400 font-normal">ERP</span>
+              <span className={`font-extrabold text-xs tracking-wider uppercase ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                Zibon<span className="text-amber-500">baba</span> <span className={`text-[10px] ${isLight ? 'text-slate-600' : 'text-slate-400'} font-semibold ml-1 px-1.5 py-0.5 rounded ${isLight ? 'bg-slate-100' : 'bg-white/5'}`}>ERP</span>
               </span>
             </div>
           ) : (
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#FFC107] to-amber-500 flex items-center justify-center font-black text-slate-950 shadow-[0_0_15px_rgba(255,193,7,0.3)] mx-auto">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#FFC107] to-amber-500 flex items-center justify-center font-black text-slate-950 shadow-md mx-auto">
               Z
             </div>
           )}
           <button 
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="p-1.5 hover:bg-white/5 rounded-lg transition-colors text-slate-400 hover:text-white cursor-pointer"
+            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+              isLight ? 'hover:bg-slate-100 text-slate-500 hover:text-slate-900' : 'hover:bg-white/5 text-slate-400 hover:text-white'
+            }`}
           >
             <ChevronRight className={`w-4 h-4 transition-transform duration-300 ${isSidebarOpen ? 'rotate-180' : ''}`} />
           </button>
         </div>
 
         {/* Sidebar Scroll Area */}
-        <div className="flex-grow overflow-y-auto py-5 px-4 space-y-6 scrollbar-thin scrollbar-thumb-white/5">
+        <div className="flex-grow overflow-y-auto py-5 px-3 space-y-6 scrollbar-thin">
           {navigationGroups.map((group, groupIdx) => (
-            <div key={groupIdx} className="space-y-1.5">
+            <div key={groupIdx} className="space-y-1">
               {isSidebarOpen && (
-                <h3 className="text-[9px] font-black text-slate-500 uppercase tracking-widest px-3 mb-2 flex items-center gap-1.5">
-                  <span className="w-1 h-1 bg-[#FFC107] rounded-full" />
+                <h3 className={`text-[10px] font-black uppercase tracking-wider px-3 mb-2 flex items-center gap-1.5 ${
+                  isLight ? 'text-slate-400' : 'text-slate-500'
+                }`}>
+                  <span className="w-1.5 h-1.5 bg-amber-500 rounded-full" />
                   {group.title}
                 </h3>
               )}
@@ -1436,19 +1446,29 @@ export default function AdminDashboardPage() {
                   <button
                     key={item.id}
                     onClick={() => setActiveModule(item.id as AdminModule)}
-                    className={`w-full flex items-center gap-3 px-3 py-2 text-xs font-bold rounded-xl transition-all relative cursor-pointer ${
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold rounded-xl transition-all relative cursor-pointer ${
                       isActive 
-                        ? 'bg-gradient-to-r from-[#FFC107]/20 to-[#FFC107]/5 border border-[#FFC107]/30 text-white shadow-[0_0_15px_rgba(255,193,7,0.05)]' 
-                        : 'text-slate-400 hover:bg-white/5 hover:text-white border border-transparent'
+                        ? isLight
+                          ? 'bg-amber-500 text-slate-950 font-black shadow-sm'
+                          : 'bg-gradient-to-r from-[#FFC107]/20 to-[#FFC107]/5 border border-[#FFC107]/30 text-white shadow-[0_0_15px_rgba(255,193,7,0.05)]' 
+                        : isLight
+                          ? 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                          : 'text-slate-400 hover:bg-white/5 hover:text-white'
                     }`}
                   >
-                    <Icon className={`w-4 h-4 shrink-0 transition-transform ${isActive ? 'text-[#FFC107] scale-110' : 'text-slate-400'}`} />
+                    <Icon className={`w-4 h-4 shrink-0 transition-transform ${
+                      isActive 
+                        ? isLight ? 'text-slate-950 scale-110' : 'text-[#FFC107] scale-110' 
+                        : isLight ? 'text-slate-500' : 'text-slate-400'
+                    }`} />
                     {isSidebarOpen && <span className="truncate">{item.label}</span>}
                     
                     {/* Dynamic Sidebar Badges */}
                     {(item as any).badge !== undefined && (item as any).badge > 0 && (
-                      <span className={`absolute right-3 top-2.5 text-[8.5px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center border ${
-                        isActive ? 'bg-[#FFC107] text-slate-950 border-[#FFC107]' : 'bg-blue-600 text-white border-blue-500'
+                      <span className={`absolute right-3 top-2.5 text-[9px] font-black px-1.5 py-0.5 rounded-full flex items-center justify-center ${
+                        isActive 
+                          ? isLight ? 'bg-slate-950 text-white' : 'bg-[#FFC107] text-slate-950' 
+                          : 'bg-blue-600 text-white'
                       }`}>
                         {(item as any).badge}
                       </span>
@@ -1461,21 +1481,29 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Sidebar Profile Switcher & Sign Out */}
-        <div className="p-4 border-t border-white/5 shrink-0 bg-slate-950/60 space-y-2">
+        <div className={`p-4 border-t shrink-0 space-y-2 ${
+          isLight ? 'border-slate-200 bg-slate-50/80' : 'border-white/5 bg-slate-950/60'
+        }`}>
           {isSidebarOpen && (
-            <div className="flex items-center gap-2.5 px-2 py-1.5 rounded-xl bg-white/[0.02] border border-white/5 mb-2">
-              <div className="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-400 font-black text-xs flex items-center justify-center border border-amber-500/30 shrink-0">
+            <div className={`flex items-center gap-2.5 px-3 py-2 rounded-xl border mb-2 ${
+              isLight ? 'bg-white border-slate-200 shadow-xs' : 'bg-white/[0.02] border-white/5'
+            }`}>
+              <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400 font-black text-xs flex items-center justify-center border border-amber-500/30 shrink-0">
                 {(username || role || 'A').charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-[11px] font-bold text-white truncate">{username || 'Admin'}</p>
-                <p className="text-[9px] text-amber-400 font-extrabold uppercase tracking-wider">{role || 'ADMIN'}</p>
+                <p className={`text-xs font-bold truncate ${isLight ? 'text-slate-900' : 'text-white'}`}>{username || 'Admin'}</p>
+                <p className="text-[9px] text-amber-600 dark:text-amber-400 font-extrabold uppercase tracking-wider">{role || 'ADMIN'}</p>
               </div>
             </div>
           )}
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 text-xs font-bold py-2.5 rounded-xl transition-all border border-rose-500/20 cursor-pointer active:scale-98"
+            className={`w-full flex items-center justify-center gap-2 text-xs font-bold py-2.5 rounded-xl transition-all border cursor-pointer active:scale-98 ${
+              isLight
+                ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200'
+                : 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 border-rose-500/20'
+            }`}
             title="Sign Out of Admin Console"
           >
             <LogOut className="w-4 h-4 shrink-0" />
@@ -1488,20 +1516,29 @@ export default function AdminDashboardPage() {
       <div className="flex-1 flex flex-col min-h-screen overflow-x-hidden relative z-10">
         
         {/* Global Transparent Header */}
-        <header className="h-16 bg-slate-950/60 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-4 sm:px-6 shrink-0 z-20">
+        <header className={`h-16 border-b flex items-center justify-between px-4 sm:px-6 shrink-0 z-20 ${
+          isLight
+            ? 'bg-white/95 backdrop-blur-md border-slate-200 shadow-xs'
+            : 'bg-slate-950/60 backdrop-blur-md border-white/5'
+        }`}>
           <div className="flex items-center gap-3">
             {/* Mobile Sidebar Hamburger Toggle (< md) */}
             <button
               onClick={() => setIsMobileDrawerOpen(true)}
-              className="md:hidden p-2 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/10 cursor-pointer active:scale-95 transition-all"
+              className={`md:hidden p-2 rounded-xl border cursor-pointer active:scale-95 transition-all ${
+                isLight
+                  ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+                  : 'bg-white/5 hover:bg-white/10 text-white border-white/10'
+              }`}
               title="Open Navigation Menu"
             >
-              <Menu className="w-4 h-4 text-amber-400" />
+              <Menu className="w-4 h-4 text-amber-500" />
             </button>
 
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping shadow-[0_0_10px_rgba(16,185,129,0.5)] shrink-0"></span>
-            <h1 className="text-xs font-bold uppercase tracking-widest text-slate-400 truncate">
-              <span className="hidden sm:inline">Operations Center // </span><span className="text-white font-extrabold capitalize text-sm">{activeModule}</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping shadow-[0_0_10px_rgba(16,185,129,0.5)] shrink-0" />
+            <h1 className="text-xs font-bold uppercase tracking-wider truncate">
+              <span className={`hidden sm:inline ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Operations Center // </span>
+              <span className={`font-black capitalize text-sm ${isLight ? 'text-slate-900' : 'text-white'}`}>{activeModule}</span>
             </h1>
           </div>
 
@@ -1509,32 +1546,46 @@ export default function AdminDashboardPage() {
             {/* Search command shortcut */}
             <button
               onClick={() => setCommandPaletteOpen(true)}
-              className="bg-white/5 hover:bg-white/10 text-slate-400 border border-white/5 text-[11px] font-bold px-2.5 sm:px-3 py-1.5 rounded-xl flex items-center gap-1.5 sm:gap-2 transition-colors cursor-pointer"
+              className={`border text-[11px] font-bold px-2.5 sm:px-3 py-1.5 rounded-xl flex items-center gap-1.5 sm:gap-2 transition-colors cursor-pointer ${
+                isLight
+                  ? 'bg-slate-100 hover:bg-slate-200/80 text-slate-700 border-slate-200'
+                  : 'bg-white/5 hover:bg-white/10 text-slate-400 border-white/5'
+              }`}
             >
               <Search className="w-3.5 h-3.5" />
               <span className="hidden lg:inline">Search Command...</span>
-              <span className="bg-slate-950 px-1.5 py-0.5 rounded text-[9px] border border-white/5">Ctrl+K</span>
+              <span className={`px-1.5 py-0.5 rounded text-[9px] border font-mono ${
+                isLight ? 'bg-white text-slate-600 border-slate-200' : 'bg-slate-950 text-slate-400 border-white/5'
+              }`}>Ctrl+K</span>
             </button>
 
             {/* Diagnostics Link */}
             <Link
               href="/admin/system-health"
-              className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-[11px] font-bold px-2.5 sm:px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
+              className={`border text-[11px] font-bold px-2.5 sm:px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer shrink-0 ${
+                isLight
+                  ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'
+                  : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/20'
+              }`}
               title="Real-Time System Diagnostics"
             >
-              <Activity className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+              <Activity className="w-3.5 h-3.5 text-emerald-500 animate-pulse" />
               <span className="hidden xl:inline">Diagnostics</span>
             </Link>
 
             {/* Theme Switcher Toggle */}
             <button
               onClick={toggleAdminTheme}
-              className="bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/5 text-[11px] font-bold px-2.5 sm:px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer shrink-0 active:scale-95"
-              title={adminTheme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+              className={`border text-[11px] font-bold px-2.5 sm:px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer shrink-0 active:scale-95 ${
+                isLight
+                  ? 'bg-slate-100 hover:bg-slate-200/80 text-slate-700 border-slate-200 shadow-xs'
+                  : 'bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border-white/5'
+              }`}
+              title={isLight ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
             >
-              {adminTheme === 'light' ? (
+              {isLight ? (
                 <>
-                  <Moon className="w-3.5 h-3.5 text-indigo-500" />
+                  <Moon className="w-3.5 h-3.5 text-indigo-600" />
                   <span className="hidden sm:inline">Dark</span>
                 </>
               ) : (
@@ -1548,17 +1599,19 @@ export default function AdminDashboardPage() {
             {/* Quick action triggers */}
             <button
               onClick={() => setShowQuickActionModal(true)}
-              className="bg-[#FFC107] hover:bg-[#FFC107]/90 text-slate-950 font-black text-xs py-1.5 px-2.5 sm:px-3 rounded-xl flex items-center gap-1.5 shadow-[0_0_15px_rgba(255,193,7,0.15)] transition-all cursor-pointer active:scale-95 shrink-0"
+              className="bg-[#FFC107] hover:bg-amber-400 text-slate-950 font-black text-xs py-1.5 px-2.5 sm:px-3 rounded-xl flex items-center gap-1.5 shadow-sm transition-all cursor-pointer active:scale-95 shrink-0"
             >
               <Plus className="w-4 h-4 text-slate-950 stroke-[3px]" /> <span className="hidden xs:inline">ERP</span> Task
             </button>
 
-
-
             {/* Global Sign Out Button */}
             <button
               onClick={handleLogout}
-              className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 border border-rose-500/20 text-xs font-black px-2.5 sm:px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer active:scale-95 shrink-0"
+              className={`border text-xs font-black px-2.5 sm:px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer active:scale-95 shrink-0 ${
+                isLight
+                  ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200'
+                  : 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 border-rose-500/20'
+              }`}
               title="Log Out of System"
             >
               <LogOut className="w-3.5 h-3.5" />
@@ -1573,22 +1626,26 @@ export default function AdminDashboardPage() {
             className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm md:hidden animate-fade-in flex"
             onClick={(e) => { if (e.target === e.currentTarget) setIsMobileDrawerOpen(false); }}
           >
-            <div className="w-[85%] max-w-[300px] bg-slate-950 h-full flex flex-col justify-between border-r border-white/10 shadow-2xl animate-slide-up overflow-y-auto">
-              <div className="p-4 border-b border-white/10 flex items-center justify-between">
+            <div className={`w-[85%] max-w-[300px] h-full flex flex-col justify-between border-r shadow-2xl animate-slide-up overflow-y-auto ${
+              isLight ? 'bg-white border-slate-200 text-slate-900' : 'bg-slate-950 border-white/10 text-white'
+            }`}>
+              <div className={`p-4 border-b flex items-center justify-between ${isLight ? 'border-slate-200' : 'border-white/10'}`}>
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#FFC107] to-amber-500 flex items-center justify-center font-black text-slate-950 text-sm shadow-glow">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#FFC107] to-amber-500 flex items-center justify-center font-black text-slate-950 text-sm shadow-md">
                     Z
                   </div>
                   <div>
-                    <h3 className="font-extrabold text-xs uppercase tracking-wider text-white">
-                      Zibon<span className="text-[#FFC107]">baba</span> ERP
+                    <h3 className={`font-extrabold text-xs uppercase tracking-wider ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                      Zibon<span className="text-amber-500">baba</span> ERP
                     </h3>
-                    <span className="text-[9px] text-amber-400 font-bold uppercase">Operations Hub</span>
+                    <span className="text-[9px] text-amber-500 font-bold uppercase">Operations Hub</span>
                   </div>
                 </div>
                 <button
                   onClick={() => setIsMobileDrawerOpen(false)}
-                  className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
+                  className={`p-1 rounded-lg transition-colors ${
+                    isLight ? 'text-slate-500 hover:text-slate-900 hover:bg-slate-100' : 'text-slate-400 hover:text-white hover:bg-white/10'
+                  }`}
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -1597,8 +1654,10 @@ export default function AdminDashboardPage() {
               <div className="flex-1 overflow-y-auto p-4 space-y-5">
                 {navigationGroups.map((group, groupIdx) => (
                   <div key={groupIdx} className="space-y-1">
-                    <h4 className="text-[9px] font-black text-slate-500 uppercase tracking-widest px-2 mb-1.5 flex items-center gap-1.5">
-                      <span className="w-1 h-1 bg-[#FFC107] rounded-full" />
+                    <h4 className={`text-[9px] font-black uppercase tracking-widest px-2 mb-1.5 flex items-center gap-1.5 ${
+                      isLight ? 'text-slate-400' : 'text-slate-500'
+                    }`}>
+                      <span className="w-1 h-1 bg-amber-500 rounded-full" />
                       {group.title}
                     </h4>
                     {group.items.map((item) => {
@@ -1613,11 +1672,19 @@ export default function AdminDashboardPage() {
                           }}
                           className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-xl transition-all text-left ${
                             isActive
-                              ? 'bg-[#FFC107]/20 border border-[#FFC107]/30 text-white shadow-glow'
-                              : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                              ? isLight
+                                ? 'bg-amber-500 text-slate-950 font-black shadow-sm'
+                                : 'bg-[#FFC107]/20 border border-[#FFC107]/30 text-white shadow-glow'
+                              : isLight
+                                ? 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                                : 'text-slate-400 hover:bg-white/5 hover:text-white'
                           }`}
                         >
-                          <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#FFC107]' : 'text-slate-400'}`} />
+                          <Icon className={`w-4 h-4 shrink-0 ${
+                            isActive 
+                              ? isLight ? 'text-slate-950' : 'text-[#FFC107]' 
+                              : isLight ? 'text-slate-500' : 'text-slate-400'
+                          }`} />
                           <span className="truncate">{item.label}</span>
                         </button>
                       );
@@ -1626,16 +1693,20 @@ export default function AdminDashboardPage() {
                 ))}
               </div>
 
-              <div className="p-4 border-t border-white/10 bg-slate-900/60 space-y-2">
+              <div className={`p-4 border-t space-y-2 ${isLight ? 'border-slate-200 bg-slate-50' : 'border-white/10 bg-slate-900/60'}`}>
                 <Link
                   href="/"
-                  className="flex items-center gap-2 text-xs text-slate-400 hover:text-white px-3 py-2 rounded-lg hover:bg-white/5 transition-colors"
+                  className={`flex items-center gap-2 text-xs px-3 py-2 rounded-lg transition-colors ${
+                    isLight ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' : 'text-slate-400 hover:text-white hover:bg-white/5'
+                  }`}
                 >
                   <ChevronRight className="w-3.5 h-3.5 rotate-180" /> Back to Marketplace
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-2 text-xs text-rose-400 hover:text-rose-300 px-3 py-2 rounded-lg hover:bg-rose-500/10 transition-colors font-bold"
+                  className={`w-full flex items-center gap-2 text-xs px-3 py-2 rounded-lg transition-colors font-bold ${
+                    isLight ? 'text-rose-700 hover:bg-rose-50' : 'text-rose-400 hover:text-rose-300 hover:bg-rose-500/10'
+                  }`}
                 >
                   <LogOut className="w-3.5 h-3.5" /> Sign Out
                 </button>
@@ -1645,14 +1716,14 @@ export default function AdminDashboardPage() {
         )}
 
         {/* Dynamic Viewport Scroll Area */}
-        <main className="flex-grow p-6 overflow-y-auto">
+        <main className="flex-grow p-4 sm:p-6 overflow-y-auto">
           
           {/* ================================================= */}
           {/* VIEW: DASHBOARD HOME */}
           {/* ================================================= */}
           {activeModule === 'dashboard' && (
-            <div className="space-y-8 animate-fade-in">
-              {/* 8 Glassmorphic Key Metrics */}
+            <div className="space-y-6 sm:space-y-8 animate-fade-in">
+              {/* 4 Executive Key Metrics */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
                   {
@@ -1661,7 +1732,7 @@ export default function AdminDashboardPage() {
                     desc: 'Total sales gross invoices',
                     icon: CreditCard,
                     trend: '+14%',
-                    color: 'from-amber-500 to-[#FFC107]'
+                    iconBg: isLight ? 'bg-amber-100 text-amber-700' : 'bg-amber-500/20 text-amber-400',
                   },
                   {
                     label: 'Total Orders',
@@ -1669,7 +1740,7 @@ export default function AdminDashboardPage() {
                     desc: 'Across all active channels',
                     icon: ShoppingBag,
                     trend: '+22%',
-                    color: 'from-blue-600 to-indigo-500'
+                    iconBg: isLight ? 'bg-blue-100 text-blue-700' : 'bg-blue-500/20 text-blue-400',
                   },
                   {
                     label: 'Total Customers',
@@ -1677,7 +1748,7 @@ export default function AdminDashboardPage() {
                     desc: 'Profiled shopper accounts',
                     icon: Users,
                     trend: '+8%',
-                    color: 'from-emerald-600 to-teal-500'
+                    iconBg: isLight ? 'bg-emerald-100 text-emerald-700' : 'bg-emerald-500/20 text-emerald-400',
                   },
                   {
                     label: 'Active Stores',
@@ -1685,25 +1756,38 @@ export default function AdminDashboardPage() {
                     desc: `${platformStats?.overview?.pendingVerifications || pendingSellers.length} Pending KYC`,
                     icon: Store,
                     trend: '+12%',
-                    color: 'from-rose-600 to-pink-500'
+                    iconBg: isLight ? 'bg-purple-100 text-purple-700' : 'bg-purple-500/20 text-purple-400',
                   }
                 ].map((stat, i) => (
                   <div 
                     key={i} 
-                    className="relative overflow-hidden bg-white/[0.02] backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-xl flex flex-col justify-between min-h-[120px] hover:border-white/10 hover:shadow-[0_0_20px_rgba(255,255,255,0.02)] transition-all duration-300"
+                    className={`relative overflow-hidden border p-5 rounded-2xl transition-all duration-300 flex flex-col justify-between min-h-[130px] ${
+                      isLight
+                        ? 'bg-white border-slate-200/80 shadow-xs hover:shadow-md hover:border-slate-300'
+                        : 'bg-white/[0.02] backdrop-blur-md border-white/5 shadow-xl hover:border-white/10 hover:shadow-[0_0_20px_rgba(255,255,255,0.02)]'
+                    }`}
                   >
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br opacity-5 blur-2xl rounded-full" />
                     <div className="flex items-center justify-between z-10">
-                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</span>
-                      <div className="p-2 bg-white/5 rounded-lg">
-                        <stat.icon className="w-4 h-4 text-slate-300" />
+                      <span className={`text-xs font-bold uppercase tracking-wider ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                        {stat.label}
+                      </span>
+                      <div className={`p-2.5 rounded-xl ${stat.iconBg}`}>
+                        <stat.icon className="w-4 h-4" />
                       </div>
                     </div>
                     <div className="mt-4">
-                      <h4 className="text-2xl font-black text-white tracking-tight">{stat.value}</h4>
-                      <div className="flex items-center gap-1.5 mt-1">
-                        <span className="text-[10px] font-black text-emerald-500">{stat.trend}</span>
-                        <span className="text-[9px] text-slate-500 leading-none">{stat.desc}</span>
+                      <h4 className={`text-3xl font-black tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                        {stat.value}
+                      </h4>
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${
+                          isLight ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                        }`}>
+                          {stat.trend}
+                        </span>
+                        <span className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                          {stat.desc}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -1714,31 +1798,73 @@ export default function AdminDashboardPage() {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 
                 {/* 1. Neon Weekly Volume SVG chart */}
-                <div className="bg-white/[0.02] backdrop-blur-md border border-white/5 p-6 rounded-2xl shadow-xl">
-                  <h4 className="text-xs font-black text-slate-300 uppercase tracking-widest border-b border-white/5 pb-3.5 mb-4">
-                    Weekly Sales GMV Trend
-                  </h4>
-                  <div className="flex items-end gap-3.5 h-44 pt-4">
+                <div className={`border p-6 rounded-2xl transition-all ${
+                  isLight
+                    ? 'bg-white border-slate-200/80 shadow-xs'
+                    : 'bg-white/[0.02] backdrop-blur-md border-white/5 shadow-xl'
+                }`}>
+                  <div className="flex items-center justify-between border-b pb-3.5 mb-4" style={{ borderColor: isLight ? '#f1f5f9' : 'rgba(255,255,255,0.05)' }}>
+                    <div>
+                      <h4 className={`text-xs font-black uppercase tracking-wider ${isLight ? 'text-slate-900' : 'text-slate-200'}`}>
+                        Weekly Sales GMV Trend
+                      </h4>
+                      <p className={`text-[11px] mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                        ৳148,500 gross volume this week
+                      </p>
+                    </div>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                      isLight ? 'bg-amber-50 text-amber-800 border-amber-200' : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                    }`}>
+                      +18.4%
+                    </span>
+                  </div>
+
+                  <div className="flex items-end gap-3 h-44 pt-2">
                     {[
                       { day: 'Mon', val: 12000 },
                       { day: 'Tue', val: 18000 },
                       { day: 'Wed', val: 14500 },
                       { day: 'Thu', val: 24000 },
-                      { day: 'Fri', val: 32000 },
+                      { day: 'Fri', val: 32000, peak: true },
                       { day: 'Sat', val: 27000 },
                       { day: 'Sun', val: 21000 }
                     ].map((d, idx) => {
-                      const pct = (d.val / 32000) * 100;
+                      const pct = Math.round((d.val / 32000) * 100);
                       return (
-                        <div key={idx} className="flex-grow flex flex-col items-center gap-2 group">
-                          <span className="text-[8.5px] font-mono font-bold text-[#FFC107] opacity-0 group-hover:opacity-100 transition-opacity">
-                            {(d.val / 1000)}k
+                        <div key={idx} className="flex-1 flex flex-col items-center gap-1.5 group cursor-pointer">
+                          {/* Top Label */}
+                          <span className={`text-[10px] font-bold font-mono transition-all ${
+                            d.peak 
+                              ? isLight ? 'text-amber-700 font-black' : 'text-amber-400 font-black' 
+                              : isLight ? 'text-slate-500 group-hover:text-slate-900' : 'text-slate-400 group-hover:text-white'
+                          }`}>
+                            ৳{(d.val / 1000)}k
                           </span>
-                          <div 
-                            className="w-full bg-white/5 group-hover:bg-gradient-to-t group-hover:from-amber-600 group-hover:to-[#FFC107] group-hover:shadow-[0_0_15px_rgba(255,193,7,0.3)] transition-all duration-500 rounded-t-lg"
-                            style={{ height: `${pct}%` }}
-                          />
-                          <span className="text-[10px] font-extrabold text-slate-500 uppercase">{d.day}</span>
+
+                          {/* Bar Track & Fill */}
+                          <div className={`w-full h-32 rounded-xl p-1 flex items-end justify-center transition-all ${
+                            isLight ? 'bg-slate-100 group-hover:bg-slate-200/60' : 'bg-white/5 group-hover:bg-white/10'
+                          }`}>
+                            <div 
+                              className={`w-full rounded-lg transition-all duration-500 ${
+                                d.peak
+                                  ? 'bg-gradient-to-t from-amber-500 to-amber-400 shadow-sm'
+                                  : isLight
+                                    ? 'bg-gradient-to-t from-slate-400 to-slate-300 group-hover:from-amber-500 group-hover:to-amber-400'
+                                    : 'bg-gradient-to-t from-slate-700 to-slate-600 group-hover:from-amber-500 group-hover:to-amber-400'
+                              }`}
+                              style={{ height: `${pct}%` }}
+                            />
+                          </div>
+
+                          {/* Day Label */}
+                          <span className={`text-[11px] font-extrabold uppercase mt-0.5 ${
+                            d.peak
+                              ? isLight ? 'text-amber-700' : 'text-amber-400'
+                              : isLight ? 'text-slate-600' : 'text-slate-400'
+                          }`}>
+                            {d.day}
+                          </span>
                         </div>
                       );
                     })}
@@ -1746,92 +1872,192 @@ export default function AdminDashboardPage() {
                 </div>
 
                 {/* 2. Interactive SVG Sparklines */}
-                <div className="bg-white/[0.02] backdrop-blur-md border border-white/5 p-6 rounded-2xl shadow-xl space-y-4">
-                  <h4 className="text-xs font-black text-slate-300 uppercase tracking-widest border-b border-white/5 pb-3.5">
-                    Real-time Conversion Analytics
-                  </h4>
-                  <div className="relative h-44 flex items-end justify-center">
+                <div className={`border p-6 rounded-2xl space-y-4 transition-all ${
+                  isLight
+                    ? 'bg-white border-slate-200/80 shadow-xs'
+                    : 'bg-white/[0.02] backdrop-blur-md border-white/5 shadow-xl'
+                }`}>
+                  <div className="flex items-center justify-between border-b pb-3.5" style={{ borderColor: isLight ? '#f1f5f9' : 'rgba(255,255,255,0.05)' }}>
+                    <h4 className={`text-xs font-black uppercase tracking-wider ${isLight ? 'text-slate-900' : 'text-slate-200'}`}>
+                      Real-time Conversion Analytics
+                    </h4>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border flex items-center gap-1.5 ${
+                      isLight ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                    }`}>
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                      Live Pulse
+                    </span>
+                  </div>
+
+                  <div className="flex items-baseline justify-between pt-1">
+                    <div>
+                      <span className={`text-3xl font-black ${isLight ? 'text-slate-900' : 'text-white'}`}>3.82%</span>
+                      <span className={`text-xs ml-2 font-bold ${isLight ? 'text-emerald-700' : 'text-emerald-400'}`}>+0.4% this hour</span>
+                    </div>
+                    <div className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'} font-medium text-right`}>
+                      <p>95 conversions / 2,490 visits</p>
+                    </div>
+                  </div>
+
+                  <div className="relative h-28 flex items-end justify-center">
                     <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 40" preserveAspectRatio="none">
                       <defs>
                         <linearGradient id="neonGlow" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.25" />
+                          <stop offset="0%" stopColor="#3b82f6" stopOpacity={isLight ? 0.35 : 0.25} />
                           <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.0" />
                         </linearGradient>
                       </defs>
                       <path 
                         d="M 0 35 Q 20 10 40 25 T 80 5 T 100 20" 
                         fill="none" 
-                        stroke="#3b82f6" 
-                        strokeWidth="1.5" 
+                        stroke="#2563eb" 
+                        strokeWidth="2.5" 
                         strokeLinecap="round"
-                        className="drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]"
                       />
                       <path 
                         d="M 0 35 Q 20 10 40 25 T 80 5 T 100 20 L 100 40 L 0 40 Z" 
                         fill="url(#neonGlow)"
                       />
                     </svg>
-                    <span className="text-[10px] font-mono text-slate-500 uppercase relative z-10 bottom-2 bg-slate-950/80 px-2.5 py-0.5 rounded-full border border-white/5">
-                      Session Checkouts conversion: <span className="text-[#FFC107] font-black">3.82%</span>
-                    </span>
+                  </div>
+
+                  <div className={`p-2.5 rounded-xl border flex items-center justify-between text-xs font-semibold ${
+                    isLight ? 'bg-slate-50 border-slate-200/80 text-slate-700' : 'bg-slate-950/60 border-white/5 text-slate-300'
+                  }`}>
+                    <span>Checkout Drop-off: <strong className={isLight ? 'text-slate-900' : 'text-white'}>18.2%</strong></span>
+                    <span>Avg Cart: <strong className={isLight ? 'text-slate-900' : 'text-white'}>৳4,120</strong></span>
                   </div>
                 </div>
 
                 {/* 3. Category & Device Performance */}
-                <div className="bg-white/[0.02] backdrop-blur-md border border-white/5 p-6 rounded-2xl shadow-xl space-y-5">
-                  <h4 className="text-xs font-black text-slate-300 uppercase tracking-widest border-b border-white/5 pb-3.5">
-                    Traffic Sources Channel
-                  </h4>
-                  <div className="space-y-3.5 text-[10px] font-bold text-slate-400">
+                <div className={`border p-6 rounded-2xl space-y-4 transition-all ${
+                  isLight
+                    ? 'bg-white border-slate-200/80 shadow-xs'
+                    : 'bg-white/[0.02] backdrop-blur-md border-white/5 shadow-xl'
+                }`}>
+                  <div className="flex items-center justify-between border-b pb-3.5" style={{ borderColor: isLight ? '#f1f5f9' : 'rgba(255,255,255,0.05)' }}>
+                    <h4 className={`text-xs font-black uppercase tracking-wider ${isLight ? 'text-slate-900' : 'text-slate-200'}`}>
+                      Traffic Sources Channel
+                    </h4>
+                    <span className={`text-[10px] font-bold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                      Monthly Split
+                    </span>
+                  </div>
+
+                  <div className="space-y-4 text-xs font-bold">
                     {[
-                      { name: 'App Checkouts (PWA)', pct: '68%', color: 'from-amber-500 to-[#FFC107]' },
-                      { name: 'Desktop Web Core', pct: '32%', color: 'from-blue-600 to-indigo-500' }
+                      { name: 'App Checkouts (PWA)', pct: '68%', amount: '৳47,389', color: 'from-amber-500 to-[#FFC107]' },
+                      { name: 'Desktop Web Core', pct: '32%', amount: '৳22,301', color: 'from-blue-600 to-indigo-500' }
                     ].map((item, idx) => (
                       <div key={idx} className="space-y-1.5">
-                        <div className="flex justify-between">
-                          <span>{item.name}</span>
-                          <span className="font-extrabold text-white">{item.pct}</span>
+                        <div className="flex justify-between items-center">
+                          <span className={isLight ? 'text-slate-700' : 'text-slate-300'}>{item.name}</span>
+                          <div className="flex items-center gap-2">
+                            <span className={`font-mono text-[11px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>{item.amount}</span>
+                            <span className={`font-black ${isLight ? 'text-slate-900' : 'text-white'}`}>{item.pct}</span>
+                          </div>
                         </div>
-                        <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
+                        <div className={`w-full h-2.5 rounded-full overflow-hidden ${isLight ? 'bg-slate-100' : 'bg-white/5'}`}>
                           <div className={`h-full bg-gradient-to-r ${item.color} rounded-full`} style={{ width: item.pct }} />
                         </div>
                       </div>
                     ))}
+                  </div>
+
+                  <div className={`mt-4 p-3 rounded-xl border flex items-center justify-between text-xs ${
+                    isLight ? 'bg-amber-50/60 border-amber-200/60 text-amber-900' : 'bg-amber-500/10 border-amber-500/20 text-amber-300'
+                  }`}>
+                    <span className="font-medium">Mobile Traffic Dominance:</span>
+                    <span className="font-black text-amber-700 dark:text-amber-400">+14% Growth</span>
                   </div>
                 </div>
 
               </div>
 
               {/* Security Shield Live Audit log */}
-              <div className="bg-white/[0.02] backdrop-blur-md border border-white/5 p-5 rounded-2xl shadow-xl">
-                <h4 className="text-xs font-black text-slate-300 uppercase tracking-widest border-b border-white/5 pb-3.5 mb-4 flex items-center justify-between">
-                  <span>Security Monitoring Live Thread</span>
-                  <span className="text-[9px] font-normal text-emerald-400 flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping" /> System Auditing
+              <div className={`border p-6 rounded-2xl transition-all ${
+                isLight
+                  ? 'bg-white border-slate-200/80 shadow-xs'
+                  : 'bg-white/[0.02] backdrop-blur-md border-white/5 shadow-xl'
+              }`}>
+                <div className="flex items-center justify-between border-b pb-3.5 mb-4" style={{ borderColor: isLight ? '#f1f5f9' : 'rgba(255,255,255,0.05)' }}>
+                  <h4 className={`text-xs font-black uppercase tracking-wider flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-slate-200'}`}>
+                    <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                    Security Monitoring Live Thread
+                  </h4>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border flex items-center gap-1.5 ${
+                    isLight ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                  }`}>
+                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping" />
+                    System Auditing Active
                   </span>
-                </h4>
-                <div className="space-y-2.5 font-mono text-[9px] text-slate-400">
+                </div>
+
+                <div className="space-y-2.5">
                   {platformStats?.recentLogs && platformStats.recentLogs.length > 0 ? (
                     platformStats.recentLogs.slice(0, 4).map((log: any, idx: number) => (
-                      <div key={idx} className="flex justify-between border-b border-white/5 pb-2">
-                        <span>[{new Date(log.createdAt).toLocaleTimeString()}] {log.action} {log.user?.email ? `by ${log.user.email}` : ''} {log.ipAddress ? `(IP ${log.ipAddress})` : ''}</span>
-                        <span className="text-emerald-400 font-extrabold">PASS</span>
+                      <div 
+                        key={idx} 
+                        className={`flex items-center justify-between p-3 rounded-xl border transition-colors ${
+                          isLight ? 'bg-slate-50 border-slate-200/60 hover:bg-slate-100/70' : 'bg-white/[0.02] border-white/5 hover:bg-white/[0.04]'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <span className={`font-mono text-[10px] px-2 py-0.5 rounded border font-semibold shrink-0 ${
+                            isLight ? 'bg-white text-slate-600 border-slate-200' : 'bg-slate-900 text-slate-400 border-white/10'
+                          }`}>
+                            [{new Date(log.createdAt).toLocaleTimeString()}]
+                          </span>
+                          <p className={`text-xs font-medium truncate ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>
+                            {log.action} {log.user?.email && <strong className={isLight ? 'text-slate-950 font-bold' : 'text-white font-bold'}>by {log.user.email}</strong>} {log.ipAddress && <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>(IP {log.ipAddress})</span>}
+                          </p>
+                        </div>
+                        <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border shrink-0 ${
+                          isLight ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                        }`}>
+                          PASS
+                        </span>
                       </div>
                     ))
                   ) : (
                     <>
-                      <div className="flex justify-between border-b border-white/5 pb-2">
-                        <span>[04:22:15] Security alert: Auth trigger verification. Direct superadmin login verified.</span>
-                        <span className="text-emerald-400 font-extrabold">PASS</span>
-                      </div>
-                      <div className="flex justify-between border-b border-white/5 pb-2">
-                        <span>[04:18:47] Database sync: PostgreSQL transaction pooler snapshot archived to Cloud Node.</span>
-                        <span className="text-blue-400 font-extrabold">INFO</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>[04:09:12] Shield alert: Anomaly Shield active with zero breaches.</span>
-                        <span className="text-emerald-400 font-extrabold">ACTIVE</span>
-                      </div>
+                      {[
+                        { time: '04:22:15', category: 'AUTH', text: 'Security alert: Auth trigger verification. Direct superadmin login verified.', status: 'PASS', color: 'emerald' },
+                        { time: '04:18:47', category: 'SYNC', text: 'Database sync: PostgreSQL transaction pooler snapshot archived to Cloud Node.', status: 'INFO', color: 'blue' },
+                        { time: '04:09:12', category: 'SHIELD', text: 'Shield alert: Anomaly Shield active with zero breaches across active storefront sessions.', status: 'ACTIVE', color: 'emerald' }
+                      ].map((item, i) => (
+                        <div 
+                          key={i} 
+                          className={`flex items-center justify-between p-3 rounded-xl border transition-colors ${
+                            isLight ? 'bg-slate-50 border-slate-200/60 hover:bg-slate-100/70' : 'bg-white/[0.02] border-white/5 hover:bg-white/[0.04]'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <span className={`font-mono text-[10px] px-2 py-0.5 rounded border font-semibold shrink-0 ${
+                              isLight ? 'bg-white text-slate-600 border-slate-200' : 'bg-slate-900 text-slate-400 border-white/10'
+                            }`}>
+                              [{item.time}]
+                            </span>
+                            <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded shrink-0 ${
+                              item.color === 'emerald'
+                                ? isLight ? 'bg-emerald-100 text-emerald-800' : 'bg-emerald-500/20 text-emerald-300'
+                                : isLight ? 'bg-blue-100 text-blue-800' : 'bg-blue-500/20 text-blue-300'
+                            }`}>
+                              {item.category}
+                            </span>
+                            <p className={`text-xs font-medium truncate ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>
+                              {item.text}
+                            </p>
+                          </div>
+                          <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border shrink-0 ${
+                            item.color === 'emerald'
+                              ? isLight ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                              : isLight ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                          }`}>
+                            {item.status}
+                          </span>
+                        </div>
+                      ))}
                     </>
                   )}
                 </div>

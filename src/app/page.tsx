@@ -126,7 +126,7 @@ export default function HomePage() {
         console.error('Failed to parse recently viewed', err);
       }
     } else {
-      setRecentlyViewed(products.slice(0, 2));
+      setRecentlyViewed([]);
     }
 
     return () => {
@@ -407,6 +407,7 @@ export default function HomePage() {
           </section>
 
           {/* Flash Deals Carousel Section */}
+          {products.length > 0 && (
           <section id="flash-sale" className="py-12 px-4 lg:px-8 border-b border-slate-100 bg-white">
             <div className="max-w-[1440px] mx-auto">
               {/* Header with Countdown */}
@@ -509,8 +510,10 @@ export default function HomePage() {
               </div>
             </div>
           </section>
+          )}
 
           {/* Today's Deals Section (Inspire by Daraz / Temu) */}
+          {products.length > 0 && (
           <section id="todays-deals" className="py-12 px-4 lg:px-8 border-b border-slate-100">
             <div className="max-w-[1440px] mx-auto">
               <div className="flex items-center justify-between mb-8">
@@ -598,8 +601,10 @@ export default function HomePage() {
               </div>
             </div>
           </section>
+          )}
 
           {/* Featured Products Zoom Section */}
+          {products.length > 0 && (
           <section id="featured-products" className="py-12 px-4 lg:px-8 border-b border-slate-100 bg-white">
             <div className="max-w-[1440px] mx-auto">
               <div className="flex items-center justify-between mb-8">
@@ -662,8 +667,10 @@ export default function HomePage() {
               </div>
             </div>
           </section>
+          )}
 
           {/* Trending Products / New Arrivals tab section */}
+          {products.length > 0 && (
           <section className="py-12 px-4 lg:px-8 border-b border-slate-100">
             <div className="max-w-[1440px] mx-auto">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-200 pb-5 gap-4 mb-8">
@@ -742,8 +749,10 @@ export default function HomePage() {
               </div>
             </div>
           </section>
+          )}
 
           {/* Best Selling Products Section */}
+          {products.length > 0 && (
           <section id="best-selling" className="py-12 px-4 lg:px-8 border-b border-slate-100 bg-white">
             <div className="max-w-[1440px] mx-auto">
               <div className="flex items-center justify-between mb-8">
@@ -813,6 +822,7 @@ export default function HomePage() {
               </div>
             </div>
           </section>
+          )}
 
           {/* Shop by Sellers Section */}
           <section id="vendors" className="py-12 px-4 lg:px-8 border-b border-slate-100 bg-slate-50">
@@ -909,6 +919,7 @@ export default function HomePage() {
           </section>
 
           {/* AI Recommended Section */}
+          {products.length > 0 && (
           <section id="ai-recommendations" className="py-12 px-4 lg:px-8 border-b border-slate-100">
             <div className="max-w-[1440px] mx-auto">
               <div className="flex items-center justify-between mb-8">
@@ -972,6 +983,7 @@ export default function HomePage() {
               </div>
             </div>
           </section>
+          )}
 
           {/* Promotional Section: Coupons Register & Cashback Banners */}
           <section className="py-12 px-4 lg:px-8 border-b border-slate-100 bg-white">

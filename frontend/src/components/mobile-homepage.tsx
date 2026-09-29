@@ -101,7 +101,7 @@ export default function MobileHomepage() {
         console.error('Failed to parse recently viewed', err);
       }
     } else {
-      setRecentlyViewed(products.slice(0, 2));
+      setRecentlyViewed([]);
     }
 
     return () => {
@@ -210,6 +210,7 @@ export default function MobileHomepage() {
       </section>
 
       {/* 3. FLASH DEALS */}
+      {products.length > 0 && (
       <section className="bg-white mt-3.5 border-t border-b border-slate-100 py-5 px-4 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-1.5">
@@ -275,8 +276,10 @@ export default function MobileHomepage() {
           })}
         </div>
       </section>
+      )}
 
       {/* 4. TODAY'S DEALS */}
+      {products.length > 0 && (
       <section className="bg-white mt-3.5 border-t border-b border-slate-100 py-5 px-4 shadow-sm">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xs font-black text-slate-800 uppercase tracking-wider">Today's Deals</h2>
@@ -331,8 +334,10 @@ export default function MobileHomepage() {
           })}
         </div>
       </section>
+      )}
 
       {/* NEW: 4.1 FEATURED PRODUCTS */}
+      {products.length > 0 && (
       <section className="bg-white mt-3.5 border-t border-b border-slate-100 py-5 px-4 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-1.5">
@@ -380,6 +385,7 @@ export default function MobileHomepage() {
           })}
         </div>
       </section>
+      )}
 
       {/* 5. CODES & CASHBACKS */}
       <section className="bg-gradient-to-br from-slate-900 to-slate-950 text-white mt-3.5 border-y border-slate-900 p-5 shadow-lg relative overflow-hidden mx-4 rounded-3xl">
@@ -404,6 +410,7 @@ export default function MobileHomepage() {
       </section>
 
       {/* 6. TRENDING & NEW ARRIVALS */}
+      {products.length > 0 && (
       <section className="bg-white mt-3.5 border-t border-b border-slate-100 py-5 px-4 shadow-sm">
         <div className="flex gap-4 border-b border-slate-100 pb-3 mb-4">
           <button
@@ -455,8 +462,10 @@ export default function MobileHomepage() {
           })}
         </div>
       </section>
+      )}
 
       {/* NEW: 6.1 BEST SELLING PRODUCTS */}
+      {products.length > 0 && (
       <section className="bg-white mt-3.5 border-t border-b border-slate-100 py-5 px-4 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-1.5">
@@ -505,8 +514,10 @@ export default function MobileHomepage() {
           })}
         </div>
       </section>
+      )}
 
       {/* 7. AI PERSONALIZED RECOMMENDATIONS */}
+      {products.length > 0 && (
       <section className="bg-white mt-3.5 border-t border-b border-slate-100 py-5 px-4 shadow-sm">
         <div className="flex items-center gap-1.5 mb-4">
           <Sparkles className="w-4.5 h-4.5 text-amber-500 fill-current animate-pulse" />
@@ -549,6 +560,7 @@ export default function MobileHomepage() {
           })}
         </div>
       </section>
+      )}
 
       {/* 8. RECENTLY VIEWED PRODUCTS */}
       {recentlyViewed.length > 0 && (

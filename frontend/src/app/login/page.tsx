@@ -238,9 +238,9 @@ export default function LoginPage() {
         {/* Footer note */}
         <p className="text-center text-xs text-gray-600 mt-4">
           By signing in, you agree to our{' '}
-          <span className="text-gray-500 hover:text-gray-400 cursor-pointer transition-colors">Terms of Service</span>
+          <Link href="/terms" className="text-gray-400 hover:text-primary transition-colors underline">Terms of Service</Link>
           {' '}and{' '}
-          <span className="text-gray-500 hover:text-gray-400 cursor-pointer transition-colors">Privacy Policy</span>
+          <Link href="/privacy-policy" className="text-gray-400 hover:text-primary transition-colors underline">Privacy Policy</Link>
         </p>
       </div>
     </div>

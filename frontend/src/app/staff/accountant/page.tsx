@@ -15,10 +15,10 @@ import {
 } from 'lucide-react';
 
 const stats = [
-  { label: 'Total Revenue', value: '$482,900', icon: DollarSign, color: 'bg-green-50 text-green-600', trend: '+12.4%' },
-  { label: 'Monthly Expenses', value: '$38,400', icon: TrendingDown, color: 'bg-red-50 text-red-600', trend: '+3.1%' },
-  { label: 'Vendor Payouts', value: '$156,200', icon: CreditCard, color: 'bg-blue-50 text-blue-600', trend: '-2.0%' },
-  { label: 'Pending Refunds', value: '$4,800', icon: RefreshCcw, color: 'bg-orange-50 text-orange-600', trend: '+8.5%' },
+  { label: 'Total Revenue', value: '৳482,900', icon: DollarSign, color: 'bg-green-50 text-green-600', trend: '+12.4%' },
+  { label: 'Monthly Expenses', value: '৳38,400', icon: TrendingDown, color: 'bg-red-50 text-red-600', trend: '+3.1%' },
+  { label: 'Vendor Payouts', value: '৳156,200', icon: CreditCard, color: 'bg-blue-50 text-blue-600', trend: '-2.0%' },
+  { label: 'Pending Refunds', value: '৳4,800', icon: RefreshCcw, color: 'bg-orange-50 text-orange-600', trend: '+8.5%' },
 ];
 
 const revenueData = [
@@ -137,7 +137,7 @@ export default function AccountantDashboard() {
           </div>
           <div className="mt-6 p-3 bg-yellow-50 rounded-xl border border-yellow-100">
             <p className="text-xs text-yellow-700 font-semibold">Total Monthly Expenses</p>
-            <p className="text-xl font-bold text-gray-800 mt-1">$38,400</p>
+            <p className="text-xl font-bold text-gray-800 mt-1">৳38,400</p>
             <p className="text-xs text-gray-500 mt-0.5">July 2026</p>
           </div>
         </div>

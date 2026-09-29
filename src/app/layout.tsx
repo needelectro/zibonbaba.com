@@ -11,11 +11,76 @@ const inter = Inter({
   variable: '--font-inter',
 });
 
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://zibonbaba.com';
+
 export const metadata: Metadata = {
-  title: 'Zibonbaba.com - Premium Multi-Vendor E-Commerce & SaaS ERP',
-  description: 'Enterprise business management solution combining online multi-vendor retail market, barcode scanning POS, warehouse inventory syncing, and CRM logs.',
-  keywords: 'Zibonbaba, E-commerce, SaaS, POS system, Enterprise, Inventory management, CRM, Multi-vendor marketplace, Bangladesh',
+  metadataBase: new URL(baseUrl),
+  title: {
+    default: 'Zibonbaba.com | Bangladesh’s Premier Multi-Vendor Online Marketplace',
+    template: '%s | Zibonbaba.com',
+  },
+  description: 'Shop authentic electronics, fashion, lifestyle, home essentials & groceries with fastest doorstep delivery across all 64 districts in Bangladesh. Enjoy Cash on Delivery, bKash & secure cards.',
+  keywords: [
+    'Zibonbaba',
+    'Online Shopping Bangladesh',
+    'Daraz Alternative Bangladesh',
+    'E-commerce Bangladesh',
+    'bKash Online Shopping',
+    'Cash on Delivery Dhaka',
+    'Multi-vendor marketplace',
+    'Bangladeshi Online Store'
+  ],
+  authors: [{ name: 'Zibonbaba Team' }],
+  creator: 'Zibonbaba Bangladesh',
+  publisher: 'Zibonbaba.com',
+  alternates: {
+    canonical: baseUrl,
+  },
+  icons: {
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512x512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
+    ],
+  },
+  openGraph: {
+    title: 'Zibonbaba.com | Bangladesh’s Premier Multi-Vendor Online Marketplace',
+    description: 'Shop authentic products with fastest doorstep delivery across all 64 districts. Enjoy Cash on Delivery, bKash & card payments.',
+    url: baseUrl,
+    siteName: 'Zibonbaba.com',
+    locale: 'en_BD',
+    type: 'website',
+    images: [
+      {
+        url: '/icons/icon-512x512.png',
+        width: 512,
+        height: 512,
+        alt: 'Zibonbaba.com Logo',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Zibonbaba.com | Online Shopping in Bangladesh',
+    description: 'Shop authentic products with fastest doorstep delivery across 64 districts in Bangladesh.',
+    images: ['/icons/icon-512x512.png'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
 };
+
 
 export default function RootLayout({
   children,

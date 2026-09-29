@@ -1559,7 +1559,7 @@ export default function HomePage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white p-5 rounded-lg border border-neutral-light shadow-card">
             <p className="text-[10px] text-neutral-muted font-bold uppercase">Total Platform GMV</p>
-            <h3 className="text-2xl font-extrabold text-neutral-dark mt-1">$482,900.00</h3>
+            <h3 className="text-2xl font-extrabold text-neutral-dark mt-1">৳482,900.00</h3>
             <span className="text-[10px] text-success font-bold mt-1 inline-block">↗ +18.4% monthly velocity</span>
           </div>
           <div className="bg-white p-5 rounded-lg border border-neutral-light shadow-card">

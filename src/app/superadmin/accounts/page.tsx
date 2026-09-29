@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import SuperAdminLayout from '@/components/superadmin-layout';
+import { useStore } from '@/store/useStore';
 import {
   Users,
   Plus,
@@ -66,6 +67,9 @@ const ALL_ROLES = [
 ];
 
 export default function AccountsManagementPage() {
+  const { adminTheme } = useStore();
+  const isLight = adminTheme === 'light';
+
   const [accounts, setAccounts] = useState<UserAccount[]>(INITIAL_ACCOUNTS);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRole, setSelectedRole] = useState('ALL');
@@ -329,17 +333,25 @@ export default function AccountsManagementPage() {
       )}
 
       {/* ── Top Action & Filter Controls Bar ── */}
-      <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6 shadow-xl mb-8">
+      <div className={`border rounded-3xl p-6 mb-8 transition-colors ${
+        isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-950 border-slate-800 shadow-xl'
+      }`}>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           {/* Search Bar */}
-          <div className="flex items-center bg-slate-900 border border-slate-800 rounded-2xl px-3.5 py-2.5 text-xs text-white focus-within:border-amber-500/50 w-full md:w-80">
-            <Search size={16} className="text-slate-500 mr-2" />
+          <div className={`flex items-center rounded-2xl px-3.5 py-2.5 text-xs w-full md:w-80 border ${
+            isLight
+              ? 'bg-slate-50 border-slate-300 text-slate-900 focus-within:border-amber-500'
+              : 'bg-slate-900 border-slate-800 text-white focus-within:border-amber-500/50'
+          }`}>
+            <Search size={16} className={isLight ? 'text-slate-500 mr-2' : 'text-slate-400 mr-2'} />
             <input
               type="text"
               placeholder="Search by name, email, phone..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-transparent outline-none w-full text-xs placeholder:text-slate-500 font-semibold"
+              className={`bg-transparent outline-none w-full text-xs font-semibold ${
+                isLight ? 'text-slate-900 placeholder:text-slate-500' : 'text-white placeholder:text-slate-500'
+              }`}
             />
           </div>
 
@@ -349,7 +361,11 @@ export default function AccountsManagementPage() {
             <select
               value={selectedRole}
               onChange={(e) => setSelectedRole(e.target.value)}
-              className="bg-slate-900 border border-slate-800 text-slate-300 text-xs font-bold rounded-2xl px-3.5 py-2.5 outline-none"
+              className={`text-xs font-bold rounded-2xl px-3.5 py-2.5 outline-none border ${
+                isLight
+                  ? 'bg-slate-50 border-slate-300 text-slate-800'
+                  : 'bg-slate-900 border-slate-800 text-slate-300'
+              }`}
             >
               {ALL_ROLES.map((r) => (
                 <option key={r} value={r}>Role: {r}</option>
@@ -360,7 +376,11 @@ export default function AccountsManagementPage() {
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className="bg-slate-900 border border-slate-800 text-slate-300 text-xs font-bold rounded-2xl px-3.5 py-2.5 outline-none"
+              className={`text-xs font-bold rounded-2xl px-3.5 py-2.5 outline-none border ${
+                isLight
+                  ? 'bg-slate-50 border-slate-300 text-slate-800'
+                  : 'bg-slate-900 border-slate-800 text-slate-300'
+              }`}
             >
               <option value="ALL">Status: All</option>
               <option value="ACTIVE">Active</option>
@@ -380,26 +400,40 @@ export default function AccountsManagementPage() {
 
         {/* Bulk Action Bar (when rows are checked) */}
         {selectedAccountIds.length > 0 && (
-          <div className="mt-4 pt-4 border-t border-slate-800 flex items-center justify-between bg-slate-900/60 p-3 rounded-2xl">
-            <span className="text-xs font-bold text-amber-400">
+          <div className={`mt-4 pt-4 border-t flex items-center justify-between p-3 rounded-2xl ${
+            isLight ? 'border-slate-200 bg-slate-50' : 'border-slate-800 bg-slate-900/60'
+          }`}>
+            <span className={`text-xs font-bold ${isLight ? 'text-amber-800' : 'text-amber-400'}`}>
               {selectedAccountIds.length} account(s) selected
             </span>
             <div className="flex items-center gap-2">
               <button
                 onClick={handleBulkActivate}
-                className="bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-xs font-bold px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1"
+                className={`text-xs font-bold px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1 border ${
+                  isLight
+                    ? 'bg-emerald-100 hover:bg-emerald-200 border-emerald-300 text-emerald-800'
+                    : 'bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/30 text-emerald-400'
+                }`}
               >
                 <UserCheck size={14} /> Bulk Activate
               </button>
               <button
                 onClick={handleBulkSuspend}
-                className="bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 text-xs font-bold px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1"
+                className={`text-xs font-bold px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1 border ${
+                  isLight
+                    ? 'bg-amber-100 hover:bg-amber-200 border-amber-300 text-amber-800'
+                    : 'bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/30 text-amber-400'
+                }`}
               >
                 <UserX size={14} /> Bulk Suspend
               </button>
               <button
                 onClick={handleBulkDelete}
-                className="bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 text-xs font-bold px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1"
+                className={`text-xs font-bold px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1 border ${
+                  isLight
+                    ? 'bg-rose-100 hover:bg-rose-200 border-rose-300 text-rose-800'
+                    : 'bg-rose-500/10 hover:bg-rose-500/20 border-rose-500/30 text-rose-400'
+                }`}
               >
                 <Trash2 size={14} /> Bulk Delete
               </button>
@@ -409,10 +443,16 @@ export default function AccountsManagementPage() {
       </div>
 
       {/* ── Main Accounts Table ── */}
-      <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6 shadow-xl mb-8">
+      <div className={`border rounded-3xl p-6 mb-8 transition-colors ${
+        isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-950 border-slate-800 shadow-xl'
+      }`}>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-900 text-slate-400 font-extrabold uppercase text-[9px] tracking-wider border-b border-slate-800">
+            <thead className={`font-extrabold uppercase text-[9px] tracking-wider border-b ${
+              isLight
+                ? 'bg-slate-100 text-slate-700 border-slate-300'
+                : 'bg-slate-900 text-slate-400 border-slate-800'
+            }`}>
               <tr>
                 <th className="py-3.5 px-4">
                   <input
@@ -433,11 +473,13 @@ export default function AccountsManagementPage() {
                 <th className="py-3.5 px-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60 font-medium">
+            <tbody className={`divide-y font-medium ${isLight ? 'divide-slate-200' : 'divide-slate-800/60'}`}>
               {filteredAccounts.map((acc) => {
                 const isSelected = selectedAccountIds.includes(acc.id);
                 return (
-                  <tr key={acc.id} className={`hover:bg-slate-900/60 transition-colors ${isSelected ? 'bg-amber-500/5' : ''}`}>
+                  <tr key={acc.id} className={`transition-colors ${
+                    isSelected ? (isLight ? 'bg-amber-50' : 'bg-amber-500/5') : (isLight ? 'hover:bg-slate-50' : 'hover:bg-slate-900/60')
+                  }`}>
                     <td className="py-3.5 px-4">
                       <input
                         type="checkbox"
@@ -446,47 +488,66 @@ export default function AccountsManagementPage() {
                         className="w-4 h-4 accent-amber-500"
                       />
                     </td>
-                    <td className="py-3.5 px-4 font-bold text-white flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 font-black flex items-center justify-center text-xs shrink-0">
+                    <td className={`py-3.5 px-4 font-bold flex items-center gap-2.5 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                      <div className={`w-8 h-8 rounded-xl font-black flex items-center justify-center text-xs shrink-0 border ${
+                        isLight
+                          ? 'bg-amber-100 border-amber-300 text-amber-800'
+                          : 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+                      }`}>
                         {acc.name.charAt(0)}
                       </div>
                       <div>
-                        <p className="font-extrabold text-white text-xs">{acc.name}</p>
-                        <span className="text-[10px] text-slate-500 block font-mono">ID: {acc.id}</span>
+                        <p className={`font-extrabold text-xs ${isLight ? 'text-slate-900' : 'text-white'}`}>{acc.name}</p>
+                        <span className={`text-[10px] block font-mono ${isLight ? 'text-slate-500 font-semibold' : 'text-slate-500'}`}>ID: {acc.id}</span>
                       </div>
                     </td>
                     <td className="py-3.5 px-4">
-                      <span className="font-mono text-slate-200 block text-[11px]">{acc.email}</span>
-                      <span className="text-[10px] text-slate-400 block font-mono">{acc.phone}</span>
+                      <span className={`font-mono block text-[11px] font-semibold ${isLight ? 'text-slate-900' : 'text-slate-200'}`}>{acc.email}</span>
+                      <span className={`text-[10px] block font-mono ${isLight ? 'text-slate-600 font-medium' : 'text-slate-400'}`}>{acc.phone}</span>
                     </td>
                     <td className="py-3.5 px-4">
-                      <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black border bg-slate-900 text-amber-400 border-slate-700">
+                      <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black border ${
+                        isLight
+                          ? 'bg-amber-50 text-amber-900 border-amber-200'
+                          : 'bg-slate-900 text-amber-400 border-slate-700'
+                      }`}>
                         {acc.role}
                       </span>
                     </td>
                     <td className="py-3.5 px-4">
-                      <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-extrabold border ${
-                        acc.status === 'ACTIVE' ? 'bg-emerald-950 text-emerald-400 border-emerald-800' :
-                        acc.status === 'SUSPENDED' ? 'bg-rose-950 text-rose-400 border-rose-800' :
-                        acc.status === 'BLOCKED' ? 'bg-red-950 text-red-400 border-red-800' :
-                        'bg-amber-950 text-amber-400 border-amber-800'
+                      <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black border ${
+                        acc.status === 'ACTIVE'
+                          ? (isLight ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-emerald-950 text-emerald-400 border-emerald-800') :
+                        acc.status === 'SUSPENDED'
+                          ? (isLight ? 'bg-rose-100 text-rose-800 border-rose-300' : 'bg-rose-950 text-rose-400 border-rose-800') :
+                        acc.status === 'BLOCKED'
+                          ? (isLight ? 'bg-red-100 text-red-800 border-red-300' : 'bg-red-950 text-red-400 border-red-800') :
+                          (isLight ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-amber-950 text-amber-400 border-amber-800')
                       }`}>
                         {acc.status}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 font-mono text-slate-400 text-[11px]">{acc.joined}</td>
+                    <td className={`py-3.5 px-4 font-mono text-[11px] font-semibold ${isLight ? 'text-slate-700' : 'text-slate-400'}`}>{acc.joined}</td>
                     <td className="py-3.5 px-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => setEditAccount(acc)}
-                          className="p-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 transition-colors"
+                          className={`p-1.5 rounded-xl border transition-colors ${
+                            isLight
+                              ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 border-slate-300'
+                              : 'bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border-slate-800'
+                          }`}
                           title="Edit account details"
                         >
                           <Edit size={14} />
                         </button>
                         <button
                           onClick={() => handleDeleteOne(acc.id, acc.email)}
-                          className="p-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition-colors"
+                          className={`p-1.5 rounded-xl border transition-colors ${
+                            isLight
+                              ? 'bg-rose-100 hover:bg-rose-200 text-rose-700 border-rose-300'
+                              : 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border-rose-500/20'
+                          }`}
                           title="Delete account"
                         >
                           <Trash2 size={14} />

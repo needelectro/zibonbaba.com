@@ -2582,8 +2582,12 @@ export default function AdminDashboardPage() {
                     onClick={() => setSellerTab('verified')}
                     className={`text-xs font-black px-4 py-2 rounded-xl transition-all cursor-pointer flex items-center gap-2 ${
                       sellerTab === 'verified'
-                        ? 'bg-[#FFC107] text-slate-950 shadow-glow'
-                        : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10'
+                        ? isLight
+                          ? 'bg-amber-400 text-slate-950 font-black shadow-md border border-amber-500'
+                          : 'bg-[#FFC107] text-slate-950 shadow-glow'
+                        : isLight
+                          ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-bold'
+                          : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10'
                     }`}
                   >
                     <Store className="w-3.5 h-3.5" />
@@ -2593,8 +2597,12 @@ export default function AdminDashboardPage() {
                     onClick={() => setSellerTab('kyc')}
                     className={`text-xs font-black px-4 py-2 rounded-xl transition-all cursor-pointer flex items-center gap-2 ${
                       sellerTab === 'kyc'
-                        ? 'bg-[#FFC107] text-slate-950 shadow-glow'
-                        : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10'
+                        ? isLight
+                          ? 'bg-amber-400 text-slate-950 font-black shadow-md border border-amber-500'
+                          : 'bg-[#FFC107] text-slate-950 shadow-glow'
+                        : isLight
+                          ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-bold'
+                          : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10'
                     }`}
                   >
                     <ShieldCheck className="w-3.5 h-3.5" />
@@ -2603,7 +2611,11 @@ export default function AdminDashboardPage() {
                 </div>
                 <button
                   onClick={() => { fetchAdminSellers(); }}
-                  className="p-2 bg-white/5 hover:bg-white/10 text-slate-300 rounded-xl border border-white/10 text-xs flex items-center gap-1 font-bold"
+                  className={`p-2 rounded-xl border text-xs flex items-center gap-1 font-bold transition-all ${
+                    isLight
+                      ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200 shadow-sm'
+                      : 'bg-white/5 hover:bg-white/10 text-slate-300 border-white/10'
+                  }`}
                   title="Refresh Sellers"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
@@ -2612,19 +2624,29 @@ export default function AdminDashboardPage() {
 
               {/* SUB-VIEW 1: VERIFIED VENDOR STORES */}
               {sellerTab === 'verified' && (
-                <div className="bg-white/[0.02] border border-white/5 p-5 rounded-2xl shadow-xl space-y-4">
+                <div className={`p-5 rounded-2xl shadow-xl space-y-4 ${
+                  isLight
+                    ? 'bg-white border border-slate-200 shadow-sm'
+                    : 'bg-white/[0.02] border border-white/5'
+                }`}>
                   <div className="flex flex-col sm:flex-row gap-3">
-                    <div className="flex items-center bg-white/5 border border-white/5 rounded-xl px-3 h-9 flex-1 focus-within:border-[#FFC107] transition-colors max-w-md">
-                      <Search className="w-3.5 h-3.5 text-slate-400 mr-2 shrink-0" />
+                    <div className={`flex items-center rounded-xl px-3 h-9 flex-1 transition-colors max-w-md ${
+                      isLight
+                        ? 'bg-white border border-slate-300 focus-within:border-amber-500 focus-within:ring-2 focus-within:ring-amber-500/20'
+                        : 'bg-white/5 border border-white/5 focus-within:border-[#FFC107]'
+                    }`}>
+                      <Search className={`w-3.5 h-3.5 mr-2 shrink-0 ${isLight ? 'text-slate-500' : 'text-slate-400'}`} />
                       <input
                         type="text"
                         placeholder="Search store name, owner, or email..."
                         value={sellerSearchQuery}
                         onChange={(e) => setSellerSearchQuery(e.target.value)}
-                        className="bg-transparent text-xs w-full outline-none text-white font-medium"
+                        className={`bg-transparent text-xs w-full outline-none font-medium ${
+                          isLight ? 'text-slate-900 placeholder:text-slate-400' : 'text-white'
+                        }`}
                       />
                       {sellerSearchQuery && (
-                        <button onClick={() => setSellerSearchQuery('')} className="text-slate-500 hover:text-white text-xs">
+                        <button onClick={() => setSellerSearchQuery('')} className={`${isLight ? 'text-slate-400 hover:text-slate-700' : 'text-slate-500 hover:text-white'} text-xs`}>
                           <X className="w-3 h-3" />
                         </button>
                       )}
@@ -2634,7 +2656,11 @@ export default function AdminDashboardPage() {
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs border-collapse">
                       <thead>
-                        <tr className="border-b border-white/5 bg-white/5 text-slate-400 font-bold">
+                        <tr className={`border-b font-bold ${
+                          isLight
+                            ? 'bg-slate-100/90 border-slate-200 text-slate-800'
+                            : 'bg-white/5 border-white/5 text-slate-400'
+                        }`}>
                           <th className="py-3 px-4 font-black">Store / Merchant</th>
                           <th className="py-3 px-4">Owner & Contact</th>
                           <th className="py-3 px-4">Commission</th>
@@ -2644,7 +2670,9 @@ export default function AdminDashboardPage() {
                           <th className="py-3 px-4 text-right">Actions</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-white/5 font-semibold text-slate-300">
+                      <tbody className={`divide-y font-semibold ${
+                        isLight ? 'divide-slate-200 text-slate-800' : 'divide-white/5 text-slate-300'
+                      }`}>
                         {adminSellers
                           .filter((s: any) =>
                             s.name.toLowerCase().includes(sellerSearchQuery.toLowerCase()) ||
@@ -2652,38 +2680,44 @@ export default function AdminDashboardPage() {
                             (s.owner?.email && s.owner.email.toLowerCase().includes(sellerSearchQuery.toLowerCase()))
                           )
                           .map((seller: any) => (
-                            <tr key={seller.id} className="hover:bg-white/5 transition-colors">
+                            <tr key={seller.id} className={`${isLight ? 'hover:bg-slate-50' : 'hover:bg-white/5'} transition-colors`}>
                               <td className="py-3.5 px-4">
                                 <div className="flex items-center gap-2.5">
                                   <img
                                     src={seller.logo || 'https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=80&auto=format&fit=crop'}
                                     alt={seller.name}
-                                    className="w-8 h-8 rounded-lg object-cover border border-white/10 shrink-0"
+                                    className={`w-8 h-8 rounded-lg object-cover shrink-0 border ${
+                                      isLight ? 'border-slate-300' : 'border-white/10'
+                                    }`}
                                   />
                                   <div>
-                                    <h4 className="text-white font-extrabold">{seller.name}</h4>
-                                    <p className="text-[10px] text-slate-400 truncate max-w-[180px]">{seller.description}</p>
+                                    <h4 className={`font-extrabold ${isLight ? 'text-slate-900' : 'text-white'}`}>{seller.name}</h4>
+                                    <p className={`text-[10px] truncate max-w-[180px] font-medium ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>{seller.description}</p>
                                   </div>
                                 </div>
                               </td>
                               <td className="py-3.5 px-4">
-                                <p className="text-white font-bold">{seller.owner?.name || 'Store Owner'}</p>
-                                <p className="text-[10px] text-slate-400 font-mono">{seller.owner?.email}</p>
+                                <p className={`font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>{seller.owner?.name || 'Store Owner'}</p>
+                                <p className={`text-[10px] font-mono font-medium ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>{seller.owner?.email}</p>
                               </td>
-                              <td className="py-3.5 px-4 font-mono font-bold text-amber-400">
+                              <td className={`py-3.5 px-4 font-mono font-black ${isLight ? 'text-amber-800' : 'text-amber-400'}`}>
                                 {seller.commissionRate || 8.5}%
                               </td>
-                              <td className="py-3.5 px-4 text-white font-mono font-bold">
+                              <td className={`py-3.5 px-4 font-mono font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
                                 {seller.productsCount || 0} Products
                               </td>
-                              <td className="py-3.5 px-4 text-emerald-400 font-bold font-mono">
+                              <td className={`py-3.5 px-4 font-black font-mono ${isLight ? 'text-emerald-700' : 'text-emerald-400'}`}>
                                 ৳{(seller.grossSales || 0).toLocaleString()}
                               </td>
                               <td className="py-3.5 px-4 text-center">
                                 <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-black border ${
-                                  seller.isApproved
-                                    ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
-                                    : 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400'
+                                  isLight
+                                    ? seller.isApproved
+                                      ? 'bg-emerald-50 border-emerald-300 text-emerald-800 font-extrabold'
+                                      : 'bg-amber-50 border-amber-300 text-amber-900 font-extrabold'
+                                    : seller.isApproved
+                                      ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                                      : 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400'
                                 }`}>
                                   {seller.isApproved ? 'VERIFIED' : 'PENDING'}
                                 </span>
@@ -2692,7 +2726,11 @@ export default function AdminDashboardPage() {
                                 <div className="flex items-center justify-end gap-1.5">
                                   <button
                                     onClick={() => handleOpenEditSeller(seller)}
-                                    className="p-1.5 bg-white/5 hover:bg-[#FFC107]/20 hover:text-[#FFC107] rounded-lg text-slate-400 transition-colors"
+                                    className={`p-1.5 rounded-lg transition-colors ${
+                                      isLight
+                                        ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 shadow-sm'
+                                        : 'bg-white/5 hover:bg-[#FFC107]/20 hover:text-[#FFC107] text-slate-400'
+                                    }`}
                                     title="Edit Store Profile & Commission"
                                   >
                                     <Edit className="w-3.5 h-3.5" />
@@ -2700,9 +2738,13 @@ export default function AdminDashboardPage() {
                                   <button
                                     onClick={() => handleToggleSellerApproval(seller.id, seller.isApproved)}
                                     className={`p-1.5 rounded-lg border text-xs transition-colors ${
-                                      seller.isApproved
-                                        ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border-amber-500/20'
-                                        : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/20'
+                                      isLight
+                                        ? seller.isApproved
+                                          ? 'bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-300 shadow-sm'
+                                          : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-300 shadow-sm'
+                                        : seller.isApproved
+                                          ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border-amber-500/20'
+                                          : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/20'
                                     }`}
                                     title={seller.isApproved ? 'Suspend Store Verification' : 'Verify Store'}
                                   >
@@ -2710,7 +2752,11 @@ export default function AdminDashboardPage() {
                                   </button>
                                   <button
                                     onClick={() => handleDeleteSeller(seller.id, seller.name)}
-                                    className="p-1.5 bg-white/5 hover:bg-rose-500/20 hover:text-rose-400 rounded-lg text-slate-400 transition-colors"
+                                    className={`p-1.5 rounded-lg transition-colors ${
+                                      isLight
+                                        ? 'bg-slate-100 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-300 text-slate-700 border border-slate-200 shadow-sm'
+                                        : 'bg-white/5 hover:bg-rose-500/20 hover:text-rose-400 text-slate-400'
+                                    }`}
                                     title="Delete Store & Catalog"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
@@ -2721,7 +2767,7 @@ export default function AdminDashboardPage() {
                           ))}
                         {adminSellers.length === 0 && (
                           <tr>
-                            <td colSpan={7} className="py-8 text-center text-slate-500">
+                            <td colSpan={7} className={`py-8 text-center ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                               No stores registered yet. Use verified vendor creation or approve KYC requests.
                             </td>
                           </tr>

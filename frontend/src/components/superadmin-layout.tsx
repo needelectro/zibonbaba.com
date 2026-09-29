@@ -111,29 +111,33 @@ export default function SuperAdminLayout({
     router.push('/login');
   };
 
+  const isLight = adminTheme === 'light';
+
   return (
     <div
       data-admin-theme={adminTheme}
       className={`flex h-screen font-sans overflow-hidden transition-colors duration-200 ${
-        adminTheme === 'light' ? 'admin-light bg-slate-100 text-slate-900' : 'admin-dark bg-slate-900 text-slate-100'
+        isLight ? 'admin-light bg-slate-50 text-slate-900' : 'admin-dark bg-slate-900 text-slate-100'
       }`}
     >
       {/* ── Sidebar Navigation ── */}
       <aside
         className={`${
           sidebarOpen ? 'w-64' : 'w-20'
-        } transition-all duration-300 flex-shrink-0 bg-slate-950 border-r border-slate-800 flex flex-col z-20 shadow-2xl`}
+        } transition-all duration-300 flex-shrink-0 flex flex-col z-20 ${
+          isLight ? 'bg-white border-r border-slate-200 shadow-sm' : 'bg-slate-950 border-r border-slate-800 shadow-2xl'
+        }`}
       >
         {/* Brand Logo */}
-        <div className="flex items-center justify-between px-5 py-5 border-b border-slate-800/80">
+        <div className={`flex items-center justify-between px-5 py-5 border-b ${isLight ? 'border-slate-200' : 'border-slate-800/80'}`}>
           <Link href="/superadmin" className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-600 flex items-center justify-center flex-shrink-0 shadow-lg text-slate-950 font-black text-xl">
               Z
             </div>
             {sidebarOpen && (
               <div className="min-w-0">
-                <p className="text-white font-black text-base tracking-tight leading-none truncate">Zibonbaba</p>
-                <span className="text-[10px] font-extrabold text-amber-500 uppercase tracking-widest block mt-0.5">
+                <p className={`font-black text-base tracking-tight leading-none truncate ${isLight ? 'text-slate-900' : 'text-white'}`}>Zibonbaba</p>
+                <span className={`text-[10px] font-extrabold uppercase tracking-widest block mt-0.5 ${isLight ? 'text-amber-700' : 'text-amber-500'}`}>
                   Super Admin
                 </span>
               </div>
@@ -154,11 +158,19 @@ export default function SuperAdminLayout({
                 className={`flex items-center gap-3 px-3.5 py-3 rounded-2xl transition-all duration-200 group ${
                   isActive
                     ? 'bg-amber-500 text-slate-950 font-black shadow-lg shadow-amber-500/20'
-                    : 'text-slate-400 hover:bg-slate-800/60 hover:text-white font-bold'
+                    : isLight
+                      ? 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-bold'
+                      : 'text-slate-400 hover:bg-slate-800/60 hover:text-white font-bold'
                 }`}
                 title={item.label}
               >
-                <Icon size={20} className={`flex-shrink-0 ${isActive ? 'text-slate-950' : 'text-slate-400 group-hover:text-amber-400'}`} />
+                <Icon size={20} className={`flex-shrink-0 ${
+                  isActive
+                    ? 'text-slate-950'
+                    : isLight
+                      ? 'text-slate-500 group-hover:text-amber-700'
+                      : 'text-slate-400 group-hover:text-amber-400'
+                }`} />
                 {sidebarOpen && <span className="text-xs truncate">{item.label}</span>}
               </Link>
             );
@@ -166,23 +178,33 @@ export default function SuperAdminLayout({
         </nav>
 
         {/* User Info & Logout */}
-        <div className="p-3 border-t border-slate-800/80 bg-slate-950/60">
+        <div className={`p-3 border-t ${isLight ? 'border-slate-200 bg-slate-50/80' : 'border-slate-800/80 bg-slate-950/60'}`}>
           {sidebarOpen ? (
-            <div className="flex items-center justify-between p-2.5 rounded-2xl bg-slate-900 border border-slate-800 mb-2">
+            <div className={`flex items-center justify-between p-2.5 rounded-2xl border mb-2 ${
+              isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-900 border-slate-800'
+            }`}>
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-400 font-black flex items-center justify-center text-xs shrink-0">
+                <div className={`w-8 h-8 rounded-xl font-black flex items-center justify-center text-xs shrink-0 border ${
+                  isLight ? 'bg-amber-100 border-amber-300 text-amber-800' : 'bg-amber-500/20 border-amber-500/40 text-amber-400'
+                }`}>
                   {username ? username.charAt(0).toUpperCase() : 'S'}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs font-black text-white truncate">{username || 'Super Admin'}</p>
-                  <span className="text-[9px] text-emerald-400 font-extrabold uppercase">Verified Admin</span>
+                  <p className={`text-xs font-black truncate ${isLight ? 'text-slate-900' : 'text-white'}`}>{username || 'Super Admin'}</p>
+                  <span className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded ${
+                    isLight ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'text-emerald-400'
+                  }`}>Verified Admin</span>
                 </div>
               </div>
             </div>
           ) : null}
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl text-slate-400 hover:bg-rose-500/10 hover:text-rose-400 hover:border-rose-500/20 border border-transparent transition-all text-xs font-extrabold"
+            className={`flex items-center gap-3 w-full px-3.5 py-2.5 rounded-2xl transition-all text-xs font-extrabold border ${
+              isLight
+                ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 hover:text-rose-800 border-rose-200 shadow-sm'
+                : 'text-slate-400 hover:bg-rose-500/10 hover:text-rose-400 hover:border-rose-500/20 border-transparent'
+            }`}
           >
             <LogOut size={18} />
             {sidebarOpen && <span>Sign Out</span>}
@@ -191,51 +213,71 @@ export default function SuperAdminLayout({
       </aside>
 
       {/* ── Main Content Region ── */}
-      <div className="flex-1 flex flex-col overflow-hidden bg-slate-900">
+      <div className={`flex-1 flex flex-col overflow-hidden ${isLight ? 'bg-slate-50' : 'bg-slate-900'}`}>
         {/* Top Header Bar */}
-        <header className="bg-slate-950/90 border-b border-slate-800/80 px-6 py-4 flex items-center justify-between shadow-md backdrop-blur-md shrink-0">
+        <header className={`px-6 py-4 flex items-center justify-between shadow-sm backdrop-blur-md shrink-0 border-b ${
+          isLight ? 'bg-white/95 border-slate-200' : 'bg-slate-950/90 border-slate-800/80'
+        }`}>
           <div className="flex items-center gap-4">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+              className={`p-2 rounded-xl border transition-colors ${
+                isLight
+                  ? 'bg-slate-100 border-slate-300 hover:bg-slate-200 text-slate-700'
+                  : 'bg-slate-900 border-slate-800 hover:bg-slate-800 text-slate-400 hover:text-white'
+              }`}
               title="Toggle Navigation Menu"
             >
               <Menu size={18} />
             </button>
             <div>
-              <h1 className="text-base font-black text-white tracking-tight">{title}</h1>
-              <p className="text-[11px] text-slate-400 font-semibold">{subtitle}</p>
+              <h1 className={`text-base font-black tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>{title}</h1>
+              <p className={`text-[11px] font-semibold ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>{subtitle}</p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
             {/* Quick Search */}
-            <div className="hidden sm:flex items-center bg-slate-900 border border-slate-800 rounded-2xl px-3 py-1.5 text-xs text-slate-300 focus-within:border-amber-500/50 w-64 transition-all">
-              <Search size={14} className="text-slate-500 mr-2" />
+            <div className={`hidden sm:flex items-center rounded-2xl px-3 py-1.5 text-xs w-64 transition-all border ${
+              isLight
+                ? 'bg-slate-50 border-slate-300 text-slate-900 focus-within:border-amber-500'
+                : 'bg-slate-900 border-slate-800 text-slate-300 focus-within:border-amber-500/50'
+            }`}>
+              <Search size={14} className={isLight ? 'text-slate-500 mr-2' : 'text-slate-500 mr-2'} />
               <input
                 type="text"
                 placeholder="Quick search accounts, logs..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-transparent outline-none w-full text-xs placeholder:text-slate-500 font-medium"
+                className={`bg-transparent outline-none w-full text-xs font-semibold ${
+                  isLight ? 'text-slate-900 placeholder:text-slate-500' : 'text-slate-200 placeholder:text-slate-500'
+                }`}
               />
             </div>
 
             {/* System Status Indicator */}
-            <div className="hidden md:flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-extrabold px-3 py-1.5 rounded-2xl">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+            <div className={`hidden md:flex items-center gap-2 text-[10px] font-extrabold px-3 py-1.5 rounded-2xl border ${
+              isLight
+                ? 'bg-emerald-50 text-emerald-800 border-emerald-300 shadow-sm'
+                : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+            }`}>
+              <span className={`w-2 h-2 rounded-full animate-ping ${isLight ? 'bg-emerald-600' : 'bg-emerald-400'}`}></span>
               <span>All Systems Operational</span>
             </div>
 
             {/* Theme Switcher Toggle */}
             <button
               onClick={toggleAdminTheme}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 hover:text-white transition-all text-xs font-bold shrink-0 cursor-pointer shadow-sm active:scale-95"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-2xl border transition-all text-xs font-bold shrink-0 cursor-pointer shadow-sm active:scale-95 ${
+                isLight
+                  ? 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-800'
+                  : 'bg-slate-900 border-slate-800 hover:bg-slate-800 text-slate-300 hover:text-white'
+              }`}
               title={adminTheme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
             >
               {adminTheme === 'light' ? (
                 <>
-                  <Moon size={14} className="text-indigo-500" />
+                  <Moon size={14} className="text-indigo-600" />
                   <span className="hidden sm:inline">Dark</span>
                 </>
               ) : (
@@ -249,7 +291,11 @@ export default function SuperAdminLayout({
             {/* Back to Site Button */}
             <Link
               href="/customer"
-              className="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white font-bold text-xs px-3 py-2 rounded-2xl transition-colors flex items-center gap-1.5"
+              className={`border font-bold text-xs px-3 py-2 rounded-2xl transition-colors flex items-center gap-1.5 ${
+                isLight
+                  ? 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-800 hover:text-slate-950 shadow-sm'
+                  : 'bg-slate-900 hover:bg-slate-800 border-slate-800 text-slate-300 hover:text-white'
+              }`}
             >
               <span>Customer View</span>
               <ChevronRight size={14} />

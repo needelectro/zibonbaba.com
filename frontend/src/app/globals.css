@@ -432,15 +432,14 @@ html, body {
 /* ------------------------------------------------------------------------- */
 
 /* Chart bar column track & progress tracks in light mode */
-.admin-light .bg-white\/5,
-[data-admin-theme="light"] .bg-white\/5 {
+.admin-light .chart-track,
+.admin-light [class*="h-44"] .bg-white\/5,
+.admin-light .group .h-full.bg-white\/5,
+[data-admin-theme="light"] .chart-track,
+[data-admin-theme="light"] [class*="h-44"] .bg-white\/5,
+[data-admin-theme="light"] .group .h-full.bg-white\/5 {
   background-color: #e2e8f0 !important;
   border-color: #cbd5e1 !important;
-}
-
-.admin-light .bg-white\/5 svg,
-[data-admin-theme="light"] .bg-white\/5 svg {
-  color: #334155 !important;
 }
 
 /* Chart bar hover interaction */
@@ -501,7 +500,7 @@ html, body {
 /* Level 3: Secondary Labels, Card Titles, Table Headers */
 .admin-light .text-slate-400,
 [data-admin-theme="light"] .text-slate-400 {
-  color: #334155 !important;
+  color: #475569 !important;
   font-weight: 600;
 }
 
@@ -539,25 +538,19 @@ html, body {
 .admin-light .text-yellow-500,
 [data-admin-theme="light"] .text-\[\#FFC107\],
 [data-admin-theme="light"] .text-amber-400,
-[data-admin-theme="light"] .text-amber-300 {
-  color: #b45309 !important;
+[data-admin-theme="light"] .text-amber-300,
+[data-admin-theme="light"] .text-yellow-400,
+[data-admin-theme="light"] .text-yellow-500 {
+  color: #92400e !important;
+  font-weight: 800 !important;
 }
 
 .admin-light .text-amber-500,
 .admin-light .text-amber-600,
-[data-admin-theme="light"] .text-amber-500 {
-  color: #92400e !important;
-}
-
-.admin-light .bg-amber-500\/10,
-.admin-light .bg-amber-500\/20,
-.admin-light .bg-amber-400\/10,
-.admin-light .bg-amber-400\/20,
-[data-admin-theme="light"] .bg-amber-500\/10,
-[data-admin-theme="light"] .bg-amber-500\/20 {
-  background-color: #fffbeb !important;
-  border-color: #fde68a !important;
-  color: #b45309 !important;
+[data-admin-theme="light"] .text-amber-500,
+[data-admin-theme="light"] .text-amber-600 {
+  color: #78350f !important;
+  font-weight: 800 !important;
 }
 
 /* Solid gold buttons keep dark black text */
@@ -578,92 +571,505 @@ html, body {
 }
 
 /* ------------------------------------------------------------------------- */
-/* 8. STATUS BADGES & HIGH-CONTRAST ACCENTS                                  */
+/* 8. STATUS BADGES & HIGH-CONTRAST ACCENTS (CRISP SOLID TINTS)              */
 /* ------------------------------------------------------------------------- */
 
-/* Emerald / Success */
+/* Emerald / Success / Verified / Approved / Delivered / Allowed / Active */
+.admin-light .bg-emerald-950,
+.admin-light .bg-emerald-900,
+.admin-light .bg-green-950,
+.admin-light [class*="bg-emerald-950"],
+.admin-light [class*="bg-emerald-500/"],
+.admin-light [class*="bg-emerald-400/"],
+.admin-light [class*="bg-green-500/"],
+[data-admin-theme="light"] .bg-emerald-950,
+[data-admin-theme="light"] .bg-emerald-900,
+[data-admin-theme="light"] [class*="bg-emerald-950"],
+[data-admin-theme="light"] [class*="bg-emerald-500/"],
+[data-admin-theme="light"] [class*="bg-emerald-400/"],
+[data-admin-theme="light"] [class*="bg-green-500/"] {
+  background-color: #d1fae5 !important;
+  border-color: #6ee7b7 !important;
+  color: #065f46 !important;
+  font-weight: 800 !important;
+}
+
 .admin-light .text-emerald-400,
 .admin-light .text-emerald-500,
+.admin-light tbody td.text-emerald-400,
+.admin-light .bg-emerald-950 .text-emerald-400,
 [data-admin-theme="light"] .text-emerald-400,
-[data-admin-theme="light"] .text-emerald-500 {
-  color: #047857 !important;
-  font-weight: 700;
+[data-admin-theme="light"] .text-emerald-500,
+[data-admin-theme="light"] tbody td.text-emerald-400 {
+  color: #065f46 !important;
+  font-weight: 800 !important;
 }
 
-.admin-light .bg-emerald-500\/10,
-.admin-light .bg-emerald-500\/20,
-.admin-light .bg-emerald-400\/10,
-.admin-light .bg-emerald-400\/20,
-[data-admin-theme="light"] .bg-emerald-500\/10,
-[data-admin-theme="light"] .bg-emerald-500\/20 {
-  background-color: #ecfdf5 !important;
-  border-color: #a7f3d0 !important;
-  color: #047857 !important;
+/* Rose / Red / Danger / Cancelled / Suspended / Low Stock / Blocked */
+.admin-light .bg-rose-950,
+.admin-light .bg-rose-900,
+.admin-light .bg-red-950,
+.admin-light .bg-red-900,
+.admin-light [class*="bg-rose-950"],
+.admin-light [class*="bg-red-950"],
+.admin-light [class*="bg-rose-500/"],
+.admin-light [class*="bg-rose-400/"],
+.admin-light [class*="bg-red-500/"],
+.admin-light [class*="bg-red-400/"],
+[data-admin-theme="light"] .bg-rose-950,
+[data-admin-theme="light"] .bg-rose-900,
+[data-admin-theme="light"] .bg-red-950,
+[data-admin-theme="light"] [class*="bg-rose-950"],
+[data-admin-theme="light"] [class*="bg-red-950"],
+[data-admin-theme="light"] [class*="bg-rose-500/"],
+[data-admin-theme="light"] [class*="bg-rose-400/"],
+[data-admin-theme="light"] [class*="bg-red-500/"],
+[data-admin-theme="light"] [class*="bg-red-400/"] {
+  background-color: #ffe4e6 !important;
+  border-color: #fda4af !important;
+  color: #9f1239 !important;
+  font-weight: 800 !important;
 }
 
-/* Rose / Red / Danger */
 .admin-light .text-rose-400,
 .admin-light .text-rose-500,
 .admin-light .text-red-400,
 .admin-light .text-red-500,
 [data-admin-theme="light"] .text-rose-400,
 [data-admin-theme="light"] .text-rose-500 {
-  color: #be123c !important;
-  font-weight: 700;
+  color: #9f1239 !important;
+  font-weight: 800 !important;
 }
 
-.admin-light .bg-rose-500\/10,
-.admin-light .bg-rose-500\/20,
-.admin-light .bg-rose-400\/10,
-.admin-light .bg-rose-400\/20,
-.admin-light .bg-red-500\/10,
-.admin-light .bg-red-500\/20,
-[data-admin-theme="light"] .bg-rose-500\/10,
-[data-admin-theme="light"] .bg-rose-500\/20 {
-  background-color: #fff1f2 !important;
-  border-color: #fecdd3 !important;
-  color: #be123c !important;
+/* Amber / Yellow / Pending / In-Progress / Flagged / Warnings */
+.admin-light .bg-amber-950,
+.admin-light .bg-amber-900,
+.admin-light .bg-yellow-950,
+.admin-light [class*="bg-amber-950"],
+.admin-light [class*="bg-yellow-500/"],
+.admin-light [class*="bg-yellow-400/"],
+.admin-light [class*="bg-amber-500/"],
+.admin-light [class*="bg-amber-400/"],
+.admin-light [class*="bg-[#FFC107]/"],
+[data-admin-theme="light"] .bg-amber-950,
+[data-admin-theme="light"] .bg-amber-900,
+[data-admin-theme="light"] [class*="bg-amber-950"],
+[data-admin-theme="light"] [class*="bg-yellow-500/"],
+[data-admin-theme="light"] [class*="bg-yellow-400/"],
+[data-admin-theme="light"] [class*="bg-amber-500/"],
+[data-admin-theme="light"] [class*="bg-amber-400/"],
+[data-admin-theme="light"] [class*="bg-[#FFC107]/"] {
+  background-color: #fef3c7 !important;
+  border-color: #fcd34d !important;
+  color: #92400e !important;
+  font-weight: 800 !important;
 }
 
-/* Blue / Info */
+/* Blue / Info / Processing */
+.admin-light .bg-blue-950,
+.admin-light .bg-blue-900,
+.admin-light [class*="bg-blue-950"],
+.admin-light [class*="bg-blue-500/"],
+.admin-light [class*="bg-blue-400/"],
+.admin-light [class*="bg-blue-600/"],
+[data-admin-theme="light"] .bg-blue-950,
+[data-admin-theme="light"] .bg-blue-900,
+[data-admin-theme="light"] [class*="bg-blue-950"],
+[data-admin-theme="light"] [class*="bg-blue-500/"],
+[data-admin-theme="light"] [class*="bg-blue-400/"] {
+  background-color: #dbeafe !important;
+  border-color: #93c5fd !important;
+  color: #1e40af !important;
+  font-weight: 800 !important;
+}
+
 .admin-light .text-blue-400,
 .admin-light .text-blue-500,
 .admin-light .text-indigo-400,
 [data-admin-theme="light"] .text-blue-400,
 [data-admin-theme="light"] .text-blue-500 {
-  color: #1d4ed8 !important;
-  font-weight: 700;
+  color: #1e40af !important;
+  font-weight: 800 !important;
 }
 
-.admin-light .bg-blue-500\/10,
-.admin-light .bg-blue-500\/20,
-.admin-light .bg-blue-400\/10,
-.admin-light .bg-blue-400\/20,
-[data-admin-theme="light"] .bg-blue-500\/10,
-[data-admin-theme="light"] .bg-blue-500\/20 {
-  background-color: #eff6ff !important;
-  border-color: #bfdbfe !important;
-  color: #1d4ed8 !important;
+/* Purple / Reseller */
+.admin-light .bg-purple-950,
+.admin-light .bg-purple-900,
+.admin-light [class*="bg-purple-950"],
+.admin-light [class*="bg-purple-500/"],
+.admin-light [class*="bg-purple-400/"],
+[data-admin-theme="light"] .bg-purple-950,
+[data-admin-theme="light"] [class*="bg-purple-950"],
+[data-admin-theme="light"] [class*="bg-purple-500/"] {
+  background-color: #f3e8ff !important;
+  border-color: #d8b4fe !important;
+  color: #6b21a8 !important;
+  font-weight: 800 !important;
 }
 
-/* Purple / Violet */
 .admin-light .text-purple-400,
 .admin-light .text-purple-500,
 [data-admin-theme="light"] .text-purple-400 {
-  color: #6d28d9 !important;
-  font-weight: 700;
+  color: #6b21a8 !important;
+  font-weight: 800 !important;
 }
 
-.admin-light .bg-purple-500\/10,
-.admin-light .bg-purple-500\/20,
-[data-admin-theme="light"] .bg-purple-500\/10 {
-  background-color: #faf5ff !important;
-  border-color: #e9d5ff !important;
-  color: #6d28d9 !important;
+/* System Role Badges & Chips */
+.admin-light span.bg-slate-800,
+.admin-light span.bg-slate-900,
+.admin-light span[class*="bg-slate-800"],
+.admin-light span[class*="bg-slate-900"],
+[data-admin-theme="light"] span.bg-slate-800,
+[data-admin-theme="light"] span.bg-slate-900 {
+  background-color: #fef3c7 !important;
+  border-color: #fcd34d !important;
+  color: #78350f !important;
+  font-weight: 800 !important;
+}
+
+/* Border overrides for colored chips */
+.admin-light .border-emerald-800,
+.admin-light .border-emerald-900,
+.admin-light .border-emerald-700,
+[data-admin-theme="light"] .border-emerald-800,
+[data-admin-theme="light"] .border-emerald-900 {
+  border-color: #6ee7b7 !important;
+}
+
+.admin-light .border-rose-800,
+.admin-light .border-rose-900,
+.admin-light .border-rose-700,
+.admin-light .border-red-800,
+[data-admin-theme="light"] .border-rose-800,
+[data-admin-theme="light"] .border-rose-900 {
+  border-color: #fda4af !important;
+}
+
+.admin-light .border-amber-800,
+.admin-light .border-amber-900,
+.admin-light .border-amber-700,
+[data-admin-theme="light"] .border-amber-800,
+[data-admin-theme="light"] .border-amber-900 {
+  border-color: #fcd34d !important;
+}
+
+.admin-light .border-blue-800,
+.admin-light .border-blue-900,
+[data-admin-theme="light"] .border-blue-800 {
+  border-color: #93c5fd !important;
 }
 
 /* ------------------------------------------------------------------------- */
-/* 9. SOLID ACTION BUTTONS (CRISP WHITE TEXT PRESERVATION)                   */
+/* 9. SUB-NAVIGATION TABS, FILTERS & PILL BUTTONS                            */
+/* ------------------------------------------------------------------------- */
+
+/* Inactive tabs (e.g. KYC Applications Queue, Order status pills) */
+.admin-light button.bg-white\/5,
+.admin-light a.bg-white\/5,
+.admin-light span.bg-white\/5,
+[data-admin-theme="light"] button.bg-white\/5,
+[data-admin-theme="light"] a.bg-white\/5,
+[data-admin-theme="light"] span.bg-white\/5 {
+  background-color: #f1f5f9 !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #334155 !important;
+  font-weight: 700 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+}
+
+.admin-light button.bg-white\/5:hover,
+.admin-light a.bg-white\/5:hover,
+[data-admin-theme="light"] button.bg-white\/5:hover,
+[data-admin-theme="light"] a.bg-white\/5:hover {
+  background-color: #e2e8f0 !important;
+  border-color: #94a3b8 !important;
+  color: #0f172a !important;
+}
+
+.admin-light button.bg-white\/5 svg,
+.admin-light a.bg-white\/5 svg,
+[data-admin-theme="light"] button.bg-white\/5 svg,
+[data-admin-theme="light"] a.bg-white\/5 svg {
+  color: #475569 !important;
+}
+
+.admin-light button.bg-white\/5:hover svg,
+.admin-light a.bg-white\/5:hover svg,
+[data-admin-theme="light"] button.bg-white\/5:hover svg,
+[data-admin-theme="light"] a.bg-white\/5:hover svg {
+  color: #0f172a !important;
+}
+
+/* Active tab buttons */
+.admin-light button.bg-\[\#FFC107\],
+.admin-light button.bg-amber-400,
+.admin-light button.bg-amber-500,
+[data-admin-theme="light"] button.bg-\[\#FFC107\],
+[data-admin-theme="light"] button.bg-amber-400,
+[data-admin-theme="light"] button.bg-amber-500 {
+  background-color: #f59e0b !important;
+  border: 1px solid #d97706 !important;
+  color: #000000 !important;
+  font-weight: 900 !important;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.25) !important;
+}
+
+/* ------------------------------------------------------------------------- */
+/* 10. SEARCH BARS & INPUT CONTAINERS                                        */
+/* ------------------------------------------------------------------------- */
+
+/* Search bar outer wrapper */
+.admin-light div.bg-white\/5:has(input),
+.admin-light div.bg-white\/5:has(svg),
+[data-admin-theme="light"] div.bg-white\/5:has(input),
+[data-admin-theme="light"] div.bg-white\/5:has(svg) {
+  background-color: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+}
+
+.admin-light div.bg-white\/5:has(input):focus-within,
+[data-admin-theme="light"] div.bg-white\/5:has(input):focus-within {
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2) !important;
+}
+
+/* Inner input in search bar */
+.admin-light input.bg-transparent,
+[data-admin-theme="light"] input.bg-transparent {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #0f172a !important;
+  font-weight: 600 !important;
+}
+
+.admin-light input.bg-transparent::placeholder,
+[data-admin-theme="light"] input.bg-transparent::placeholder {
+  color: #64748b !important;
+  font-weight: 500 !important;
+}
+
+.admin-light div.bg-white\/5 svg,
+[data-admin-theme="light"] div.bg-white\/5 svg {
+  color: #64748b !important;
+}
+
+/* ------------------------------------------------------------------------- */
+/* 11. FORM INPUTS, TEXTAREAS & SELECTS                                      */
+/* ------------------------------------------------------------------------- */
+
+.admin-light input:not([type="checkbox"]):not([type="radio"]):not(.bg-transparent),
+.admin-light textarea,
+.admin-light select,
+[data-admin-theme="light"] input:not([type="checkbox"]):not([type="radio"]):not(.bg-transparent),
+[data-admin-theme="light"] textarea,
+[data-admin-theme="light"] select {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+}
+
+.admin-light select,
+.admin-light select.bg-gray-900,
+.admin-light select.bg-slate-900,
+[data-admin-theme="light"] select,
+[data-admin-theme="light"] select.bg-gray-900,
+[data-admin-theme="light"] select.bg-slate-900 {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+.admin-light select option,
+[data-admin-theme="light"] select option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+.admin-light input::placeholder,
+.admin-light textarea::placeholder,
+[data-admin-theme="light"] input::placeholder,
+[data-admin-theme="light"] textarea::placeholder {
+  color: #64748b !important;
+}
+
+.admin-light input:focus,
+.admin-light textarea:focus,
+.admin-light select:focus,
+[data-admin-theme="light"] input:focus,
+[data-admin-theme="light"] textarea:focus,
+[data-admin-theme="light"] select:focus {
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2) !important;
+}
+
+/* ------------------------------------------------------------------------- */
+/* 12. DATA TABLES & ACTION BUTTONS                                          */
+/* ------------------------------------------------------------------------- */
+
+.admin-light thead,
+[data-admin-theme="light"] thead {
+  background-color: #f8fafc !important;
+}
+
+.admin-light thead tr,
+.admin-light thead tr.bg-white\/5,
+[data-admin-theme="light"] thead tr,
+[data-admin-theme="light"] thead tr.bg-white\/5 {
+  background-color: #f8fafc !important;
+  border-bottom: 2px solid #e2e8f0 !important;
+}
+
+.admin-light thead th,
+.admin-light thead th.text-slate-400,
+[data-admin-theme="light"] thead th,
+[data-admin-theme="light"] thead th.text-slate-400 {
+  color: #1e293b !important;
+  border-bottom: 2px solid #e2e8f0 !important;
+  font-weight: 800 !important;
+  font-size: 11px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+
+.admin-light tbody,
+[data-admin-theme="light"] tbody {
+  background-color: #ffffff !important;
+}
+
+.admin-light tbody tr,
+[data-admin-theme="light"] tbody tr {
+  border-bottom: 1px solid #f1f5f9 !important;
+  background-color: #ffffff;
+  transition: background-color 0.15s ease !important;
+}
+
+.admin-light tbody tr:hover,
+.admin-light tbody tr.hover\:bg-white\/5:hover,
+[data-admin-theme="light"] tbody tr:hover,
+[data-admin-theme="light"] tbody tr.hover\:bg-white\/5:hover {
+  background-color: #f8fafc !important;
+}
+
+.admin-light tbody td,
+[data-admin-theme="light"] tbody td {
+  color: #1e293b !important;
+}
+
+/* Primary text in cells: Store name, customer name, order ref */
+.admin-light tbody td h4,
+.admin-light tbody td .text-white,
+[data-admin-theme="light"] tbody td h4,
+[data-admin-theme="light"] tbody td .text-white {
+  color: #0f172a !important;
+  font-weight: 800 !important;
+}
+
+/* Secondary descriptions, subtitles, emails in cells */
+.admin-light tbody td p.text-slate-400,
+.admin-light tbody td .text-slate-400,
+.admin-light tbody td .text-slate-500,
+.admin-light tbody td .text-slate-300,
+.admin-light tbody td .text-slate-200,
+.admin-light tbody td span.font-mono,
+.admin-light tbody td .font-mono,
+[data-admin-theme="light"] tbody td p.text-slate-400,
+[data-admin-theme="light"] tbody td .text-slate-400,
+[data-admin-theme="light"] tbody td .text-slate-500,
+[data-admin-theme="light"] tbody td .text-slate-300,
+[data-admin-theme="light"] tbody td .text-slate-200,
+[data-admin-theme="light"] tbody td span.font-mono,
+[data-admin-theme="light"] tbody td .font-mono {
+  color: #1e293b !important;
+  font-weight: 700 !important;
+}
+
+/* Store logo & avatar image borders in table cells */
+.admin-light tbody td img,
+[data-admin-theme="light"] tbody td img {
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Action Icon Buttons inside Table Cells */
+.admin-light tbody td button,
+[data-admin-theme="light"] tbody td button {
+  background-color: #f1f5f9 !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #334155 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+}
+
+.admin-light tbody td button svg,
+[data-admin-theme="light"] tbody td button svg {
+  color: #334155 !important;
+}
+
+.admin-light tbody td button:hover,
+[data-admin-theme="light"] tbody td button:hover {
+  background-color: #e2e8f0 !important;
+  border-color: #94a3b8 !important;
+  color: #0f172a !important;
+}
+
+.admin-light tbody td button:hover svg,
+[data-admin-theme="light"] tbody td button:hover svg {
+  color: #0f172a !important;
+}
+
+/* Amber Action Toggle (e.g. Suspend/EyeOff) */
+.admin-light tbody td button[class*="amber"],
+[data-admin-theme="light"] tbody td button[class*="amber"] {
+  background-color: #fffbeb !important;
+  border-color: #fde68a !important;
+  color: #92400e !important;
+}
+
+.admin-light tbody td button[class*="amber"] svg,
+[data-admin-theme="light"] tbody td button[class*="amber"] svg {
+  color: #92400e !important;
+}
+
+/* Emerald Action Toggle (e.g. Verify/Check) */
+.admin-light tbody td button[class*="emerald"],
+[data-admin-theme="light"] tbody td button[class*="emerald"] {
+  background-color: #ecfdf5 !important;
+  border-color: #a7f3d0 !important;
+  color: #047857 !important;
+}
+
+.admin-light tbody td button[class*="emerald"] svg,
+[data-admin-theme="light"] tbody td button[class*="emerald"] svg {
+  color: #047857 !important;
+}
+
+/* Rose / Trash Action Hover */
+.admin-light tbody td button:hover:has(svg.lucide-trash-2),
+.admin-light tbody td button[class*="rose"]:hover,
+[data-admin-theme="light"] tbody td button:hover:has(svg.lucide-trash-2),
+[data-admin-theme="light"] tbody td button[class*="rose"]:hover {
+  background-color: #fee2e2 !important;
+  border-color: #fca5a5 !important;
+  color: #b91c1c !important;
+}
+
+.admin-light tbody td button:hover:has(svg.lucide-trash-2) svg,
+.admin-light tbody td button[class*="rose"]:hover svg,
+[data-admin-theme="light"] tbody td button:hover:has(svg.lucide-trash-2) svg,
+[data-admin-theme="light"] tbody td button[class*="rose"]:hover svg {
+  color: #b91c1c !important;
+}
+
+/* Manage Button in Orders Table */
+.admin-light tbody td button[class*="rounded-lg"],
+[data-admin-theme="light"] tbody td button[class*="rounded-lg"] {
+  font-weight: 700 !important;
+}
+
+/* ------------------------------------------------------------------------- */
+/* 13. SOLID ACTION BUTTONS (CRISP WHITE TEXT PRESERVATION)                   */
 /* ------------------------------------------------------------------------- */
 
 .admin-light .bg-blue-600,
@@ -678,23 +1084,15 @@ html, body {
 .admin-light .bg-indigo-500,
 .admin-light .bg-purple-600,
 .admin-light [class*="bg-blue-600"],
-.admin-light [class*="bg-blue-500"],
 .admin-light [class*="bg-emerald-600"],
-.admin-light [class*="bg-emerald-500"],
 .admin-light [class*="bg-rose-600"],
-.admin-light [class*="bg-rose-500"],
 .admin-light [class*="bg-red-600"],
-.admin-light [class*="bg-red-500"],
 .admin-light [class*="bg-indigo-600"],
 .admin-light [class*="bg-purple-600"],
 .admin-light [class*="bg-blue-600"] *,
-.admin-light [class*="bg-blue-500"] *,
 .admin-light [class*="bg-emerald-600"] *,
-.admin-light [class*="bg-emerald-500"] *,
 .admin-light [class*="bg-rose-600"] *,
-.admin-light [class*="bg-rose-500"] *,
 .admin-light [class*="bg-red-600"] *,
-.admin-light [class*="bg-red-500"] *,
 .admin-light [class*="bg-indigo-600"] *,
 .admin-light [class*="bg-purple-600"] *,
 [data-admin-theme="light"] [class*="bg-blue-600"],
@@ -705,7 +1103,7 @@ html, body {
 }
 
 /* ------------------------------------------------------------------------- */
-/* 10. BORDERS, DIVIDERS & HOVER STATES                                      */
+/* 14. BORDERS, DIVIDERS & HOVER STATES                                      */
 /* ------------------------------------------------------------------------- */
 
 .admin-light .border-slate-800,
@@ -726,8 +1124,10 @@ html, body {
 
 .admin-light .divide-slate-800,
 .admin-light .divide-slate-800\/60,
+.admin-light .divide-white\/5,
 [data-admin-theme="light"] .divide-slate-800,
-[data-admin-theme="light"] .divide-slate-800\/60 {
+[data-admin-theme="light"] .divide-slate-800\/60,
+[data-admin-theme="light"] .divide-white\/5 {
   border-color: #f1f5f9 !important;
 }
 
@@ -749,72 +1149,9 @@ html, body {
 }
 
 /* ------------------------------------------------------------------------- */
-/* 11. FORM INPUTS & TEXTAREAS                                               */
+/* 15. DRAWERS, MODALS & DIALOGS                                             */
 /* ------------------------------------------------------------------------- */
 
-.admin-light input:not([type="checkbox"]):not([type="radio"]),
-.admin-light textarea,
-.admin-light select,
-[data-admin-theme="light"] input:not([type="checkbox"]):not([type="radio"]),
-[data-admin-theme="light"] textarea,
-[data-admin-theme="light"] select {
-  background-color: #ffffff !important;
-  color: #0f172a !important;
-  border-color: #cbd5e1 !important;
-}
-
-.admin-light input::placeholder,
-.admin-light textarea::placeholder,
-[data-admin-theme="light"] input::placeholder,
-[data-admin-theme="light"] textarea::placeholder {
-  color: #64748b !important;
-}
-
-.admin-light input:focus,
-.admin-light textarea:focus,
-.admin-light select:focus,
-[data-admin-theme="light"] input:focus,
-[data-admin-theme="light"] textarea:focus,
-[data-admin-theme="light"] select:focus {
-  border-color: #f59e0b !important;
-  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2) !important;
-}
-
-/* ------------------------------------------------------------------------- */
-/* 12. DATA TABLES & MODALS                                                  */
-/* ------------------------------------------------------------------------- */
-
-.admin-light thead,
-[data-admin-theme="light"] thead {
-  background-color: #f1f5f9 !important;
-  color: #1e293b !important;
-  border-color: #cbd5e1 !important;
-}
-
-.admin-light thead th,
-[data-admin-theme="light"] thead th {
-  color: #1e293b !important;
-  border-color: #cbd5e1 !important;
-  font-weight: 700 !important;
-}
-
-.admin-light tbody tr,
-[data-admin-theme="light"] tbody tr {
-  border-color: #f1f5f9 !important;
-  background-color: #ffffff;
-}
-
-.admin-light tbody tr:hover,
-[data-admin-theme="light"] tbody tr:hover {
-  background-color: #f8fafc !important;
-}
-
-.admin-light tbody td,
-[data-admin-theme="light"] tbody td {
-  color: #1e293b !important;
-}
-
-/* Drawers & Modals */
 .admin-light .fixed .bg-slate-900,
 .admin-light .fixed .bg-slate-950,
 [data-admin-theme="light"] .fixed .bg-slate-900,
@@ -822,15 +1159,30 @@ html, body {
   background-color: #ffffff !important;
   border-color: #e2e8f0 !important;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.18) !important;
+  color: #0f172a !important;
 }
 
 .admin-light .fixed .bg-slate-950\/40,
-[data-admin-theme="light"] .fixed .bg-slate-950\/40 {
+.admin-light .fixed .bg-white\/5,
+[data-admin-theme="light"] .fixed .bg-slate-950\/40,
+[data-admin-theme="light"] .fixed .bg-white\/5 {
   background-color: #f8fafc !important;
   border-color: #e2e8f0 !important;
 }
 
-/* Light Scrollbar */
+.admin-light .fixed h2,
+.admin-light .fixed h3,
+.admin-light .fixed h4,
+[data-admin-theme="light"] .fixed h2,
+[data-admin-theme="light"] .fixed h3,
+[data-admin-theme="light"] .fixed h4 {
+  color: #0f172a !important;
+}
+
+/* ------------------------------------------------------------------------- */
+/* 16. LIGHT SCROLLBARS                                                      */
+/* ------------------------------------------------------------------------- */
+
 .admin-light ::-webkit-scrollbar-track,
 [data-admin-theme="light"] ::-webkit-scrollbar-track {
   background-color: #f8fafc !important;
@@ -846,5 +1198,6 @@ html, body {
 [data-admin-theme="light"] ::-webkit-scrollbar-thumb:hover {
   background-color: #94a3b8 !important;
 }
+
 
 

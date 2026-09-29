@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import SuperAdminLayout from '@/components/superadmin-layout';
+import { useStore } from '@/store/useStore';
 import {
   Lock,
   Shield,
@@ -59,6 +60,9 @@ const INITIAL_SESSIONS: ActiveSession[] = [
 ];
 
 export default function SecurityLogsPage() {
+  const { adminTheme } = useStore();
+  const isLight = adminTheme === 'light';
+
   const [logs, setLogs] = useState<AuditLog[]>(INITIAL_LOGS);
   const [sessions, setSessions] = useState<ActiveSession[]>(INITIAL_SESSIONS);
   const [blacklistedIps, setBlacklistedIps] = useState<string[]>(['185.220.101.4', '45.15.24.99']);
@@ -138,32 +142,45 @@ export default function SecurityLogsPage() {
       subtitle="Real-time Intrusion Logs, Active Session Revocation & IP Blacklist Firewall Controls"
     >
       {toastMessage && (
-        <div className="mb-6 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 p-4 rounded-2xl text-xs font-bold flex items-center justify-between animate-fade-in shadow-xl">
+        <div className={`mb-6 p-4 rounded-2xl text-xs font-bold flex items-center justify-between animate-fade-in shadow-xl border ${
+          isLight
+            ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
+            : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+        }`}>
           <div className="flex items-center gap-2">
             <CheckCircle size={16} />
             <span>{toastMessage}</span>
           </div>
-          <button onClick={() => setToastMessage(null)} className="text-emerald-500 hover:text-white">✕</button>
+          <button onClick={() => setToastMessage(null)} className={isLight ? 'text-emerald-700 hover:text-emerald-900' : 'text-emerald-500 hover:text-white'}>✕</button>
         </div>
       )}
 
       {/* ── Top Stats Row ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
         {[
-          { label: 'Security Threats Blocked', value: '142', change: '+14 today', color: 'border-rose-500/30 text-rose-400', icon: Shield },
-          { label: 'Active User Sessions', value: sessions.length.toString(), change: 'Live tracked', color: 'border-emerald-500/30 text-emerald-400', icon: Smartphone },
-          { label: 'Blacklisted IP Addresses', value: blacklistedIps.length.toString(), change: 'Firewall protected', color: 'border-amber-500/30 text-amber-400', icon: Globe },
-          { label: '2FA Compliance Rate', value: '98.5%', change: 'Mandatory on Admin', color: 'border-blue-500/30 text-blue-400', icon: Key },
+          { label: 'Security Threats Blocked', value: '142', change: '+14 today', lightBorder: 'border-rose-200', lightText: 'text-rose-700', darkColor: 'border-rose-500/30 text-rose-400', icon: Shield },
+          { label: 'Active User Sessions', value: sessions.length.toString(), change: 'Live tracked', lightBorder: 'border-emerald-200', lightText: 'text-emerald-700', darkColor: 'border-emerald-500/30 text-emerald-400', icon: Smartphone },
+          { label: 'Blacklisted IP Addresses', value: blacklistedIps.length.toString(), change: 'Firewall protected', lightBorder: 'border-amber-200', lightText: 'text-amber-700', darkColor: 'border-amber-500/30 text-amber-400', icon: Globe },
+          { label: '2FA Compliance Rate', value: '98.5%', change: 'Mandatory on Admin', lightBorder: 'border-blue-200', lightText: 'text-blue-700', darkColor: 'border-blue-500/30 text-blue-400', icon: Key },
         ].map((stat, idx) => {
           const Icon = stat.icon;
           return (
-            <div key={idx} className={`bg-slate-950 p-5 rounded-3xl border ${stat.color} shadow-lg`}>
+            <div
+              key={idx}
+              className={`p-5 rounded-3xl border transition-all ${
+                isLight
+                  ? `bg-white ${stat.lightBorder} shadow-sm`
+                  : `bg-slate-950 ${stat.darkColor} shadow-lg`
+              }`}
+            >
               <div className="flex items-center justify-between mb-3">
-                <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">{stat.label}</span>
-                <Icon size={18} />
+                <span className={`text-[10px] font-black uppercase tracking-wider ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                  {stat.label}
+                </span>
+                <Icon size={18} className={isLight ? stat.lightText : ''} />
               </div>
-              <p className="text-2xl font-black text-white">{stat.value}</p>
-              <span className="text-[10px] font-bold text-slate-400 mt-1 block">{stat.change}</span>
+              <p className={`text-2xl font-black ${isLight ? 'text-slate-900' : 'text-white'}`}>{stat.value}</p>
+              <span className={`text-[10px] font-bold mt-1 block ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>{stat.change}</span>
             </div>
           );
         })}
@@ -171,18 +188,24 @@ export default function SecurityLogsPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
         {/* ── Active Sessions Section (2 Cols) ── */}
-        <div className="lg:col-span-2 bg-slate-950 border border-slate-800 rounded-3xl p-6 shadow-xl">
-          <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-5">
+        <div className={`lg:col-span-2 border rounded-3xl p-6 transition-all ${
+          isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-950 border-slate-800 shadow-xl'
+        }`}>
+          <div className={`flex items-center justify-between pb-4 border-b mb-5 ${isLight ? 'border-slate-200' : 'border-slate-800'}`}>
             <div>
-              <h2 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
-                <Smartphone className="w-4 h-4 text-emerald-400" /> Active User Login Sessions
+              <h2 className={`text-sm font-black uppercase tracking-wider flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                <Smartphone className={`w-4 h-4 ${isLight ? 'text-emerald-700' : 'text-emerald-400'}`} /> Active User Login Sessions
               </h2>
-              <p className="text-xs text-slate-400 mt-0.5">Manage live user tokens and terminate suspicious sessions</p>
+              <p className={`text-xs mt-0.5 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>Manage live user tokens and terminate suspicious sessions</p>
             </div>
             {sessions.length > 0 && (
               <button
                 onClick={handleRevokeAllSessions}
-                className="bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 font-extrabold text-xs px-4 py-2 rounded-xl transition-all flex items-center gap-1.5"
+                className={`font-extrabold text-xs px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 border ${
+                  isLight
+                    ? 'bg-rose-50 hover:bg-rose-100 text-rose-800 border-rose-300'
+                    : 'bg-rose-500/10 hover:bg-rose-500/20 border-rose-500/30 text-rose-400'
+                }`}
               >
                 <UserX size={14} /> Revoke All Sessions
               </button>
@@ -190,24 +213,39 @@ export default function SecurityLogsPage() {
           </div>
 
           {sessions.length === 0 ? (
-            <div className="text-center py-12 text-slate-500 text-xs">No active user sessions found.</div>
+            <div className={`text-center py-12 text-xs ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>No active user sessions found.</div>
           ) : (
             <div className="space-y-3">
               {sessions.map((sess) => (
-                <div key={sess.id} className="p-4 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-slate-700 transition-all">
+                <div
+                  key={sess.id}
+                  className={`p-4 border rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all ${
+                    isLight
+                      ? 'bg-slate-50 border-slate-200 hover:bg-slate-100'
+                      : 'bg-slate-900 border-slate-800 hover:border-slate-700'
+                  }`}
+                >
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-black text-xs text-white">{sess.user}</span>
-                      <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-slate-800 text-amber-400 border border-slate-700">
+                      <span className={`font-black text-xs ${isLight ? 'text-slate-900' : 'text-white'}`}>{sess.user}</span>
+                      <span className={`text-[9px] font-black px-2 py-0.5 rounded-full border ${
+                        isLight
+                          ? 'bg-amber-100 text-amber-900 border-amber-300 font-extrabold'
+                          : 'bg-slate-800 text-amber-400 border-slate-700'
+                      }`}>
                         {sess.role}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-400 mt-1">{sess.email} · {sess.device}</p>
-                    <p className="text-[10px] text-slate-500 mt-0.5">IP: {sess.ip} ({sess.location}) · {sess.loginTime}</p>
+                    <p className={`text-xs mt-1 ${isLight ? 'text-slate-700 font-medium' : 'text-slate-400'}`}>{sess.email} · {sess.device}</p>
+                    <p className={`text-[10px] mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>IP: {sess.ip} ({sess.location}) · {sess.loginTime}</p>
                   </div>
                   <button
                     onClick={() => handleRevokeSession(sess.id, sess.email)}
-                    className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold text-xs px-3.5 py-2 rounded-xl transition-colors self-start sm:self-auto shrink-0"
+                    className={`font-bold text-xs px-3.5 py-2 rounded-xl transition-colors self-start sm:self-auto shrink-0 border ${
+                      isLight
+                        ? 'bg-rose-50 hover:bg-rose-100 text-rose-800 border-rose-300'
+                        : 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border-rose-500/30'
+                    }`}
                   >
                     Revoke Session
                   </button>
@@ -218,12 +256,14 @@ export default function SecurityLogsPage() {
         </div>
 
         {/* ── IP Blacklist Firewall (1 Col) ── */}
-        <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6 shadow-xl flex flex-col">
-          <div className="pb-4 border-b border-slate-800 mb-5">
-            <h2 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
-              <Globe className="w-4 h-4 text-amber-400" /> IP Firewall Blacklist
+        <div className={`border rounded-3xl p-6 flex flex-col transition-all ${
+          isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-950 border-slate-800 shadow-xl'
+        }`}>
+          <div className={`pb-4 border-b mb-5 ${isLight ? 'border-slate-200' : 'border-slate-800'}`}>
+            <h2 className={`text-sm font-black uppercase tracking-wider flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+              <Globe className={`w-4 h-4 ${isLight ? 'text-amber-700' : 'text-amber-400'}`} /> IP Firewall Blacklist
             </h2>
-            <p className="text-xs text-slate-400 mt-0.5">Block malicous IPs from accessing Zibonbaba</p>
+            <p className={`text-xs mt-0.5 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>Block malicous IPs from accessing Zibonbaba</p>
           </div>
 
           <form onSubmit={handleAddBlacklistIp} className="flex gap-2 mb-5">
@@ -232,11 +272,15 @@ export default function SecurityLogsPage() {
               placeholder="e.g. 185.220.101.5"
               value={newIpInput}
               onChange={(e) => setNewIpInput(e.target.value)}
-              className="flex-1 bg-slate-900 border border-slate-800 text-white rounded-xl px-3 py-2 text-xs outline-none focus:border-amber-500"
+              className={`flex-1 rounded-xl px-3 py-2 text-xs outline-none border transition-colors ${
+                isLight
+                  ? 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-500 focus:border-amber-500'
+                  : 'bg-slate-900 border-slate-800 text-white placeholder:text-slate-500 focus:border-amber-500'
+              }`}
             />
             <button
               type="submit"
-              className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs px-4 py-2 rounded-xl transition-all flex items-center gap-1 shrink-0"
+              className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs px-4 py-2 rounded-xl transition-all flex items-center gap-1 shrink-0 shadow-sm"
             >
               <Plus size={14} /> Add IP
             </button>
@@ -244,14 +288,21 @@ export default function SecurityLogsPage() {
 
           <div className="flex-1 space-y-2 max-h-64 overflow-y-auto scrollbar-none">
             {blacklistedIps.map((ip) => (
-              <div key={ip} className="p-3 bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-between text-xs">
+              <div
+                key={ip}
+                className={`p-3 border rounded-xl flex items-center justify-between text-xs transition-colors ${
+                  isLight
+                    ? 'bg-slate-50 border-slate-200'
+                    : 'bg-slate-900 border-slate-800'
+                }`}
+              >
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-rose-500"></span>
-                  <span className="font-mono font-bold text-white">{ip}</span>
+                  <span className={`font-mono font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>{ip}</span>
                 </div>
                 <button
                   onClick={() => handleRemoveBlacklistIp(ip)}
-                  className="text-slate-500 hover:text-rose-400 p-1 transition-colors"
+                  className={`p-1 transition-colors ${isLight ? 'text-slate-400 hover:text-rose-600' : 'text-slate-500 hover:text-rose-400'}`}
                   title="Remove from blacklist"
                 >
                   <Trash2 size={14} />
@@ -263,31 +314,45 @@ export default function SecurityLogsPage() {
       </div>
 
       {/* ── System Audit Logs Table ── */}
-      <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6 shadow-xl">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800 mb-5">
+      <div className={`border rounded-3xl p-6 transition-all ${
+        isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-950 border-slate-800 shadow-xl'
+      }`}>
+        <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b mb-5 ${
+          isLight ? 'border-slate-200' : 'border-slate-800'
+        }`}>
           <div>
-            <h2 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
-              <Lock className="w-4 h-4 text-blue-400" /> Live Security Audit Logs
+            <h2 className={`text-sm font-black uppercase tracking-wider flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+              <Lock className={`w-4 h-4 ${isLight ? 'text-blue-700' : 'text-blue-400'}`} /> Live Security Audit Logs
             </h2>
-            <p className="text-xs text-slate-400 mt-0.5">Comprehensive audit trail of authentication and platform operations</p>
+            <p className={`text-xs mt-0.5 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>Comprehensive audit trail of authentication and platform operations</p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             {/* Search */}
-            <div className="flex items-center bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-white">
-              <Search size={14} className="text-slate-500 mr-2" />
+            <div className={`flex items-center border rounded-xl px-3 py-1.5 text-xs ${
+              isLight
+                ? 'bg-white border-slate-300 text-slate-900'
+                : 'bg-slate-900 border-slate-800 text-white'
+            }`}>
+              <Search size={14} className={`mr-2 ${isLight ? 'text-slate-500' : 'text-slate-500'}`} />
               <input
                 type="text"
                 placeholder="Filter logs by user or IP..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-transparent outline-none text-xs placeholder:text-slate-500"
+                className={`bg-transparent outline-none text-xs ${
+                  isLight ? 'text-slate-900 placeholder:text-slate-500' : 'text-white placeholder:text-slate-500'
+                }`}
               />
             </div>
             {/* Risk Filter */}
             <select
               value={riskFilter}
               onChange={(e) => setRiskFilter(e.target.value)}
-              className="bg-slate-900 border border-slate-800 text-slate-300 text-xs font-bold rounded-xl px-3 py-2 outline-none"
+              className={`border text-xs font-bold rounded-xl px-3 py-2 outline-none transition-colors ${
+                isLight
+                  ? 'bg-white border-slate-300 text-slate-900'
+                  : 'bg-slate-900 border-slate-800 text-slate-300'
+              }`}
             >
               <option value="ALL">All Risk Levels</option>
               <option value="LOW">Low Risk</option>
@@ -300,7 +365,11 @@ export default function SecurityLogsPage() {
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-900 text-slate-400 font-extrabold uppercase text-[9px] tracking-wider border-b border-slate-800">
+            <thead className={`font-extrabold uppercase text-[9px] tracking-wider border-b ${
+              isLight
+                ? 'bg-slate-100 text-slate-700 border-slate-300'
+                : 'bg-slate-900 text-slate-400 border-slate-800'
+            }`}>
               <tr>
                 <th className="py-3 px-4">Timestamp</th>
                 <th className="py-3 px-4">User Account</th>
@@ -310,31 +379,43 @@ export default function SecurityLogsPage() {
                 <th className="py-3 px-4">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60 font-medium">
+            <tbody className={`divide-y font-medium ${isLight ? 'divide-slate-200' : 'divide-slate-800/60'}`}>
               {filteredLogs.map((log) => (
-                <tr key={log.id} className="hover:bg-slate-900/60 transition-colors">
-                  <td className="py-3 px-4 text-slate-400 font-mono text-[11px]">{log.timestamp}</td>
-                  <td className="py-3 px-4 font-bold text-white">{log.user}</td>
-                  <td className="py-3 px-4 font-mono font-bold text-amber-400 text-[11px]">{log.action}</td>
-                  <td className="py-3 px-4 text-slate-300">
-                    <span className="font-mono text-slate-200 block">{log.ip}</span>
-                    <span className="text-[10px] text-slate-500 block">{log.device}</span>
+                <tr
+                  key={log.id}
+                  className={`transition-colors ${isLight ? 'hover:bg-slate-50' : 'hover:bg-slate-900/60'}`}
+                >
+                  <td className={`py-3 px-4 font-mono text-[11px] ${isLight ? 'text-slate-700' : 'text-slate-400'}`}>{log.timestamp}</td>
+                  <td className={`py-3 px-4 font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>{log.user}</td>
+                  <td className={`py-3 px-4 font-mono font-bold text-[11px] ${isLight ? 'text-amber-800' : 'text-amber-400'}`}>{log.action}</td>
+                  <td className="py-3 px-4">
+                    <span className={`font-mono block font-semibold ${isLight ? 'text-slate-900' : 'text-slate-200'}`}>{log.ip}</span>
+                    <span className={`text-[10px] block ${isLight ? 'text-slate-600' : 'text-slate-500'}`}>{log.device}</span>
                   </td>
                   <td className="py-3 px-4">
                     <span className={`px-2 py-0.5 rounded-full text-[9px] font-black border ${
-                      log.risk === 'CRITICAL' ? 'bg-rose-500/20 text-rose-400 border-rose-500/30' :
-                      log.risk === 'HIGH' ? 'bg-orange-500/20 text-orange-400 border-orange-500/30' :
-                      log.risk === 'MEDIUM' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
-                      'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                      isLight
+                        ? (log.risk === 'CRITICAL' ? 'bg-rose-100 text-rose-800 border-rose-300' :
+                           log.risk === 'HIGH' ? 'bg-orange-100 text-orange-800 border-orange-300' :
+                           log.risk === 'MEDIUM' ? 'bg-amber-100 text-amber-800 border-amber-300' :
+                           'bg-emerald-100 text-emerald-800 border-emerald-300')
+                        : (log.risk === 'CRITICAL' ? 'bg-rose-500/20 text-rose-400 border-rose-500/30' :
+                           log.risk === 'HIGH' ? 'bg-orange-500/20 text-orange-400 border-orange-500/30' :
+                           log.risk === 'MEDIUM' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
+                           'bg-emerald-500/20 text-emerald-400 border-emerald-500/30')
                     }`}>
                       {log.risk}
                     </span>
                   </td>
                   <td className="py-3 px-4">
-                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
-                      log.status === 'ALLOWED' ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' :
-                      log.status === 'BLOCKED' ? 'bg-rose-950 text-rose-400 border border-rose-800' :
-                      'bg-amber-950 text-amber-400 border border-amber-800'
+                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-black border ${
+                      isLight
+                        ? (log.status === 'ALLOWED' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' :
+                           log.status === 'BLOCKED' ? 'bg-rose-100 text-rose-800 border-rose-300' :
+                           'bg-amber-100 text-amber-800 border-amber-300')
+                        : (log.status === 'ALLOWED' ? 'bg-emerald-950 text-emerald-400 border-emerald-800' :
+                           log.status === 'BLOCKED' ? 'bg-rose-950 text-rose-400 border-rose-800' :
+                           'bg-amber-950 text-amber-400 border-amber-800')
                     }`}>
                       {log.status}
                     </span>

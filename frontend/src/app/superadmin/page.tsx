@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import SuperAdminLayout from '@/components/superadmin-layout';
+import { useStore } from '@/store/useStore';
 import {
   Users,
   Shield,
@@ -35,7 +36,10 @@ const INITIAL_STATS = [
     change: '+14 Active Roles',
     positive: true,
     icon: Users,
-    color: 'border-blue-500/30 text-blue-400',
+    lightBorder: 'border-blue-200',
+    lightIcon: 'text-blue-600',
+    darkBorder: 'border-blue-500/30',
+    darkIcon: 'text-blue-400',
     link: '/superadmin/accounts',
   },
   {
@@ -44,7 +48,10 @@ const INITIAL_STATS = [
     change: '32 Permissions Active',
     positive: true,
     icon: Key,
-    color: 'border-emerald-500/30 text-emerald-400',
+    lightBorder: 'border-emerald-200',
+    lightIcon: 'text-emerald-700',
+    darkBorder: 'border-emerald-500/30',
+    darkIcon: 'text-emerald-400',
     link: '/superadmin/roles',
   },
   {
@@ -53,7 +60,10 @@ const INITIAL_STATS = [
     change: 'Firewall Active',
     positive: true,
     icon: Shield,
-    color: 'border-rose-500/30 text-rose-400',
+    lightBorder: 'border-rose-200',
+    lightIcon: 'text-rose-600',
+    darkBorder: 'border-rose-500/30',
+    darkIcon: 'text-rose-400',
     link: '/superadmin/security',
   },
   {
@@ -62,7 +72,10 @@ const INITIAL_STATS = [
     change: '+19.2% Growth',
     positive: true,
     icon: TrendingUp,
-    color: 'border-amber-500/30 text-amber-400',
+    lightBorder: 'border-amber-200',
+    lightIcon: 'text-amber-700',
+    darkBorder: 'border-amber-500/30',
+    darkIcon: 'text-amber-400',
     link: '/superadmin/reports',
   },
 ];
@@ -87,6 +100,9 @@ const INITIAL_ACCOUNTS: QuickAccount[] = [
 ];
 
 export default function SuperAdminDashboard() {
+  const { adminTheme } = useStore();
+  const isLight = adminTheme === 'light';
+
   const [accounts, setAccounts] = useState<QuickAccount[]>(INITIAL_ACCOUNTS);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -137,18 +153,26 @@ export default function SuperAdminDashboard() {
             <Link
               key={idx}
               href={stat.link}
-              className={`bg-slate-950 p-5 rounded-3xl border ${stat.color} hover:border-amber-500/50 transition-all shadow-xl group cursor-pointer`}
+              className={`p-5 rounded-3xl border transition-all group cursor-pointer ${
+                isLight
+                  ? `bg-white ${stat.lightBorder} hover:border-amber-500 shadow-sm hover:shadow-md`
+                  : `bg-slate-950 ${stat.darkBorder} hover:border-amber-500/50 shadow-xl`
+              }`}
             >
               <div className="flex items-center justify-between mb-3">
-                <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider group-hover:text-amber-400 transition-colors">
+                <span className={`text-[10px] font-black uppercase tracking-wider transition-colors ${
+                  isLight ? 'text-slate-600 group-hover:text-amber-700' : 'text-slate-400 group-hover:text-amber-400'
+                }`}>
                   {stat.label}
                 </span>
-                <Icon size={18} />
+                <Icon size={18} className={isLight ? stat.lightIcon : stat.darkIcon} />
               </div>
-              <p className="text-2xl font-black text-white">{stat.value}</p>
-              <div className="flex items-center justify-between mt-2 text-xs font-bold text-emerald-400">
+              <p className={`text-2xl font-black ${isLight ? 'text-slate-900' : 'text-white'}`}>{stat.value}</p>
+              <div className={`flex items-center justify-between mt-2 text-xs font-bold ${
+                isLight ? 'text-emerald-700' : 'text-emerald-400'
+              }`}>
                 <span>{stat.change}</span>
-                <ChevronRight size={14} className="text-slate-600 group-hover:text-amber-400 group-hover:translate-x-1 transition-all" />
+                <ChevronRight size={14} className={isLight ? 'text-slate-400 group-hover:text-amber-700 group-hover:translate-x-1 transition-all' : 'text-slate-600 group-hover:text-amber-400 group-hover:translate-x-1 transition-all'} />
               </div>
             </Link>
           );
@@ -156,8 +180,12 @@ export default function SuperAdminDashboard() {
       </div>
 
       {/* ── Quick Action Hub Bar ── */}
-      <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6 shadow-xl mb-8">
-        <h2 className="text-xs font-black text-slate-400 uppercase tracking-wider mb-4">Quick Executive Actions</h2>
+      <div className={`border rounded-3xl p-6 mb-8 transition-colors ${
+        isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-950 border-slate-800 shadow-xl'
+      }`}>
+        <h2 className={`text-xs font-black uppercase tracking-wider mb-4 ${
+          isLight ? 'text-slate-600' : 'text-slate-400'
+        }`}>Quick Executive Actions</h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <Link
             href="/superadmin/accounts?action=create"
@@ -167,37 +195,59 @@ export default function SuperAdminDashboard() {
           </Link>
           <Link
             href="/superadmin/roles"
-            className="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-white font-bold text-xs p-4 rounded-2xl transition-all flex items-center justify-center gap-2 text-center"
+            className={`border text-xs p-4 rounded-2xl transition-all flex items-center justify-center gap-2 text-center font-extrabold ${
+              isLight
+                ? 'bg-slate-50 hover:bg-slate-100 border-slate-300 text-slate-900 shadow-sm'
+                : 'bg-slate-900 hover:bg-slate-800 border-slate-800 text-white'
+            }`}
           >
-            <Key size={16} className="text-amber-400" /> Manage Permissions
+            <Key size={16} className={isLight ? 'text-amber-700' : 'text-amber-400'} /> Manage Permissions
           </Link>
           <Link
             href="/superadmin/security"
-            className="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-white font-bold text-xs p-4 rounded-2xl transition-all flex items-center justify-center gap-2 text-center"
+            className={`border text-xs p-4 rounded-2xl transition-all flex items-center justify-center gap-2 text-center font-extrabold ${
+              isLight
+                ? 'bg-slate-50 hover:bg-slate-100 border-slate-300 text-slate-900 shadow-sm'
+                : 'bg-slate-900 hover:bg-slate-800 border-slate-800 text-white'
+            }`}
           >
-            <Lock size={16} className="text-rose-400" /> View Security Audit
+            <Lock size={16} className={isLight ? 'text-rose-600' : 'text-rose-400'} /> View Security Audit
           </Link>
           <Link
             href="/superadmin/reports"
-            className="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-white font-bold text-xs p-4 rounded-2xl transition-all flex items-center justify-center gap-2 text-center"
+            className={`border text-xs p-4 rounded-2xl transition-all flex items-center justify-center gap-2 text-center font-extrabold ${
+              isLight
+                ? 'bg-slate-50 hover:bg-slate-100 border-slate-300 text-slate-900 shadow-sm'
+                : 'bg-slate-900 hover:bg-slate-800 border-slate-800 text-white'
+            }`}
           >
-            <BarChart2 size={16} className="text-emerald-400" /> Export Reports
+            <BarChart2 size={16} className={isLight ? 'text-emerald-700' : 'text-emerald-400'} /> Export Reports
           </Link>
         </div>
       </div>
 
       {/* ── Accounts Management Table Preview ── */}
-      <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6 shadow-xl mb-8">
-        <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-5">
+      <div className={`border rounded-3xl p-6 mb-8 transition-colors ${
+        isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-950 border-slate-800 shadow-xl'
+      }`}>
+        <div className={`flex items-center justify-between pb-4 border-b mb-5 ${
+          isLight ? 'border-slate-200' : 'border-slate-800'
+        }`}>
           <div>
-            <h2 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
-              <Users className="w-4 h-4 text-amber-400" /> Core System Accounts
+            <h2 className={`text-sm font-black uppercase tracking-wider flex items-center gap-2 ${
+              isLight ? 'text-slate-900' : 'text-white'
+            }`}>
+              <Users className={`w-4 h-4 ${isLight ? 'text-amber-600' : 'text-amber-400'}`} /> Core System Accounts
             </h2>
-            <p className="text-xs text-slate-400 mt-0.5">Direct quick status toggling and account management</p>
+            <p className={`text-xs mt-0.5 ${isLight ? 'text-slate-600 font-medium' : 'text-slate-400'}`}>
+              Direct quick status toggling and account management
+            </p>
           </div>
           <Link
             href="/superadmin/accounts"
-            className="text-xs font-black text-amber-400 hover:text-amber-300 flex items-center gap-1"
+            className={`text-xs font-black flex items-center gap-1 ${
+              isLight ? 'text-amber-700 hover:text-amber-800' : 'text-amber-400 hover:text-amber-300'
+            }`}
           >
             View All Accounts ({accounts.length}) <ChevronRight size={14} />
           </Link>
@@ -205,7 +255,11 @@ export default function SuperAdminDashboard() {
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-900 text-slate-400 font-extrabold uppercase text-[9px] tracking-wider border-b border-slate-800">
+            <thead className={`font-extrabold uppercase text-[9px] tracking-wider border-b ${
+              isLight
+                ? 'bg-slate-100 text-slate-700 border-slate-300'
+                : 'bg-slate-900 text-slate-400 border-slate-800'
+            }`}>
               <tr>
                 <th className="py-3 px-4">User Name</th>
                 <th className="py-3 px-4">Email Address</th>
@@ -214,24 +268,44 @@ export default function SuperAdminDashboard() {
                 <th className="py-3 px-4 text-right">Quick Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60 font-medium">
+            <tbody className={`divide-y font-medium ${isLight ? 'divide-slate-200' : 'divide-slate-800/60'}`}>
               {accounts.map((acc) => (
-                <tr key={acc.id} className="hover:bg-slate-900/60 transition-colors">
-                  <td className="py-3.5 px-4 font-bold text-white flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 font-black flex items-center justify-center text-[10px]">
+                <tr key={acc.id} className={`transition-colors ${
+                  isLight ? 'hover:bg-slate-50' : 'hover:bg-slate-900/60'
+                }`}>
+                  <td className={`py-3.5 px-4 font-bold flex items-center gap-2.5 ${
+                    isLight ? 'text-slate-900' : 'text-white'
+                  }`}>
+                    <div className={`w-7 h-7 rounded-xl font-black flex items-center justify-center text-[10px] border ${
+                      isLight
+                        ? 'bg-amber-100 border-amber-300 text-amber-800'
+                        : 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+                    }`}>
                       {acc.name.charAt(0)}
                     </div>
                     {acc.name}
                   </td>
-                  <td className="py-3.5 px-4 font-mono text-slate-300 text-[11px]">{acc.email}</td>
+                  <td className={`py-3.5 px-4 font-mono text-[11px] font-semibold ${
+                    isLight ? 'text-slate-800' : 'text-slate-300'
+                  }`}>{acc.email}</td>
                   <td className="py-3.5 px-4">
-                    <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black border bg-slate-900 text-amber-400 border-slate-700">
+                    <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black border ${
+                      isLight
+                        ? 'bg-amber-50 text-amber-900 border-amber-200'
+                        : 'bg-slate-900 text-amber-400 border-slate-700'
+                    }`}>
                       {acc.role}
                     </span>
                   </td>
                   <td className="py-3.5 px-4">
-                    <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-extrabold border ${
-                      acc.status === 'ACTIVE' ? 'bg-emerald-950 text-emerald-400 border-emerald-800' : 'bg-rose-950 text-rose-400 border-rose-800'
+                    <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black border ${
+                      acc.status === 'ACTIVE'
+                        ? isLight
+                          ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                          : 'bg-emerald-950 text-emerald-400 border-emerald-800'
+                        : isLight
+                          ? 'bg-rose-100 text-rose-800 border-rose-300'
+                          : 'bg-rose-950 text-rose-400 border-rose-800'
                     }`}>
                       {acc.status}
                     </span>
@@ -240,14 +314,22 @@ export default function SuperAdminDashboard() {
                     <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => handleToggleStatus(acc.id, acc.status)}
-                        className="px-2.5 py-1 rounded-xl text-[10px] font-bold border transition-colors bg-slate-900 text-slate-300 border-slate-800 hover:border-amber-500/50"
+                        className={`px-2.5 py-1 rounded-xl text-[10px] font-bold border transition-colors shadow-sm ${
+                          isLight
+                            ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300'
+                            : 'bg-slate-900 text-slate-300 border-slate-800 hover:border-amber-500/50'
+                        }`}
                         title="Toggle Active/Suspended status"
                       >
                         {acc.status === 'ACTIVE' ? 'Suspend' : 'Activate'}
                       </button>
                       <button
                         onClick={() => handleDeleteAccount(acc.id, acc.email)}
-                        className="p-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition-colors"
+                        className={`p-1.5 rounded-xl border transition-colors ${
+                          isLight
+                            ? 'bg-rose-100 hover:bg-rose-200 text-rose-700 border-rose-300'
+                            : 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border-rose-500/20'
+                        }`}
                         title="Delete account"
                       >
                         <Trash2 size={13} />

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import SuperAdminLayout from '@/components/superadmin-layout';
+import { useStore } from '@/store/useStore';
 import {
   BarChart2,
   TrendingUp,
@@ -34,6 +35,9 @@ const REVENUE_BREAKDOWN: RevenueItem[] = [
 ];
 
 export default function ReportsAnalyticsPage() {
+  const { adminTheme } = useStore();
+  const isLight = adminTheme === 'light';
+
   const [timeframe, setTimeframe] = useState<'today' | 'week' | 'month' | 'year'>('month');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -68,27 +72,35 @@ export default function ReportsAnalyticsPage() {
       subtitle="Gross Revenue, Commission Breakdown, Merchant Settlement & Performance Analytics"
     >
       {toastMessage && (
-        <div className="mb-6 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 p-4 rounded-2xl text-xs font-bold flex items-center justify-between animate-fade-in shadow-xl">
+        <div className={`mb-6 p-4 rounded-2xl text-xs font-bold flex items-center justify-between animate-fade-in shadow-xl border ${
+          isLight
+            ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
+            : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+        }`}>
           <div className="flex items-center gap-2">
             <CheckCircle size={16} />
             <span>{toastMessage}</span>
           </div>
-          <button onClick={() => setToastMessage(null)} className="text-emerald-500 hover:text-white">✕</button>
+          <button onClick={() => setToastMessage(null)} className={isLight ? 'text-emerald-700 hover:text-emerald-900' : 'text-emerald-500 hover:text-white'}>✕</button>
         </div>
       )}
 
       {/* ── Top Bar Controls ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         {/* Timeframe selector */}
-        <div className="flex items-center bg-slate-950 border border-slate-800 p-1.5 rounded-2xl">
+        <div className={`flex items-center p-1.5 rounded-2xl border transition-all ${
+          isLight ? 'bg-white border-slate-300 shadow-sm' : 'bg-slate-950 border-slate-800'
+        }`}>
           {(['today', 'week', 'month', 'year'] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTimeframe(t)}
               className={`px-4 py-2 rounded-xl text-xs font-extrabold capitalize transition-all ${
                 timeframe === t
-                  ? 'bg-amber-500 text-slate-950 shadow-md'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                  ? 'bg-amber-500 text-slate-950 shadow-md font-black'
+                  : isLight
+                    ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-900'
               }`}
             >
               {t}
@@ -115,15 +127,26 @@ export default function ReportsAnalyticsPage() {
         ].map((stat, i) => {
           const Icon = stat.icon;
           return (
-            <div key={i} className="bg-slate-950 border border-slate-800 p-5 rounded-3xl shadow-xl">
+            <div
+              key={i}
+              className={`p-5 rounded-3xl border transition-all ${
+                isLight
+                  ? 'bg-white border-slate-200 shadow-sm'
+                  : 'bg-slate-950 border-slate-800 shadow-xl'
+              }`}
+            >
               <div className="flex items-center justify-between mb-3">
-                <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">{stat.label}</span>
-                <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
+                <span className={`text-[10px] font-black uppercase tracking-wider ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                  {stat.label}
+                </span>
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
+                  isLight ? 'bg-amber-100 text-amber-700' : 'bg-amber-500/10 text-amber-400'
+                }`}>
                   <Icon size={16} />
                 </div>
               </div>
-              <p className="text-2xl font-black text-white">{stat.value}</p>
-              <div className="flex items-center gap-1 mt-2 text-xs font-bold text-emerald-400">
+              <p className={`text-2xl font-black ${isLight ? 'text-slate-900' : 'text-white'}`}>{stat.value}</p>
+              <div className={`flex items-center gap-1 mt-2 text-xs font-bold ${isLight ? 'text-emerald-700' : 'text-emerald-400'}`}>
                 <ArrowUpRight size={14} />
                 <span>{stat.trend} vs previous {timeframe}</span>
               </div>
@@ -133,19 +156,25 @@ export default function ReportsAnalyticsPage() {
       </div>
 
       {/* ── Detailed Breakdown Table ── */}
-      <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6 shadow-xl mb-8">
-        <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-5">
+      <div className={`border rounded-3xl p-6 mb-8 transition-all ${
+        isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-950 border-slate-800 shadow-xl'
+      }`}>
+        <div className={`flex items-center justify-between pb-4 border-b mb-5 ${isLight ? 'border-slate-200' : 'border-slate-800'}`}>
           <div>
-            <h2 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
-              <PieChart className="w-4 h-4 text-amber-400" /> Revenue Stream Breakdown
+            <h2 className={`text-sm font-black uppercase tracking-wider flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+              <PieChart className={`w-4 h-4 ${isLight ? 'text-amber-700' : 'text-amber-400'}`} /> Revenue Stream Breakdown
             </h2>
-            <p className="text-xs text-slate-400 mt-0.5">Financial contribution per business unit</p>
+            <p className={`text-xs mt-0.5 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>Financial contribution per business unit</p>
           </div>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-900 text-slate-400 font-extrabold uppercase text-[9px] tracking-wider border-b border-slate-800">
+            <thead className={`font-extrabold uppercase text-[9px] tracking-wider border-b ${
+              isLight
+                ? 'bg-slate-100 text-slate-700 border-slate-300'
+                : 'bg-slate-900 text-slate-400 border-slate-800'
+            }`}>
               <tr>
                 <th className="py-3 px-4">Business Module</th>
                 <th className="py-3 px-4">Total Transactions</th>
@@ -154,18 +183,27 @@ export default function ReportsAnalyticsPage() {
                 <th className="py-3 px-4">Growth Rate</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60 font-medium">
+            <tbody className={`divide-y font-medium ${isLight ? 'divide-slate-200' : 'divide-slate-800/60'}`}>
               {REVENUE_BREAKDOWN.map((row, idx) => (
-                <tr key={idx} className="hover:bg-slate-900/60 transition-colors">
-                  <td className="py-4 px-4 font-bold text-white flex items-center gap-2">
+                <tr
+                  key={idx}
+                  className={`transition-colors ${isLight ? 'hover:bg-slate-50' : 'hover:bg-slate-900/60'}`}
+                >
+                  <td className={`py-4 px-4 font-bold flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
                     <span className="w-2 h-2 rounded-full bg-amber-500"></span>
                     {row.module}
                   </td>
-                  <td className="py-4 px-4 font-mono text-slate-300">{row.transactions.toLocaleString()} orders</td>
-                  <td className="py-4 px-4 font-extrabold text-white">{row.grossVolume}</td>
-                  <td className="py-4 px-4 font-extrabold text-amber-400">{row.commission}</td>
+                  <td className={`py-4 px-4 font-mono font-semibold ${isLight ? 'text-slate-800' : 'text-slate-300'}`}>
+                    {row.transactions.toLocaleString()} orders
+                  </td>
+                  <td className={`py-4 px-4 font-black ${isLight ? 'text-slate-900' : 'text-white'}`}>{row.grossVolume}</td>
+                  <td className={`py-4 px-4 font-black ${isLight ? 'text-amber-800' : 'text-amber-400'}`}>{row.commission}</td>
                   <td className="py-4 px-4">
-                    <span className={`inline-flex items-center gap-0.5 text-xs font-black ${row.positive ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    <span className={`inline-flex items-center gap-0.5 text-xs font-black ${
+                      row.positive
+                        ? (isLight ? 'text-emerald-700' : 'text-emerald-400')
+                        : (isLight ? 'text-rose-700' : 'text-rose-400')
+                    }`}>
                       {row.positive ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
                       {row.growth}
                     </span>

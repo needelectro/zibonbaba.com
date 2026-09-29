@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import SuperAdminLayout from '@/components/superadmin-layout';
+import { useStore } from '@/store/useStore';
 import {
   Key,
   Shield,
@@ -36,6 +37,7 @@ interface RoleConfig {
   description: string;
   isSystem: boolean;
   color: string;
+  lightColor: string;
   matrix: PermissionCategory[];
 }
 
@@ -100,21 +102,24 @@ const DEFAULT_CATEGORIES: PermissionCategory[] = [
 ];
 
 const INITIAL_ROLES: RoleConfig[] = [
-  { id: 'SUPER_ADMIN', name: 'Super Admin', description: 'Unrestricted full platform control across all system modules', isSystem: true, color: 'bg-rose-500/20 text-rose-400 border-rose-500/30', matrix: DEFAULT_CATEGORIES },
-  { id: 'ADMIN', name: 'Platform Admin', description: 'Platform operations, vendor approvals and moderation', isSystem: true, color: 'bg-purple-500/20 text-purple-400 border-purple-500/30', matrix: DEFAULT_CATEGORIES },
-  { id: 'MANAGER', name: 'Operations Manager', description: 'Operations oversight, support escalation and fulfillment', isSystem: true, color: 'bg-blue-500/20 text-blue-400 border-blue-500/30', matrix: DEFAULT_CATEGORIES },
-  { id: 'ACCOUNTANT', name: 'Chief Accountant', description: 'Financial ledger, merchant payouts and tax compliance', isSystem: true, color: 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30', matrix: DEFAULT_CATEGORIES },
-  { id: 'CUSTOMER_SUPPORT', name: 'Support Agent', description: 'Customer tickets, order tracking assistance', isSystem: true, color: 'bg-pink-500/20 text-pink-400 border-pink-500/30', matrix: DEFAULT_CATEGORIES },
-  { id: 'MARKETING', name: 'Marketing Manager', description: 'Banners, promotions, campaigns and SEO', isSystem: true, color: 'bg-lime-500/20 text-lime-400 border-lime-500/30', matrix: DEFAULT_CATEGORIES },
-  { id: 'WAREHOUSE_MANAGER', name: 'Warehouse Supervisor', description: 'Stock replenishment, transfers and barcode POS', isSystem: true, color: 'bg-teal-500/20 text-teal-400 border-teal-500/30', matrix: DEFAULT_CATEGORIES },
-  { id: 'DELIVERY_MANAGER', name: 'Delivery Manager', description: 'Rider dispatch, route tracking and logistics', isSystem: true, color: 'bg-orange-500/20 text-orange-400 border-orange-500/30', matrix: DEFAULT_CATEGORIES },
-  { id: 'VENDOR_ADMIN', name: 'Vendor Admin', description: 'Store products, inventory, orders and branch POS', isSystem: true, color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30', matrix: DEFAULT_CATEGORIES },
-  { id: 'VENDOR_STAFF', name: 'Vendor Staff', description: 'Store cashier and inventory stock updating', isSystem: true, color: 'bg-sky-500/20 text-sky-400 border-sky-500/30', matrix: DEFAULT_CATEGORIES },
-  { id: 'RESELLER', name: 'Reseller Agent', description: 'Affiliate product links and sales commissions', isSystem: true, color: 'bg-amber-500/20 text-amber-400 border-amber-500/30', matrix: DEFAULT_CATEGORIES },
-  { id: 'DELIVERY_MAN', name: 'Courier / Rider', description: 'Order delivery updates and OTP confirmation', isSystem: true, color: 'bg-orange-500/20 text-orange-400 border-orange-500/30', matrix: DEFAULT_CATEGORIES },
+  { id: 'SUPER_ADMIN', name: 'Super Admin', description: 'Unrestricted full platform control across all system modules', isSystem: true, color: 'bg-rose-500/20 text-rose-400 border-rose-500/30', lightColor: 'bg-rose-50 text-rose-800 border-rose-300', matrix: DEFAULT_CATEGORIES },
+  { id: 'ADMIN', name: 'Platform Admin', description: 'Platform operations, vendor approvals and moderation', isSystem: true, color: 'bg-purple-500/20 text-purple-400 border-purple-500/30', lightColor: 'bg-purple-50 text-purple-800 border-purple-300', matrix: DEFAULT_CATEGORIES },
+  { id: 'MANAGER', name: 'Operations Manager', description: 'Operations oversight, support escalation and fulfillment', isSystem: true, color: 'bg-blue-500/20 text-blue-400 border-blue-500/30', lightColor: 'bg-blue-50 text-blue-800 border-blue-300', matrix: DEFAULT_CATEGORIES },
+  { id: 'ACCOUNTANT', name: 'Chief Accountant', description: 'Financial ledger, merchant payouts and tax compliance', isSystem: true, color: 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30', lightColor: 'bg-indigo-50 text-indigo-800 border-indigo-300', matrix: DEFAULT_CATEGORIES },
+  { id: 'CUSTOMER_SUPPORT', name: 'Support Agent', description: 'Customer tickets, order tracking assistance', isSystem: true, color: 'bg-pink-500/20 text-pink-400 border-pink-500/30', lightColor: 'bg-pink-50 text-pink-800 border-pink-300', matrix: DEFAULT_CATEGORIES },
+  { id: 'MARKETING', name: 'Marketing Manager', description: 'Banners, promotions, campaigns and SEO', isSystem: true, color: 'bg-lime-500/20 text-lime-400 border-lime-500/30', lightColor: 'bg-lime-50 text-lime-900 border-lime-300', matrix: DEFAULT_CATEGORIES },
+  { id: 'WAREHOUSE_MANAGER', name: 'Warehouse Supervisor', description: 'Stock replenishment, transfers and barcode POS', isSystem: true, color: 'bg-teal-500/20 text-teal-400 border-teal-500/30', lightColor: 'bg-teal-50 text-teal-900 border-teal-300', matrix: DEFAULT_CATEGORIES },
+  { id: 'DELIVERY_MANAGER', name: 'Delivery Manager', description: 'Rider dispatch, route tracking and logistics', isSystem: true, color: 'bg-orange-500/20 text-orange-400 border-orange-500/30', lightColor: 'bg-orange-50 text-orange-800 border-orange-300', matrix: DEFAULT_CATEGORIES },
+  { id: 'VENDOR_ADMIN', name: 'Vendor Admin', description: 'Store products, inventory, orders and branch POS', isSystem: true, color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30', lightColor: 'bg-emerald-50 text-emerald-800 border-emerald-300', matrix: DEFAULT_CATEGORIES },
+  { id: 'VENDOR_STAFF', name: 'Vendor Staff', description: 'Store cashier and inventory stock updating', isSystem: true, color: 'bg-sky-500/20 text-sky-400 border-sky-500/30', lightColor: 'bg-sky-50 text-sky-800 border-sky-300', matrix: DEFAULT_CATEGORIES },
+  { id: 'RESELLER', name: 'Reseller Agent', description: 'Affiliate product links and sales commissions', isSystem: true, color: 'bg-amber-500/20 text-amber-400 border-amber-500/30', lightColor: 'bg-amber-50 text-amber-900 border-amber-300', matrix: DEFAULT_CATEGORIES },
+  { id: 'DELIVERY_MAN', name: 'Courier / Rider', description: 'Order delivery updates and OTP confirmation', isSystem: true, color: 'bg-orange-500/20 text-orange-400 border-orange-500/30', lightColor: 'bg-orange-50 text-orange-800 border-orange-300', matrix: DEFAULT_CATEGORIES },
 ];
 
 export default function RolesPermissionsPage() {
+  const { adminTheme } = useStore();
+  const isLight = adminTheme === 'light';
+
   const [roles, setRoles] = useState<RoleConfig[]>(INITIAL_ROLES);
   const [selectedRoleId, setSelectedRoleId] = useState<string>('SUPER_ADMIN');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -171,6 +176,7 @@ export default function RolesPermissionsPage() {
       description: newRoleDesc || 'Custom RBAC Role',
       isSystem: false,
       color: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+      lightColor: 'bg-amber-50 text-amber-900 border-amber-300',
       matrix: JSON.parse(JSON.stringify(DEFAULT_CATEGORIES)),
     };
     setRoles((prev) => [...prev, newRoleObj]);
@@ -188,20 +194,24 @@ export default function RolesPermissionsPage() {
       subtitle="Configure Granular Granular Module Permissions Across All 14 System Roles"
     >
       {toastMessage && (
-        <div className="mb-6 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 p-4 rounded-2xl text-xs font-bold flex items-center justify-between animate-fade-in shadow-xl">
+        <div className={`mb-6 p-4 rounded-2xl text-xs font-bold flex items-center justify-between animate-fade-in shadow-xl border ${
+          isLight
+            ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
+            : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+        }`}>
           <div className="flex items-center gap-2">
             <CheckCircle size={16} />
             <span>{toastMessage}</span>
           </div>
-          <button onClick={() => setToastMessage(null)} className="text-emerald-500 hover:text-white">✕</button>
+          <button onClick={() => setToastMessage(null)} className={isLight ? 'text-emerald-700 hover:text-emerald-900' : 'text-emerald-500 hover:text-white'}>✕</button>
         </div>
       )}
 
       {/* ── Top Bar Controls ── */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-sm font-black text-white uppercase tracking-wider">Configure System Roles</h2>
-          <p className="text-xs text-slate-400">Select a role below to customize its authorization matrix</p>
+          <h2 className={`text-sm font-black uppercase tracking-wider ${isLight ? 'text-slate-900' : 'text-white'}`}>Configure System Roles</h2>
+          <p className={`text-xs ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>Select a role below to customize its authorization matrix</p>
         </div>
         <button
           onClick={() => setShowAddRoleModal(true)}
@@ -212,7 +222,7 @@ export default function RolesPermissionsPage() {
       </div>
 
       {/* ── Horizontal Role Selector Pills ── */}
-      <div className="flex gap-2 border-b border-slate-800 pb-4 mb-8 overflow-x-auto scrollbar-none">
+      <div className={`flex gap-2 border-b pb-4 mb-8 overflow-x-auto scrollbar-none ${isLight ? 'border-slate-200' : 'border-slate-800'}`}>
         {roles.map((r) => {
           const isSelected = r.id === selectedRoleId;
           return (
@@ -221,14 +231,20 @@ export default function RolesPermissionsPage() {
               onClick={() => setSelectedRoleId(r.id)}
               className={`px-4 py-2.5 rounded-2xl text-xs font-black whitespace-nowrap transition-all flex items-center gap-2 border ${
                 isSelected
-                  ? 'bg-amber-500 text-slate-950 border-amber-500 shadow-lg'
-                  : 'bg-slate-950 text-slate-300 border-slate-800 hover:border-slate-700'
+                  ? 'bg-amber-500 text-slate-950 border-amber-500 shadow-md font-black'
+                  : isLight
+                    ? 'bg-white text-slate-800 border-slate-300 hover:bg-slate-100 shadow-sm'
+                    : 'bg-slate-950 text-slate-300 border-slate-800 hover:border-slate-700'
               }`}
             >
               <span>{r.name}</span>
               {r.isSystem && (
                 <span className={`text-[8px] uppercase px-1.5 py-0.5 rounded-full font-black ${
-                  isSelected ? 'bg-slate-950 text-amber-400' : 'bg-slate-900 text-slate-400'
+                  isSelected
+                    ? 'bg-slate-950 text-amber-300'
+                    : isLight
+                      ? 'bg-slate-200 text-slate-700'
+                      : 'bg-slate-900 text-slate-400'
                 }`}>
                   System
                 </span>
@@ -239,15 +255,21 @@ export default function RolesPermissionsPage() {
       </div>
 
       {/* ── Selected Role Detail Banner & Save Button ── */}
-      <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6 shadow-xl mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className={`border rounded-3xl p-6 mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all ${
+        isLight
+          ? 'bg-white border-slate-200 shadow-sm'
+          : 'bg-slate-950 border-slate-800 shadow-xl'
+      }`}>
         <div>
           <div className="flex items-center gap-3">
-            <h2 className="text-lg font-black text-white">{activeRole.name}</h2>
-            <span className={`px-3 py-1 rounded-full text-xs font-black border ${activeRole.color}`}>
+            <h2 className={`text-lg font-black ${isLight ? 'text-slate-900' : 'text-white'}`}>{activeRole.name}</h2>
+            <span className={`px-3 py-1 rounded-full text-xs font-black border ${
+              isLight ? activeRole.lightColor : activeRole.color
+            }`}>
               {activeRole.id}
             </span>
           </div>
-          <p className="text-xs text-slate-400 mt-1">{activeRole.description}</p>
+          <p className={`text-xs mt-1 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>{activeRole.description}</p>
         </div>
 
         <button
@@ -265,16 +287,31 @@ export default function RolesPermissionsPage() {
           const allEnabled = category.items.every((i) => i.enabled);
 
           return (
-            <div key={category.moduleName} className="bg-slate-950 border border-slate-800 rounded-3xl p-5 shadow-xl flex flex-col justify-between">
+            <div
+              key={category.moduleName}
+              className={`border rounded-3xl p-5 flex flex-col justify-between transition-all ${
+                isLight
+                  ? 'bg-white border-slate-200 shadow-sm'
+                  : 'bg-slate-950 border-slate-800 shadow-xl'
+              }`}
+            >
               <div>
-                <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+                <div className={`flex items-center justify-between pb-3 border-b mb-4 ${
+                  isLight ? 'border-slate-200' : 'border-slate-800'
+                }`}>
                   <div className="flex items-center gap-2">
-                    <Icon size={16} className="text-amber-400" />
-                    <h3 className="font-extrabold text-xs text-white uppercase tracking-wider">{category.moduleName}</h3>
+                    <Icon size={16} className={isLight ? 'text-amber-700' : 'text-amber-400'} />
+                    <h3 className={`font-extrabold text-xs uppercase tracking-wider ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                      {category.moduleName}
+                    </h3>
                   </div>
                   <button
                     onClick={() => handleToggleGroup(catIdx, !allEnabled)}
-                    className="text-[10px] font-black text-slate-400 hover:text-amber-400 transition-colors"
+                    className={`text-[10px] font-black transition-colors ${
+                      isLight
+                        ? 'text-slate-600 hover:text-amber-800'
+                        : 'text-slate-400 hover:text-amber-400'
+                    }`}
                   >
                     {allEnabled ? 'Disable All' : 'Enable All'}
                   </button>
@@ -282,8 +319,17 @@ export default function RolesPermissionsPage() {
 
                 <div className="space-y-3">
                   {category.items.map((perm, itemIdx) => (
-                    <label key={perm.id} className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/60 hover:bg-slate-900 border border-slate-800/80 cursor-pointer transition-colors">
-                      <span className="text-xs font-bold text-slate-300">{perm.label}</span>
+                    <label
+                      key={perm.id}
+                      className={`flex items-center justify-between p-2.5 rounded-xl border cursor-pointer transition-colors ${
+                        isLight
+                          ? 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-900'
+                          : 'bg-slate-900/60 hover:bg-slate-900 border-slate-800/80 text-slate-300'
+                      }`}
+                    >
+                      <span className={`text-xs font-bold ${isLight ? 'text-slate-900' : 'text-slate-300'}`}>
+                        {perm.label}
+                      </span>
                       <input
                         type="checkbox"
                         checked={perm.enabled}
@@ -301,41 +347,64 @@ export default function RolesPermissionsPage() {
 
       {/* ── Create Role Modal ── */}
       {showAddRoleModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl animate-fade-in text-white">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-5">
-              <h3 className="font-black text-sm uppercase tracking-wider text-white">Create Custom RBAC Role</h3>
-              <button onClick={() => setShowAddRoleModal(false)} className="text-slate-500 hover:text-white">
+        <div className={`fixed inset-0 z-50 backdrop-blur-md flex items-center justify-center p-4 ${
+          isLight ? 'bg-slate-900/40' : 'bg-slate-950/80'
+        }`}>
+          <div className={`border rounded-3xl max-w-md w-full p-6 shadow-2xl animate-fade-in ${
+            isLight
+              ? 'bg-white border-slate-300 text-slate-900'
+              : 'bg-slate-900 border-slate-800 text-white'
+          }`}>
+            <div className={`flex items-center justify-between pb-4 border-b mb-5 ${
+              isLight ? 'border-slate-200' : 'border-slate-800'
+            }`}>
+              <h3 className={`font-black text-sm uppercase tracking-wider ${isLight ? 'text-slate-900' : 'text-white'}`}>Create Custom RBAC Role</h3>
+              <button
+                onClick={() => setShowAddRoleModal(false)}
+                className={`transition-colors ${isLight ? 'text-slate-500 hover:text-slate-900' : 'text-slate-500 hover:text-white'}`}
+              >
                 <X size={18} />
               </button>
             </div>
             <form onSubmit={handleCreateRole} className="space-y-4 text-xs">
               <div>
-                <label className="block font-bold text-slate-300 mb-1">Role Display Name</label>
+                <label className={`block font-bold mb-1 ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Role Display Name</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. Audit Auditor"
                   value={newRoleName}
                   onChange={(e) => setNewRoleName(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 outline-none focus:border-amber-500"
+                  className={`w-full rounded-xl px-3.5 py-2.5 outline-none border transition-colors ${
+                    isLight
+                      ? 'bg-slate-50 border-slate-300 text-slate-900 focus:border-amber-500'
+                      : 'bg-slate-950 border-slate-800 text-white focus:border-amber-500'
+                  }`}
                 />
               </div>
               <div>
-                <label className="block font-bold text-slate-300 mb-1">Role Description</label>
+                <label className={`block font-bold mb-1 ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Role Description</label>
                 <textarea
                   rows={3}
                   placeholder="Describe the access scope for this role..."
                   value={newRoleDesc}
                   onChange={(e) => setNewRoleDesc(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 outline-none focus:border-amber-500 resize-none"
+                  className={`w-full rounded-xl px-3.5 py-2.5 outline-none border transition-colors resize-none ${
+                    isLight
+                      ? 'bg-slate-50 border-slate-300 text-slate-900 focus:border-amber-500'
+                      : 'bg-slate-950 border-slate-800 text-white focus:border-amber-500'
+                  }`}
                 />
               </div>
               <div className="pt-4 flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setShowAddRoleModal(false)}
-                  className="px-4 py-2.5 rounded-xl border border-slate-800 text-slate-400 font-bold hover:bg-slate-800"
+                  className={`px-4 py-2.5 rounded-xl border font-bold transition-colors ${
+                    isLight
+                      ? 'border-slate-300 text-slate-700 hover:bg-slate-100'
+                      : 'border-slate-800 text-slate-400 hover:bg-slate-800'
+                  }`}
                 >
                   Cancel
                 </button>

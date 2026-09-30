@@ -24,8 +24,19 @@ export function middleware(request: NextRequest) {
   const isResellerRole = normalizedRole === 'RESELLER';
   const isDeliveryRole = normalizedRole === 'DELIVERY_MAN' || normalizedRole === 'DELIVERYMAN' || normalizedRole === 'COURIER' || normalizedRole === 'DELIVERY_MANAGER';
 
+  // 0. SUPERADMIN PERMANENT REDIRECT TO CONSOLIDATED ADMIN
+  if (pathname.startsWith('/superadmin')) {
+    let target = '/admin';
+    if (pathname.includes('/accounts')) target = '/admin?module=accounts';
+    else if (pathname.includes('/roles')) target = '/admin?module=rbac';
+    else if (pathname.includes('/security')) target = '/admin?module=security';
+    else if (pathname.includes('/reports')) target = '/admin?module=reports';
+    else if (pathname.includes('/settings')) target = '/admin?module=settings';
+    return NextResponse.redirect(new URL(target, request.url), 308);
+  }
+
   // 1. ADMIN PORTAL ROUTE PROTECTION
-  if (pathname.startsWith('/admin') || pathname.startsWith('/superadmin')) {
+  if (pathname.startsWith('/admin')) {
     // Allow access to the private admin login page
     if (pathname === '/admin/login') {
       // If already logged in as admin, send directly to admin dashboard

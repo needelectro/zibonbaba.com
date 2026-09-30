@@ -135,6 +135,45 @@ const nextConfig: NextConfig = {
         destination: `${backendUrl}/api/notifications`
       }
     ];
+  },
+  async redirects() {
+    return [
+      {
+        source: '/superadmin',
+        destination: '/admin',
+        permanent: true,
+      },
+      {
+        source: '/superadmin/accounts',
+        destination: '/admin?module=accounts',
+        permanent: true,
+      },
+      {
+        source: '/superadmin/roles',
+        destination: '/admin?module=rbac',
+        permanent: true,
+      },
+      {
+        source: '/superadmin/security',
+        destination: '/admin?module=security',
+        permanent: true,
+      },
+      {
+        source: '/superadmin/reports',
+        destination: '/admin?module=reports',
+        permanent: true,
+      },
+      {
+        source: '/superadmin/settings',
+        destination: '/admin?module=settings',
+        permanent: true,
+      },
+      {
+        source: '/superadmin/:path*',
+        destination: '/admin',
+        permanent: true,
+      },
+    ];
   }
 };
 

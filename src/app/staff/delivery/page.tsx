@@ -42,6 +42,7 @@ import {
   Info
 } from 'lucide-react';
 import { useStore } from '@/store/useStore';
+import InvoiceMemoModal from '@/components/invoice-memo-modal';
 
 type HubTab = 'dispatch' | 'fleet' | 'inbound' | 'hubs';
 
@@ -81,6 +82,8 @@ export default function DeliveryHubPage() {
   const [isBulkAssignModalOpen, setIsBulkAssignModalOpen] = useState(false);
   const [isManifestModalOpen, setIsManifestModalOpen] = useState(false);
   const [manifestData, setManifestData] = useState<any | null>(null);
+  const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
+  const [invoiceOrdersToPrint, setInvoiceOrdersToPrint] = useState<any[] | null>(null);
 
   const [isCreateHubModalOpen, setIsCreateHubModalOpen] = useState(false);
   const [newHubName, setNewHubName] = useState('');
@@ -529,6 +532,25 @@ export default function DeliveryHubPage() {
             </button>
 
             <button
+              onClick={() => {
+                if (selectedOrderIds.length > 0) {
+                  const toPrint = orders.filter(o => selectedOrderIds.includes(o.id));
+                  setInvoiceOrdersToPrint(toPrint);
+                } else if (filteredOrders.length > 0) {
+                  setInvoiceOrdersToPrint(filteredOrders);
+                } else {
+                  setInvoiceOrdersToPrint(orders);
+                }
+                setIsInvoiceModalOpen(true);
+              }}
+              disabled={orders.length === 0}
+              className="flex items-center gap-2 bg-[#FFC107] hover:bg-amber-400 text-slate-950 text-xs font-black px-3.5 py-2.5 rounded-xl transition cursor-pointer shadow disabled:opacity-50"
+              title="Print Cash Memos for Hub Orders"
+            >
+              <Printer size={15} /> Print Memos {selectedOrderIds.length > 0 ? `(${selectedOrderIds.length})` : ''}
+            </button>
+
+            <button
               onClick={loadAllData}
               disabled={loading}
               className="p-2.5 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white rounded-xl border border-white/10 transition cursor-pointer"
@@ -733,10 +755,21 @@ export default function DeliveryHubPage() {
 
           {/* Bulk Actions if Orders Selected */}
           {selectedOrderIds.length > 0 && activeTab === 'dispatch' && (
-            <div className="flex items-center gap-2 animate-fade-in bg-amber-500/10 border border-amber-500/20 px-3.5 py-1.5 rounded-xl">
+            <div className="flex items-center gap-2 animate-fade-in bg-amber-500/10 border border-amber-500/20 px-3.5 py-1.5 rounded-xl flex-wrap">
               <span className="text-xs font-bold text-amber-400">
                 {selectedOrderIds.length} orders selected
               </span>
+              <button
+                onClick={() => {
+                  const selectedOrders = orders.filter(o => selectedOrderIds.includes(o.id));
+                  setInvoiceOrdersToPrint(selectedOrders);
+                  setIsInvoiceModalOpen(true);
+                }}
+                className="bg-white/10 hover:bg-white/20 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition cursor-pointer border border-white/15 flex items-center gap-1.5"
+              >
+                <Printer size={14} className="text-[#FFC107]" />
+                Print Cash Memos ({selectedOrderIds.length})
+              </button>
               <button
                 onClick={() => setIsBulkAssignModalOpen(true)}
                 className="bg-[#FFC107] hover:bg-amber-400 text-slate-950 text-xs font-black px-3.5 py-1.5 rounded-lg transition cursor-pointer shadow"
@@ -745,7 +778,7 @@ export default function DeliveryHubPage() {
               </button>
               <button
                 onClick={() => setSelectedOrderIds([])}
-                className="text-slate-400 hover:text-white p-1 text-xs"
+                className="text-slate-400 hover:text-white p-1 text-xs cursor-pointer"
               >
                 Clear
               </button>
@@ -886,13 +919,27 @@ export default function DeliveryHubPage() {
                           </span>
                         </div>
 
-                        <button
-                          onClick={() => handleOpenAssignModal(ord)}
-                          className="flex items-center gap-2 bg-[#FFC107] hover:bg-amber-400 text-slate-950 text-xs font-black px-4 py-2.5 rounded-xl transition shadow-glow cursor-pointer"
-                        >
-                          <Send size={14} />
-                          Assign Rider
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => {
+                              setInvoiceOrdersToPrint([ord]);
+                              setIsInvoiceModalOpen(true);
+                            }}
+                            className="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 text-slate-200 hover:text-white text-xs font-bold px-3 py-2.5 rounded-xl transition border border-white/10 cursor-pointer"
+                            title="Print Cash Memo / Invoice"
+                          >
+                            <Printer size={14} className="text-[#FFC107]" />
+                            Memo
+                          </button>
+
+                          <button
+                            onClick={() => handleOpenAssignModal(ord)}
+                            className="flex items-center gap-2 bg-[#FFC107] hover:bg-amber-400 text-slate-950 text-xs font-black px-4 py-2.5 rounded-xl transition shadow-glow cursor-pointer"
+                          >
+                            <Send size={14} />
+                            Assign Rider
+                          </button>
+                        </div>
                       </div>
                     </div>
                   );
@@ -1750,6 +1797,17 @@ export default function DeliveryHubPage() {
           </div>
         </div>
       )}
+
+      {/* DELIVERY HUB CASH MEMO PRINTING MODAL */}
+      <InvoiceMemoModal
+        isOpen={isInvoiceModalOpen}
+        onClose={() => {
+          setIsInvoiceModalOpen(false);
+          setInvoiceOrdersToPrint(null);
+        }}
+        orders={invoiceOrdersToPrint}
+        title="Delivery Hub Cash Memo & Invoice Dispatch System"
+      />
     </div>
   );
 }

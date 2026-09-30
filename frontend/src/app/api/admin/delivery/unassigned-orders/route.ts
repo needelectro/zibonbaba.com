@@ -65,8 +65,19 @@ export async function GET(request: Request) {
           name: o.hub.name,
           code: o.hub.code
         } : null,
+        subTotal: o.subTotal,
+        tax: o.tax,
+        discount: o.discount,
+        source: o.source,
         itemsCount: o.items.length,
-        itemsSummary: o.items.map(it => `${it.quantity}x ${it.variant?.product?.name || 'Product'}`).join(', ')
+        itemsSummary: o.items.map(it => `${it.quantity}x ${it.variant?.product?.name || 'Product'}`).join(', '),
+        items: o.items.map(it => ({
+          id: it.id,
+          name: it.variant?.product?.name || 'Product Item',
+          sku: it.variant?.sku || 'SKU',
+          quantity: it.quantity,
+          price: it.price
+        }))
       };
     });
 

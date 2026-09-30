@@ -8,9 +8,10 @@ import {
   AlertCircle, Clock, ShieldCheck, X, Check, Lock, Power, ChevronRight,
   TrendingUp, CreditCard, User, ExternalLink, RefreshCw, LogOut, Package,
   AlertTriangle, Truck, Compass, Store, Eye, Edit3, Save, Star, Award,
-  FileText, BadgeCheck
+  FileText, BadgeCheck, Printer
 } from 'lucide-react';
 import { useStore } from '@/store/useStore';
+import InvoiceMemoModal from '@/components/invoice-memo-modal';
 
 type DeliveryTab = 'active' | 'orders' | 'earnings' | 'profile';
 
@@ -42,6 +43,8 @@ export default function DeliveryPortalPage() {
   const [isTaskDetailModalOpen, setIsTaskDetailModalOpen] = useState(false);
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+  const [isMemoModalOpen, setIsMemoModalOpen] = useState(false);
+  const [memoOrderForRider, setMemoOrderForRider] = useState<any | null>(null);
   const [selectedTaskDetail, setSelectedTaskDetail] = useState<any | null>(null);
   const [customActiveTaskId, setCustomActiveTaskId] = useState<string | null>(null);
   const [selectedTaskForAction, setSelectedTaskForAction] = useState<any | null>(null);
@@ -712,6 +715,34 @@ export default function DeliveryPortalPage() {
                       </button>
                     </div>
                   )}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMemoOrderForRider({
+                        id: activeTask.orderId || activeTask.id,
+                        customerName: activeTask.customerName,
+                        customerPhone: activeTask.customerPhone,
+                        altPhone: activeTask.altPhone,
+                        address: activeTask.address,
+                        district: activeTask.district,
+                        upazila: activeTask.upazila,
+                        total: activeTask.codAmount,
+                        codAmount: activeTask.codAmount,
+                        deliveryFee: activeTask.deliveryFee,
+                        status: activeTask.status,
+                        storeName: activeTask.storeName,
+                        hub: activeTask.hub,
+                        items: activeTask.items,
+                        specialInstructions: activeTask.specialInstructions
+                      });
+                      setIsMemoModalOpen(true);
+                    }}
+                    className="w-full mt-2.5 py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-gray-200 hover:text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition cursor-pointer"
+                  >
+                    <Printer size={15} className="text-amber-400" />
+                    <span>Print Customer Cash Memo / Slip</span>
+                  </button>
                 </div>
               </div>
             ) : (
@@ -868,16 +899,46 @@ export default function DeliveryPortalPage() {
 
                   {/* Direct Action Bar */}
                   <div className="pt-2.5 border-t border-white/5 flex flex-wrap items-center justify-between gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedTaskDetail(ord);
-                        setIsTaskDetailModalOpen(true);
-                      }}
-                      className="px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
-                    >
-                      <Eye size={14} /> Full Details
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedTaskDetail(ord);
+                          setIsTaskDetailModalOpen(true);
+                        }}
+                        className="px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Eye size={14} /> Full Details
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMemoOrderForRider({
+                            id: ord.orderId || ord.id,
+                            customerName: ord.customerName,
+                            customerPhone: ord.customerPhone,
+                            altPhone: ord.altPhone,
+                            address: ord.address,
+                            district: ord.district,
+                            upazila: ord.upazila,
+                            total: ord.codAmount,
+                            codAmount: ord.codAmount,
+                            deliveryFee: ord.deliveryFee,
+                            status: ord.status,
+                            storeName: ord.storeName,
+                            hub: ord.hub,
+                            items: ord.items,
+                            specialInstructions: ord.specialInstructions
+                          });
+                          setIsMemoModalOpen(true);
+                        }}
+                        className="px-2.5 py-2 rounded-xl bg-amber-400/10 hover:bg-amber-400/20 text-amber-400 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border border-amber-400/20"
+                        title="Print Customer Cash Memo"
+                      >
+                        <Printer size={13} /> Memo
+                      </button>
+                    </div>
 
                     <div className="flex items-center gap-2">
                       {ord.status === 'ASSIGNED' && (
@@ -1755,6 +1816,35 @@ export default function DeliveryPortalPage() {
               </div>
             </div>
 
+            {/* Cash Memo & Invoice Print for Rider */}
+            <button
+              type="button"
+              onClick={() => {
+                setMemoOrderForRider({
+                  id: selectedTaskDetail.orderId || selectedTaskDetail.id,
+                  customerName: selectedTaskDetail.customerName,
+                  customerPhone: selectedTaskDetail.customerPhone,
+                  altPhone: selectedTaskDetail.altPhone,
+                  address: selectedTaskDetail.address,
+                  district: selectedTaskDetail.district,
+                  upazila: selectedTaskDetail.upazila,
+                  total: selectedTaskDetail.codAmount,
+                  codAmount: selectedTaskDetail.codAmount,
+                  deliveryFee: selectedTaskDetail.deliveryFee,
+                  status: selectedTaskDetail.status,
+                  storeName: selectedTaskDetail.storeName,
+                  hub: selectedTaskDetail.hub,
+                  items: selectedTaskDetail.items,
+                  specialInstructions: selectedTaskDetail.specialInstructions
+                });
+                setIsMemoModalOpen(true);
+              }}
+              className="w-full py-2.5 px-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+            >
+              <Printer size={15} />
+              <span>Print Customer Cash Memo / Slip</span>
+            </button>
+
             {/* Live Status Transition Action Buttons */}
             <div className="pt-2 border-t border-white/10 space-y-2">
               <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block text-center">
@@ -2104,6 +2194,18 @@ export default function DeliveryPortalPage() {
           </div>
         </div>
       )}
+
+      {/* DELIVERY RIDER CASH MEMO PRINTING MODAL */}
+      <InvoiceMemoModal
+        isOpen={isMemoModalOpen}
+        onClose={() => {
+          setIsMemoModalOpen(false);
+          setMemoOrderForRider(null);
+        }}
+        orders={memoOrderForRider}
+        defaultFormat="POS"
+        title="Delivery Hero Customer Cash Memo & Slip"
+      />
     </div>
   );
 }

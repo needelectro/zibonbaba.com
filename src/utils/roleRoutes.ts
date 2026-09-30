@@ -10,7 +10,6 @@ export function getDashboardForRole(role?: string | null): string {
 
   switch (normalized) {
     case 'SUPER_ADMIN':
-      return '/superadmin';
     case 'ADMIN':
     case 'MARKETING':
       return '/admin';

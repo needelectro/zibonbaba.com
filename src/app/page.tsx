@@ -83,8 +83,7 @@ export default function HomePage() {
 
   useEffect(() => {
     if (isLoggedIn) {
-      if (role === 'superadmin') router.push('/superadmin');
-      else if (role === 'admin') router.push('/admin');
+      if (role === 'superadmin' || role === 'admin') router.push('/admin');
       else if (['manager', 'accountant', 'support', 'crm_manager', 'hr_manager'].includes(role)) router.push('/admin');
       else if (['vendor', 'staff'].includes(role)) router.push('/seller');
       else if (role === 'reseller') router.push('/reseller');

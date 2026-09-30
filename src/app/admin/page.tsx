@@ -68,12 +68,25 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import EnterpriseDataTable from '@/components/enterprise-data-table';
 import SlideOverDrawer from '@/components/slide-over-drawer';
+import AdminGlobalSearchModal from '@/components/admin/AdminGlobalSearchModal';
+import DashboardOverview from '@/components/admin/DashboardOverview';
+import AccountsManagementView from '@/components/admin/AccountsManagementView';
+import RolesPermissionsView from '@/components/admin/RolesPermissionsView';
+import SecurityAuditView from '@/components/admin/SecurityAuditView';
+import ReportsAnalyticsView from '@/components/admin/ReportsAnalyticsView';
+import {
+  VendorDetailModal,
+  CustomerDetailModal,
+  ProductDetailModal,
+  OrderDetailModal
+} from '@/components/admin/DetailModals';
 
 type AdminModule =
   | 'dashboard' | 'marketplace' | 'orders' | 'customers' | 'sellers'
   | 'resellers' | 'delivery' | 'inventory' | 'warehouse' | 'pos'
   | 'crm' | 'erp' | 'hrm' | 'wallet' | 'finance' | 'reports'
-  | 'notifications' | 'rbac' | 'settings' | 'audit' | 'superadmin' | 'reviews';
+  | 'notifications' | 'rbac' | 'settings' | 'audit' | 'superadmin' | 'reviews'
+  | 'accounts' | 'security';
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -107,6 +120,12 @@ export default function AdminDashboardPage() {
   const [isMounted, setIsMounted] = useState(false);
   const [platformStats, setPlatformStats] = useState<any>(null);
   const [settingsSavedMsg, setSettingsSavedMsg] = useState('');
+
+  // Enterprise Detail Modals state
+  const [viewingVendor, setViewingVendor] = useState<any | null>(null);
+  const [viewingCustomer, setViewingCustomer] = useState<any | null>(null);
+  const [viewingProduct, setViewingProduct] = useState<any | null>(null);
+  const [viewingOrder, setViewingOrder] = useState<any | null>(null);
 
   // --- LOCAL & REMOTE MUTABLE STATES ---
   const [localOrders, setLocalOrders] = useState<Order[]>([]);
@@ -366,6 +385,21 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     setIsMounted(true);
     initAdminTheme();
+
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const mod = params.get('module');
+      if (mod && [
+        'dashboard', 'marketplace', 'orders', 'customers', 'sellers',
+        'resellers', 'delivery', 'inventory', 'warehouse', 'pos',
+        'crm', 'erp', 'hrm', 'wallet', 'finance', 'reports',
+        'notifications', 'rbac', 'settings', 'audit', 'reviews',
+        'accounts', 'security'
+      ].includes(mod)) {
+        setActiveModule(mod as AdminModule);
+      }
+    }
+
     fetchProducts();
     fetchOrders();
     fetchCrmCustomers();
@@ -481,6 +515,37 @@ export default function AdminDashboardPage() {
     if (orders.length > 0) setLocalOrders(orders);
     if (crmCustomers.length > 0) setLocalCustomers(crmCustomers);
   }, [products, orders, crmCustomers]);
+
+  // Global Ctrl+K / Cmd+K listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setCommandPaletteOpen(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const handleSearchResultSelect = (module: string, itemId: string, itemData?: any) => {
+    setCommandPaletteOpen(false);
+    if (module === 'products') {
+      const prod = localProducts.find(p => p.id === itemId);
+      setViewingProduct(prod || { id: itemId, name: itemData?.title, price: 0, stock: 0 });
+    } else if (module === 'customers') {
+      const cust = adminCustomers.find(c => c.id === itemId);
+      setViewingCustomer(cust || { id: itemId, name: itemData?.title, email: itemData?.subtitle, status: 'ACTIVE' });
+    } else if (module === 'vendors') {
+      const vend = adminSellers.find(s => s.id === itemId);
+      setViewingVendor(vend || { id: itemId, name: itemData?.title, isApproved: true });
+    } else if (module === 'orders') {
+      const ord = localOrders.find(o => o.id === itemId);
+      setViewingOrder(ord || { id: itemId, orderNumber: itemData?.title, total: 0, status: 'PENDING' });
+    } else if (module === 'transactions') {
+      setActiveModule('wallet');
+    }
+  };
 
   const [sellerActionMsg, setSellerActionMsg] = useState('');
   const [selectedDrawerSeller, setSelectedDrawerSeller] = useState<any | null>(null);
@@ -1343,21 +1408,21 @@ export default function AdminDashboardPage() {
       ]
     },
     {
-      title: 'Finance & Tools',
+      title: 'Finance & Analytics',
       items: [
         { id: 'wallet', label: 'Unified Wallets', icon: Wallet },
         { id: 'finance', label: 'Financial Records', icon: Activity },
-        { id: 'reports', label: 'Export Reports', icon: FileText },
-        { id: 'notifications', label: 'Notification Hub', icon: BellRing }
+        { id: 'reports', label: 'Dynamic Reports & BI', icon: FileText }
       ]
     },
     {
-      title: 'Security & Access',
+      title: 'Administration & Security',
       items: [
-        { id: 'rbac', label: 'Roles & Matrix', icon: KeyRound },
+        { id: 'accounts', label: 'User & Staff Accounts', icon: UserPlus },
+        { id: 'rbac', label: 'Roles & Permissions', icon: KeyRound },
+        { id: 'security', label: 'Security & Firewalls', icon: ShieldAlert },
         { id: 'settings', label: 'System Settings', icon: Settings2 },
-        { id: 'audit', label: 'Audit Security Logs', icon: ShieldAlert },
-        { id: 'superadmin', label: 'Superadmin Direct', icon: Lock }
+        { id: 'notifications', label: 'Notification Hub', icon: BellRing }
       ]
     }
   ] as const;
@@ -1366,6 +1431,10 @@ export default function AdminDashboardPage() {
   const allCommands = [
     { label: 'Go to Dashboard', action: () => { setActiveModule('dashboard'); setCommandPaletteOpen(false); } },
     { label: 'Manage Orders Register', action: () => { setActiveModule('orders'); setCommandPaletteOpen(false); } },
+    { label: 'User & Staff Accounts Management', action: () => { setActiveModule('accounts'); setCommandPaletteOpen(false); } },
+    { label: 'Roles & Permissions Matrix', action: () => { setActiveModule('rbac'); setCommandPaletteOpen(false); } },
+    { label: 'Security & Active Sessions Firewall', action: () => { setActiveModule('security'); setCommandPaletteOpen(false); } },
+    { label: 'Dynamic Financial Reports & BI', action: () => { setActiveModule('reports'); setCommandPaletteOpen(false); } },
     { label: 'Open POS Register', action: () => { setActiveModule('pos'); setCommandPaletteOpen(false); } },
     { label: 'Check Warehouse Capacities', action: () => { setActiveModule('warehouse'); setCommandPaletteOpen(false); } },
     { label: 'Access System Settings', action: () => { setActiveModule('settings'); setCommandPaletteOpen(false); } },
@@ -1722,351 +1791,24 @@ export default function AdminDashboardPage() {
           {/* VIEW: DASHBOARD HOME */}
           {/* ================================================= */}
           {activeModule === 'dashboard' && (
-            <div className="space-y-6 sm:space-y-8 animate-fade-in">
-              {/* 4 Executive Key Metrics */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {[
-                  {
-                    label: 'Total Revenue (GMV)',
-                    value: platformStats?.overview?.totalGmv ? `৳${platformStats.overview.totalGmv.toLocaleString()}` : `৳${totalRevenue.toLocaleString()}`,
-                    desc: 'Total sales gross invoices',
-                    icon: CreditCard,
-                    trend: '+14%',
-                    iconBg: isLight ? 'bg-amber-100 text-amber-700' : 'bg-amber-500/20 text-amber-400',
-                  },
-                  {
-                    label: 'Total Orders',
-                    value: platformStats?.overview?.totalOrders ?? localOrders.length,
-                    desc: 'Across all active channels',
-                    icon: ShoppingBag,
-                    trend: '+22%',
-                    iconBg: isLight ? 'bg-blue-100 text-blue-700' : 'bg-blue-500/20 text-blue-400',
-                  },
-                  {
-                    label: 'Total Customers',
-                    value: platformStats?.overview?.totalCustomers ?? localCustomers.length,
-                    desc: 'Profiled shopper accounts',
-                    icon: Users,
-                    trend: '+8%',
-                    iconBg: isLight ? 'bg-emerald-100 text-emerald-700' : 'bg-emerald-500/20 text-emerald-400',
-                  },
-                  {
-                    label: 'Active Stores',
-                    value: platformStats?.overview?.totalStores ? `${platformStats.overview.totalStores} Stores` : `${pendingSellers.length + 10} Stores`,
-                    desc: `${platformStats?.overview?.pendingVerifications || pendingSellers.length} Pending KYC`,
-                    icon: Store,
-                    trend: '+12%',
-                    iconBg: isLight ? 'bg-purple-100 text-purple-700' : 'bg-purple-500/20 text-purple-400',
-                  }
-                ].map((stat, i) => (
-                  <div 
-                    key={i} 
-                    className={`relative overflow-hidden border p-5 rounded-2xl transition-all duration-300 flex flex-col justify-between min-h-[130px] ${
-                      isLight
-                        ? 'bg-white border-slate-200/80 shadow-xs hover:shadow-md hover:border-slate-300'
-                        : 'bg-white/[0.02] backdrop-blur-md border-white/5 shadow-xl hover:border-white/10 hover:shadow-[0_0_20px_rgba(255,255,255,0.02)]'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between z-10">
-                      <span className={`text-xs font-bold uppercase tracking-wider ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                        {stat.label}
-                      </span>
-                      <div className={`p-2.5 rounded-xl ${stat.iconBg}`}>
-                        <stat.icon className="w-4 h-4" />
-                      </div>
-                    </div>
-                    <div className="mt-4">
-                      <h4 className={`text-3xl font-black tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                        {stat.value}
-                      </h4>
-                      <div className="flex items-center gap-2 mt-2">
-                        <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${
-                          isLight ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                        }`}>
-                          {stat.trend}
-                        </span>
-                        <span className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                          {stat.desc}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Data Visualization Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                
-                {/* 1. Neon Weekly Volume SVG chart */}
-                <div className={`border p-6 rounded-2xl transition-all ${
-                  isLight
-                    ? 'bg-white border-slate-200/80 shadow-xs'
-                    : 'bg-white/[0.02] backdrop-blur-md border-white/5 shadow-xl'
-                }`}>
-                  <div className="flex items-center justify-between border-b pb-3.5 mb-4" style={{ borderColor: isLight ? '#f1f5f9' : 'rgba(255,255,255,0.05)' }}>
-                    <div>
-                      <h4 className={`text-xs font-black uppercase tracking-wider ${isLight ? 'text-slate-900' : 'text-slate-200'}`}>
-                        Weekly Sales GMV Trend
-                      </h4>
-                      <p className={`text-[11px] mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                        ৳148,500 gross volume this week
-                      </p>
-                    </div>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                      isLight ? 'bg-amber-50 text-amber-800 border-amber-200' : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                    }`}>
-                      +18.4%
-                    </span>
-                  </div>
-
-                  <div className="flex items-end gap-3 h-44 pt-2">
-                    {[
-                      { day: 'Mon', val: 12000 },
-                      { day: 'Tue', val: 18000 },
-                      { day: 'Wed', val: 14500 },
-                      { day: 'Thu', val: 24000 },
-                      { day: 'Fri', val: 32000, peak: true },
-                      { day: 'Sat', val: 27000 },
-                      { day: 'Sun', val: 21000 }
-                    ].map((d, idx) => {
-                      const pct = Math.round((d.val / 32000) * 100);
-                      return (
-                        <div key={idx} className="flex-1 flex flex-col items-center gap-1.5 group cursor-pointer">
-                          {/* Top Label */}
-                          <span className={`text-[10px] font-bold font-mono transition-all ${
-                            d.peak 
-                              ? isLight ? 'text-amber-700 font-black' : 'text-amber-400 font-black' 
-                              : isLight ? 'text-slate-500 group-hover:text-slate-900' : 'text-slate-400 group-hover:text-white'
-                          }`}>
-                            ৳{(d.val / 1000)}k
-                          </span>
-
-                          {/* Bar Track & Fill */}
-                          <div className={`w-full h-32 rounded-xl p-1 flex items-end justify-center transition-all ${
-                            isLight ? 'bg-slate-100 group-hover:bg-slate-200/60' : 'bg-white/5 group-hover:bg-white/10'
-                          }`}>
-                            <div 
-                              className={`w-full rounded-lg transition-all duration-500 ${
-                                d.peak
-                                  ? 'bg-gradient-to-t from-amber-500 to-amber-400 shadow-sm'
-                                  : isLight
-                                    ? 'bg-gradient-to-t from-slate-400 to-slate-300 group-hover:from-amber-500 group-hover:to-amber-400'
-                                    : 'bg-gradient-to-t from-slate-700 to-slate-600 group-hover:from-amber-500 group-hover:to-amber-400'
-                              }`}
-                              style={{ height: `${pct}%` }}
-                            />
-                          </div>
-
-                          {/* Day Label */}
-                          <span className={`text-[11px] font-extrabold uppercase mt-0.5 ${
-                            d.peak
-                              ? isLight ? 'text-amber-700' : 'text-amber-400'
-                              : isLight ? 'text-slate-600' : 'text-slate-400'
-                          }`}>
-                            {d.day}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* 2. Interactive SVG Sparklines */}
-                <div className={`border p-6 rounded-2xl space-y-4 transition-all ${
-                  isLight
-                    ? 'bg-white border-slate-200/80 shadow-xs'
-                    : 'bg-white/[0.02] backdrop-blur-md border-white/5 shadow-xl'
-                }`}>
-                  <div className="flex items-center justify-between border-b pb-3.5" style={{ borderColor: isLight ? '#f1f5f9' : 'rgba(255,255,255,0.05)' }}>
-                    <h4 className={`text-xs font-black uppercase tracking-wider ${isLight ? 'text-slate-900' : 'text-slate-200'}`}>
-                      Real-time Conversion Analytics
-                    </h4>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border flex items-center gap-1.5 ${
-                      isLight ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                    }`}>
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-                      Live Pulse
-                    </span>
-                  </div>
-
-                  <div className="flex items-baseline justify-between pt-1">
-                    <div>
-                      <span className={`text-3xl font-black ${isLight ? 'text-slate-900' : 'text-white'}`}>3.82%</span>
-                      <span className={`text-xs ml-2 font-bold ${isLight ? 'text-emerald-700' : 'text-emerald-400'}`}>+0.4% this hour</span>
-                    </div>
-                    <div className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'} font-medium text-right`}>
-                      <p>95 conversions / 2,490 visits</p>
-                    </div>
-                  </div>
-
-                  <div className="relative h-28 flex items-end justify-center">
-                    <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 40" preserveAspectRatio="none">
-                      <defs>
-                        <linearGradient id="neonGlow" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#3b82f6" stopOpacity={isLight ? 0.35 : 0.25} />
-                          <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.0" />
-                        </linearGradient>
-                      </defs>
-                      <path 
-                        d="M 0 35 Q 20 10 40 25 T 80 5 T 100 20" 
-                        fill="none" 
-                        stroke="#2563eb" 
-                        strokeWidth="2.5" 
-                        strokeLinecap="round"
-                      />
-                      <path 
-                        d="M 0 35 Q 20 10 40 25 T 80 5 T 100 20 L 100 40 L 0 40 Z" 
-                        fill="url(#neonGlow)"
-                      />
-                    </svg>
-                  </div>
-
-                  <div className={`p-2.5 rounded-xl border flex items-center justify-between text-xs font-semibold ${
-                    isLight ? 'bg-slate-50 border-slate-200/80 text-slate-700' : 'bg-slate-950/60 border-white/5 text-slate-300'
-                  }`}>
-                    <span>Checkout Drop-off: <strong className={isLight ? 'text-slate-900' : 'text-white'}>18.2%</strong></span>
-                    <span>Avg Cart: <strong className={isLight ? 'text-slate-900' : 'text-white'}>৳4,120</strong></span>
-                  </div>
-                </div>
-
-                {/* 3. Category & Device Performance */}
-                <div className={`border p-6 rounded-2xl space-y-4 transition-all ${
-                  isLight
-                    ? 'bg-white border-slate-200/80 shadow-xs'
-                    : 'bg-white/[0.02] backdrop-blur-md border-white/5 shadow-xl'
-                }`}>
-                  <div className="flex items-center justify-between border-b pb-3.5" style={{ borderColor: isLight ? '#f1f5f9' : 'rgba(255,255,255,0.05)' }}>
-                    <h4 className={`text-xs font-black uppercase tracking-wider ${isLight ? 'text-slate-900' : 'text-slate-200'}`}>
-                      Traffic Sources Channel
-                    </h4>
-                    <span className={`text-[10px] font-bold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                      Monthly Split
-                    </span>
-                  </div>
-
-                  <div className="space-y-4 text-xs font-bold">
-                    {[
-                      { name: 'App Checkouts (PWA)', pct: '68%', amount: '৳47,389', color: 'from-amber-500 to-[#FFC107]' },
-                      { name: 'Desktop Web Core', pct: '32%', amount: '৳22,301', color: 'from-blue-600 to-indigo-500' }
-                    ].map((item, idx) => (
-                      <div key={idx} className="space-y-1.5">
-                        <div className="flex justify-between items-center">
-                          <span className={isLight ? 'text-slate-700' : 'text-slate-300'}>{item.name}</span>
-                          <div className="flex items-center gap-2">
-                            <span className={`font-mono text-[11px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>{item.amount}</span>
-                            <span className={`font-black ${isLight ? 'text-slate-900' : 'text-white'}`}>{item.pct}</span>
-                          </div>
-                        </div>
-                        <div className={`w-full h-2.5 rounded-full overflow-hidden ${isLight ? 'bg-slate-100' : 'bg-white/5'}`}>
-                          <div className={`h-full bg-gradient-to-r ${item.color} rounded-full`} style={{ width: item.pct }} />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className={`mt-4 p-3 rounded-xl border flex items-center justify-between text-xs ${
-                    isLight ? 'bg-amber-50/60 border-amber-200/60 text-amber-900' : 'bg-amber-500/10 border-amber-500/20 text-amber-300'
-                  }`}>
-                    <span className="font-medium">Mobile Traffic Dominance:</span>
-                    <span className="font-black text-amber-700 dark:text-amber-400">+14% Growth</span>
-                  </div>
-                </div>
-
-              </div>
-
-              {/* Security Shield Live Audit log */}
-              <div className={`border p-6 rounded-2xl transition-all ${
-                isLight
-                  ? 'bg-white border-slate-200/80 shadow-xs'
-                  : 'bg-white/[0.02] backdrop-blur-md border-white/5 shadow-xl'
-              }`}>
-                <div className="flex items-center justify-between border-b pb-3.5 mb-4" style={{ borderColor: isLight ? '#f1f5f9' : 'rgba(255,255,255,0.05)' }}>
-                  <h4 className={`text-xs font-black uppercase tracking-wider flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-slate-200'}`}>
-                    <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                    Security Monitoring Live Thread
-                  </h4>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border flex items-center gap-1.5 ${
-                    isLight ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                  }`}>
-                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping" />
-                    System Auditing Active
-                  </span>
-                </div>
-
-                <div className="space-y-2.5">
-                  {platformStats?.recentLogs && platformStats.recentLogs.length > 0 ? (
-                    platformStats.recentLogs.slice(0, 4).map((log: any, idx: number) => (
-                      <div 
-                        key={idx} 
-                        className={`flex items-center justify-between p-3 rounded-xl border transition-colors ${
-                          isLight ? 'bg-slate-50 border-slate-200/60 hover:bg-slate-100/70' : 'bg-white/[0.02] border-white/5 hover:bg-white/[0.04]'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <span className={`font-mono text-[10px] px-2 py-0.5 rounded border font-semibold shrink-0 ${
-                            isLight ? 'bg-white text-slate-600 border-slate-200' : 'bg-slate-900 text-slate-400 border-white/10'
-                          }`}>
-                            [{new Date(log.createdAt).toLocaleTimeString()}]
-                          </span>
-                          <p className={`text-xs font-medium truncate ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>
-                            {log.action} {log.user?.email && <strong className={isLight ? 'text-slate-950 font-bold' : 'text-white font-bold'}>by {log.user.email}</strong>} {log.ipAddress && <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>(IP {log.ipAddress})</span>}
-                          </p>
-                        </div>
-                        <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border shrink-0 ${
-                          isLight ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                        }`}>
-                          PASS
-                        </span>
-                      </div>
-                    ))
-                  ) : (
-                    <>
-                      {[
-                        { time: '04:22:15', category: 'AUTH', text: 'Security alert: Auth trigger verification. Direct superadmin login verified.', status: 'PASS', color: 'emerald' },
-                        { time: '04:18:47', category: 'SYNC', text: 'Database sync: PostgreSQL transaction pooler snapshot archived to Cloud Node.', status: 'INFO', color: 'blue' },
-                        { time: '04:09:12', category: 'SHIELD', text: 'Shield alert: Anomaly Shield active with zero breaches across active storefront sessions.', status: 'ACTIVE', color: 'emerald' }
-                      ].map((item, i) => (
-                        <div 
-                          key={i} 
-                          className={`flex items-center justify-between p-3 rounded-xl border transition-colors ${
-                            isLight ? 'bg-slate-50 border-slate-200/60 hover:bg-slate-100/70' : 'bg-white/[0.02] border-white/5 hover:bg-white/[0.04]'
-                          }`}
-                        >
-                          <div className="flex items-center gap-3 min-w-0">
-                            <span className={`font-mono text-[10px] px-2 py-0.5 rounded border font-semibold shrink-0 ${
-                              isLight ? 'bg-white text-slate-600 border-slate-200' : 'bg-slate-900 text-slate-400 border-white/10'
-                            }`}>
-                              [{item.time}]
-                            </span>
-                            <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded shrink-0 ${
-                              item.color === 'emerald'
-                                ? isLight ? 'bg-emerald-100 text-emerald-800' : 'bg-emerald-500/20 text-emerald-300'
-                                : isLight ? 'bg-blue-100 text-blue-800' : 'bg-blue-500/20 text-blue-300'
-                            }`}>
-                              {item.category}
-                            </span>
-                            <p className={`text-xs font-medium truncate ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>
-                              {item.text}
-                            </p>
-                          </div>
-                          <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border shrink-0 ${
-                            item.color === 'emerald'
-                              ? isLight ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                              : isLight ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-blue-500/10 text-blue-400 border-blue-500/20'
-                          }`}>
-                            {item.status}
-                          </span>
-                        </div>
-                      ))}
-                    </>
-                  )}
-                </div>
-              </div>
-
-            </div>
+            <DashboardOverview
+              platformStats={platformStats}
+              onNavigateModule={(mod: string) => setActiveModule(mod as AdminModule)}
+              isLight={isLight}
+              token={token}
+              onSelectOrder={(ord: any) => setViewingOrder(ord)}
+            />
           )}
 
-
+          {/* ================================================= */}
+          {/* VIEW: USER & STAFF ACCOUNTS (SUPER ADMIN MIGRATED) */}
+          {/* ================================================= */}
+          {activeModule === 'accounts' && (
+            <AccountsManagementView
+              token={token}
+              isLight={isLight}
+            />
+          )}
 
           {/* ================================================= */}
           {/* VIEW: CUSTOMER REVIEWS & TESTIMONIALS MODERATION */}
@@ -2534,6 +2276,13 @@ export default function AdminDashboardPage() {
                         {/* Customer Actions */}
                         <div className="flex items-center gap-1.5 pt-2 border-t border-white/5">
                           <button
+                            onClick={() => setViewingCustomer(cust)}
+                            className="p-1.5 bg-white/5 hover:bg-[#FFC107]/20 text-slate-300 hover:text-[#FFC107] rounded-xl border border-white/5 flex items-center justify-center transition-colors"
+                            title="View Full Customer Profile"
+                          >
+                            <Eye size={12} />
+                          </button>
+                          <button
                             onClick={() => handleOpenEditCustomer(cust)}
                             className="flex-1 bg-white/5 hover:bg-[#FFC107]/20 hover:text-[#FFC107] text-slate-300 text-[10px] font-bold py-1.5 rounded-xl border border-white/5 flex items-center justify-center gap-1 transition-colors"
                           >
@@ -2724,6 +2473,17 @@ export default function AdminDashboardPage() {
                               </td>
                               <td className="py-3.5 px-4 text-right">
                                 <div className="flex items-center justify-end gap-1.5">
+                                  <button
+                                    onClick={() => setViewingVendor(seller)}
+                                    className={`p-1.5 rounded-lg transition-colors ${
+                                      isLight
+                                        ? 'bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 shadow-sm'
+                                        : 'bg-white/5 hover:bg-[#FFC107]/20 hover:text-[#FFC107] text-slate-400'
+                                    }`}
+                                    title="View Full Vendor & Store Details"
+                                  >
+                                    <Eye className="w-3.5 h-3.5" />
+                                  </button>
                                   <button
                                     onClick={() => handleOpenEditSeller(seller)}
                                     className={`p-1.5 rounded-lg transition-colors ${
@@ -3493,48 +3253,12 @@ export default function AdminDashboardPage() {
           {/* VIEW: REPORTS ENGINE */}
           {/* ================================================= */}
           {activeModule === 'reports' && (
-            <div className="bg-white/[0.02] border border-white/5 p-6 rounded-2xl shadow-xl space-y-5 animate-fade-in">
-              <h3 className="text-xs font-black text-slate-300 uppercase tracking-widest border-b border-white/5 pb-3">
-                ERP Export Report Center
-              </h3>
-              <p className="text-xs text-slate-400 leading-relaxed max-w-2xl">
-                Select a dataset partition key below to run compilation scripts. PDF builds include platform templates; CSV/XLS generate raw structured tables.
-              </p>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
-                {[
-                  { name: 'Gross Revenue Reports', desc: 'Broken down by VAT taxes and channel sources' },
-                  { name: 'Warehouse Inventories ledger', desc: 'SKU allocations inside Dhaka & Chattogram hubs' },
-                  { name: 'Resellers payroll schedules', desc: 'Monthly base wages and target milestone values' }
-                ].map((rep, idx) => (
-                  <div key={idx} className="bg-white/[0.01] border border-white/5 p-5 rounded-2xl flex flex-col justify-between min-h-[140px] hover:border-white/10 transition-colors">
-                    <div>
-                      <h4 className="text-xs font-black text-white">{rep.name}</h4>
-                      <p className="text-[9.5px] text-slate-400 mt-1.5 leading-relaxed">{rep.desc}</p>
-                    </div>
-                    <div className="flex gap-2 pt-4">
-                      <button
-                        onClick={() => triggerReportExport(rep.name, 'PDF')}
-                        className="flex-1 bg-white/5 hover:bg-[#FFC107] hover:text-slate-950 text-[9px] font-black py-2 rounded-xl transition-all flex items-center justify-center gap-1 cursor-pointer border border-white/5"
-                      >
-                        <Download className="w-3.5 h-3.5" /> PDF
-                      </button>
-                      <button
-                        onClick={() => triggerReportExport(rep.name, 'EXCEL')}
-                        className="flex-1 bg-white/5 hover:bg-white/10 text-[9px] font-black py-2 rounded-xl transition-all flex items-center justify-center gap-1 cursor-pointer border border-white/5"
-                      >
-                        <Download className="w-3.5 h-3.5" /> XLS
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <ReportsAnalyticsView
+              token={token}
+              isLight={isLight}
+            />
           )}
 
-          {/* ================================================= */}
-          {/* VIEW: NOTIFICATION HUBS */}
-          {/* ================================================= */}
           {activeModule === 'notifications' && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
               <div className="bg-white/[0.02] border border-white/5 p-5 rounded-2xl shadow-xl lg:col-span-2 space-y-4">
@@ -3607,42 +3331,12 @@ export default function AdminDashboardPage() {
           {/* VIEW: RBAC MATRIX */}
           {/* ================================================= */}
           {activeModule === 'rbac' && (
-            <div className="bg-white/[0.02] border border-white/5 p-5 rounded-2xl shadow-xl space-y-4 animate-fade-in">
-              <h3 className="text-xs font-black text-slate-300 uppercase tracking-widest border-b border-white/5 pb-3">
-                Access Permissions Matrix
-              </h3>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="border-b border-white/5 bg-white/5 text-slate-400 font-bold">
-                      <th className="py-3 px-4 font-black">System Role Tier</th>
-                      <th className="py-3 px-4 text-center">Manage Platforms</th>
-                      <th className="py-3 px-4 text-center">Access ERP Ledgers</th>
-                      <th className="py-3 px-4 text-center">Modify User Tiers</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/5 font-extrabold text-slate-300">
-                    {[
-                      { role: 'Superadmin Owner', manage: true, erp: true, modify: true },
-                      { role: 'Operations Manager', manage: true, erp: true, modify: false },
-                      { role: 'Warehouse Attendant', manage: false, erp: false, modify: false }
-                    ].map((row, idx) => (
-                      <tr key={idx} className="hover:bg-white/5 transition-colors">
-                        <td className="py-3.5 px-4 text-white font-extrabold">{row.role}</td>
-                        <td className="py-3.5 px-4 text-center">{row.manage ? '✓ Allowed' : '✗ Denied'}</td>
-                        <td className="py-3.5 px-4 text-center">{row.erp ? '✓ Allowed' : '✗ Denied'}</td>
-                        <td className="py-3.5 px-4 text-center">{row.modify ? '✓ Allowed' : '✗ Denied'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            <RolesPermissionsView
+              token={token}
+              isLight={isLight}
+            />
           )}
 
-          {/* ================================================= */}
-          {/* VIEW: SYSTEM SETTINGS */}
-          {/* ================================================= */}
           {activeModule === 'settings' && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in">
               {/* Interface Theme Appearance */}
@@ -3820,76 +3514,18 @@ export default function AdminDashboardPage() {
           {/* ================================================= */}
           {/* VIEW: AUDIT SECURITY LOGS */}
           {/* ================================================= */}
-          {activeModule === 'audit' && (
-            <div className="space-y-6 animate-fade-in">
-              <div className="bg-white/[0.02] border border-white/5 p-5 rounded-2xl shadow-xl space-y-4">
-                <h3 className="text-xs font-black text-slate-300 uppercase tracking-widest border-b border-white/5 pb-3">
-                  Centralized Action Log Ledger
-                </h3>
-                <div className="space-y-2.5 font-mono text-[9.5px] text-slate-400">
-                  <div className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl flex justify-between">
-                    <span>[04:22:15] Flagged login trace: failed auth parameters from location node IP 203.82.19.4.</span>
-                    <span className="font-bold">SUSPICIOUS</span>
-                  </div>
-                  <div className="p-3 bg-white/5 border border-white/5 rounded-xl flex justify-between">
-                    <span>[03:45:10] ERP override: platform commission rates modified by superadmin master key.</span>
-                    <span className="text-[#FFC107] font-bold">CONFIG</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+          {(activeModule === 'security' || activeModule === 'audit') && (
+            <SecurityAuditView
+              token={token}
+              isLight={isLight}
+            />
           )}
 
-          {/* ================================================= */}
-          {/* VIEW: SUPERADMIN DIRECT CONTROLS */}
-          {/* ================================================= */}
           {activeModule === 'superadmin' && (
-            <div className="space-y-6 animate-fade-in">
-              <div className="bg-white/[0.02] border border-white/5 p-6 rounded-2xl shadow-xl space-y-4">
-                <h3 className="text-xs font-black text-slate-300 uppercase tracking-widest border-b border-white/5 pb-3">
-                  Superadmin Direct Master Triggers
-                </h3>
-                <p className="text-xs text-slate-400 leading-relaxed max-w-xl">
-                  Restrict access override controls. Run full database schema backups, verify platform encryption keys, or restart microservices.
-                </p>
-                <div className="flex flex-wrap gap-3 pt-3">
-                  <button
-                    onClick={() => alert('Compiling snapshot... Full WAL dump compiled successfully.')}
-                    className="bg-[#FFC107] text-slate-950 text-xs font-extrabold px-5 py-2.5 rounded-xl transition-all cursor-pointer hover:bg-[#FFC107]/90 active:scale-95 shadow-[0_0_15px_rgba(255,193,7,0.1)]"
-                  >
-                    Backup Schema Snapshot
-                  </button>
-                  <button
-                    onClick={() => alert('Restarting core auth services. Security logs refreshed.')}
-                    className="border border-white/5 bg-white/5 hover:bg-white/10 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-all cursor-pointer"
-                  >
-                    Clear Memory Logs
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ================================================= */}
-          {/* VIEW: SYSTEM NOTIFICATIONS CENTRAL */}
-          {/* ================================================= */}
-          {activeModule === 'notifications' && (
-            <div className="bg-white/[0.02] border border-white/5 p-6 rounded-2xl shadow-xl space-y-4 animate-fade-in">
-              <h3 className="text-xs font-black text-slate-300 uppercase tracking-widest border-b border-white/5 pb-3">
-                Unified Ecosystem Notification Hub
-              </h3>
-              <p className="text-xs text-slate-400 leading-relaxed max-w-xl">
-                Zibonbaba operations, delivery dispatch lines, reseller payouts, and system alerts are managed in the centralized notification hub.
-              </p>
-              <div className="pt-3">
-                <Link
-                  href="/notifications"
-                  className="bg-[#FFC107] text-slate-950 text-xs font-extrabold px-6 py-3 rounded-xl inline-block hover:bg-yellow-600 transition-colors"
-                >
-                  Open Notification Control Center →
-                </Link>
-              </div>
-            </div>
+            <AccountsManagementView
+              token={token}
+              isLight={isLight}
+            />
           )}
 
         </main>
@@ -3897,45 +3533,105 @@ export default function AdminDashboardPage() {
 
 
 
-      {/* 4. MODAL OVERLAY: COMMAND PALETTE */}
-      {commandPaletteOpen && (
-        <div 
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-start justify-center pt-24 p-4 animate-fade-in"
-          onClick={() => setCommandPaletteOpen(false)}
-        >
-          <div 
-            className="bg-slate-900 border border-white/10 rounded-2xl shadow-2xl max-w-lg w-full p-4 space-y-3 relative overflow-hidden animate-slide-up"
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="flex items-center bg-white/5 border border-white/5 rounded-xl px-3 h-11 focus-within:border-[#FFC107]">
-              <Search className="w-4 h-4 text-slate-400 mr-2.5" />
-              <input
-                type="text"
-                autoFocus
-                placeholder="Type a module command (e.g. settings)..."
-                value={commandSearch}
-                onChange={e => setCommandSearch(e.target.value)}
-                className="bg-transparent text-xs w-full outline-none text-white font-medium"
-              />
-            </div>
-            
-            <div className="space-y-1 max-h-60 overflow-y-auto">
-              {allCommands
-                .filter(cmd => cmd.label.toLowerCase().includes(commandSearch.toLowerCase()))
-                .map((cmd, i) => (
-                  <button
-                    key={i}
-                    onClick={cmd.action}
-                    className="w-full text-left px-3 py-2.5 text-xs text-slate-300 hover:bg-[#FFC107]/10 hover:text-white rounded-xl transition-all flex justify-between items-center"
-                  >
-                    <span>{cmd.label}</span>
-                    <span className="text-[10px] text-slate-500 font-mono">Execute</span>
-                  </button>
-                ))}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* 4. GLOBAL SEARCH MODAL (Ctrl + K) */}
+      <AdminGlobalSearchModal
+        isOpen={commandPaletteOpen}
+        onClose={() => setCommandPaletteOpen(false)}
+        onSelectResult={handleSearchResultSelect}
+        isLight={isLight}
+      />
+
+      {/* 4.1 ENTERPRISE DETAIL MODALS */}
+      <VendorDetailModal
+        vendor={viewingVendor}
+        isOpen={Boolean(viewingVendor)}
+        onClose={() => setViewingVendor(null)}
+        onApproveToggle={handleToggleSellerApproval}
+        onUpdateCommission={async (vendorId, newRate) => {
+          const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null);
+          if (activeToken) {
+            await fetch('/api/admin/sellers/' + vendorId, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + activeToken },
+              body: JSON.stringify({ commissionRate: newRate })
+            });
+            fetchAdminSellers();
+          }
+        }}
+        isLight={isLight}
+      />
+
+      <CustomerDetailModal
+        customer={viewingCustomer}
+        isOpen={Boolean(viewingCustomer)}
+        onClose={() => setViewingCustomer(null)}
+        onUpdateStatus={async (userId, newStatus) => {
+          const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null);
+          if (activeToken) {
+            await fetch('/api/admin/users/' + userId, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + activeToken },
+              body: JSON.stringify({ status: newStatus })
+            });
+            fetchAdminCustomers();
+            setViewingCustomer((prev: any) => prev ? { ...prev, status: newStatus } : null);
+          }
+        }}
+        onAdjustBalance={async (userId, newBalance) => {
+          const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null);
+          if (activeToken) {
+            await fetch('/api/admin/users/' + userId, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + activeToken },
+              body: JSON.stringify({ walletBalance: newBalance })
+            });
+            fetchAdminCustomers();
+            setViewingCustomer((prev: any) => prev ? { ...prev, walletBalance: newBalance } : null);
+          }
+        }}
+        isLight={isLight}
+      />
+
+      <ProductDetailModal
+        product={viewingProduct}
+        isOpen={Boolean(viewingProduct)}
+        onClose={() => setViewingProduct(null)}
+        onUpdateStatus={async (prodId, status) => {
+          const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null);
+          if (activeToken) {
+            await fetch('/api/products/' + prodId, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + activeToken },
+              body: JSON.stringify({ status })
+            });
+            fetchProducts();
+          }
+        }}
+        onSaveProduct={async (prodId, data) => {
+          const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('zibonbaba_token') : null);
+          if (activeToken) {
+            await fetch('/api/products/' + prodId, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + activeToken },
+              body: JSON.stringify(data)
+            });
+            fetchProducts();
+          }
+        }}
+        isLight={isLight}
+      />
+
+      <OrderDetailModal
+        order={viewingOrder}
+        isOpen={Boolean(viewingOrder)}
+        onClose={() => setViewingOrder(null)}
+        onUpdateStatus={async (orderId, newStatus) => {
+          await updateOrderStatus(orderId, newStatus as any);
+          fetchOrders();
+          setViewingOrder((prev: any) => prev ? { ...prev, status: newStatus } : null);
+        }}
+        isLight={isLight}
+      />
 
       {/* 5. MODAL OVERLAY: QUICK TASK */}
       {showQuickActionModal && (

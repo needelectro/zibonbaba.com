@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getAuthUser } from '@/lib/auth';
 
 const getProductImage = (cat: string, name: string) => {
   const c = (cat || '').toLowerCase();
@@ -148,6 +149,19 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const user = await getAuthUser(request);
+    if (!user) {
+      return NextResponse.json({ error: 'Authentication required to create products.' }, { status: 401 });
+    }
+
+    const role = user.role.toUpperCase();
+    const adminRoles = ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'INVENTORY_MANAGER'];
+    const sellerRoles = ['VENDOR_ADMIN', 'SELLER', 'VENDOR', 'VENDOR_STAFF'];
+
+    if (!adminRoles.includes(role) && !sellerRoles.includes(role)) {
+      return NextResponse.json({ error: 'Access Denied. Only merchants or platform administrators can create products.' }, { status: 403 });
+    }
+
     const body = await request.json();
     const { name, price, category, stock, sku, description, attributes, storeId } = body;
     
@@ -162,13 +176,24 @@ export async function POST(request: Request) {
       });
     }
 
-    let store = storeId ? await prisma.store.findUnique({ where: { id: storeId } }) : null;
-    if (!store) {
-      store = await prisma.store.findFirst();
+    let store = null;
+    if (adminRoles.includes(role)) {
+      store = storeId ? await prisma.store.findUnique({ where: { id: storeId } }) : null;
+      if (!store) store = await prisma.store.findFirst();
+    } else {
+      // Strictly scope to this seller's owned store
+      store = await prisma.store.findFirst({ where: { ownerId: user.id } });
+      if (!store && role === 'VENDOR_STAFF') {
+        const staffMem = await prisma.staffMember.findFirst({
+          where: { userId: user.id, isActive: true },
+          include: { seller: { include: { stores: true } } }
+        });
+        store = staffMem?.seller?.stores?.[0] || null;
+      }
     }
 
     if (!store) {
-      return NextResponse.json({ error: 'No store found.' }, { status: 400 });
+      return NextResponse.json({ error: 'No active seller store found for this account.' }, { status: 400 });
     }
 
     const existingVariant = await prisma.productVariant.findUnique({ where: { sku: sku.toUpperCase() } });

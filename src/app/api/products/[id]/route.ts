@@ -120,15 +120,16 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       return NextResponse.json({ error: 'Product not found.' }, { status: 404 });
     }
 
-    // Check authorization if user is logged in
-    if (user) {
-      const adminRoles = ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'INVENTORY_MANAGER'];
-      const isAdmin = adminRoles.includes(user.role.toUpperCase());
-      const isOwner = existingProduct.store?.ownerId === user.id;
+    if (!user) {
+      return NextResponse.json({ error: 'Authentication required to update products.' }, { status: 401 });
+    }
 
-      if (!isAdmin && !isOwner) {
-        return NextResponse.json({ error: 'Access Denied. You are not authorized to modify this product.' }, { status: 403 });
-      }
+    const adminRoles = ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'INVENTORY_MANAGER'];
+    const isAdmin = adminRoles.includes(user.role.toUpperCase());
+    const isOwner = existingProduct.store?.ownerId === user.id;
+
+    if (!isAdmin && !isOwner) {
+      return NextResponse.json({ error: 'Access Denied. You are not authorized to modify this product.' }, { status: 403 });
     }
 
     // Resolve category if provided
@@ -248,15 +249,16 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
       return NextResponse.json({ error: 'Product not found.' }, { status: 404 });
     }
 
-    // Check authorization if user is logged in
-    if (user) {
-      const adminRoles = ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'INVENTORY_MANAGER'];
-      const isAdmin = adminRoles.includes(user.role.toUpperCase());
-      const isOwner = existingProduct.store?.ownerId === user.id;
+    if (!user) {
+      return NextResponse.json({ error: 'Authentication required to delete products.' }, { status: 401 });
+    }
 
-      if (!isAdmin && !isOwner) {
-        return NextResponse.json({ error: 'Access Denied. You are not authorized to delete this product.' }, { status: 403 });
-      }
+    const adminRoles = ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'INVENTORY_MANAGER'];
+    const isAdmin = adminRoles.includes(user.role.toUpperCase());
+    const isOwner = existingProduct.store?.ownerId === user.id;
+
+    if (!isAdmin && !isOwner) {
+      return NextResponse.json({ error: 'Access Denied. You are not authorized to delete this product.' }, { status: 403 });
     }
 
     // Safely delete inventory, order items, and variants before deleting product

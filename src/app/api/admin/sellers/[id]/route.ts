@@ -102,13 +102,19 @@ export async function PATCH(
       }
     });
 
-    // Update owner details if provided
-    if (existingStore.ownerId && (ownerName || ownerPhone !== undefined || ownerStatus)) {
+    // Update owner status & details
+    if (existingStore.ownerId) {
+      let resolvedOwnerStatus = ownerStatus ? ownerStatus.toUpperCase() : undefined;
+      if (!resolvedOwnerStatus && isApproved !== undefined) {
+        resolvedOwnerStatus = isApproved ? 'ACTIVE' : 'SUSPENDED';
+      }
+
       await prisma.user.update({
         where: { id: existingStore.ownerId },
         data: {
           phone: ownerPhone !== undefined ? ownerPhone : undefined,
-          status: ownerStatus ? ownerStatus.toUpperCase() : undefined,
+          status: resolvedOwnerStatus,
+          role: 'VENDOR_ADMIN',
           profile: ownerName
             ? {
                 upsert: {
@@ -119,6 +125,24 @@ export async function PATCH(
             : undefined
         }
       });
+
+      // Send status change notification to the seller
+      if (isApproved !== undefined) {
+        try {
+          await prisma.notification.create({
+            data: {
+              userId: existingStore.ownerId,
+              title: isApproved ? 'Store Approved & Activated! 🏪🎉' : 'Store Account Status Update ⚠️',
+              body: isApproved
+                ? `Congratulations! Your store "${updatedStore.name}" has been approved by the platform administrator. You now have full access to publish products and fulfill customer orders.`
+                : `Your store "${updatedStore.name}" status has been updated to suspended or inactive. Please contact merchant support if you believe this is in error.`,
+              type: isApproved ? 'SUCCESS' : 'WARNING',
+              priority: 'HIGH',
+              module: 'MARKETPLACE'
+            }
+          });
+        } catch (_) {}
+      }
     }
 
     await logAdminAction(

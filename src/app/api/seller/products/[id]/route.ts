@@ -31,7 +31,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { name, description, price, stock, status: productStatus, category, categoryId, image, images } = body;
+    const { name, description, price, discountPrice, stock, status: productStatus, category, categoryId, image, images, specifications } = body;
 
     let targetCategoryId = categoryId;
     if (!targetCategoryId && category) {
@@ -78,6 +78,14 @@ export async function PUT(
         if (image !== undefined) existingAttrs.image = image;
         if (images !== undefined) existingAttrs.images = images;
         else if (image && !existingAttrs.images) existingAttrs.images = [image];
+      }
+
+      if (discountPrice !== undefined) {
+        existingAttrs.discountPrice = discountPrice ? parseFloat(discountPrice) : null;
+      }
+
+      if (specifications !== undefined) {
+        existingAttrs.specifications = specifications;
       }
 
       await prisma.productVariant.update({

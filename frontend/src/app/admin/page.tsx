@@ -13,12 +13,15 @@ import { AdminModuleType } from '@/components/admin/layout/AdminSidebar';
 import DashboardView from '@/components/admin/views/DashboardView';
 import OrdersView from '@/components/admin/views/OrdersView';
 import ProductsView from '@/components/admin/views/ProductsView';
+import CategoriesBrandsView from '@/components/admin/views/CategoriesBrandsView';
 import CustomersView from '@/components/admin/views/CustomersView';
 import SellersView from '@/components/admin/views/SellersView';
 import InventoryView from '@/components/admin/views/InventoryView';
+import CommerceView from '@/components/admin/views/CommerceView';
 import FinanceView from '@/components/admin/views/FinanceView';
 import LogisticsView from '@/components/admin/views/LogisticsView';
 import ResellersView from '@/components/admin/views/ResellersView';
+import MarketingView from '@/components/admin/views/MarketingView';
 import CrmView from '@/components/admin/views/CrmView';
 import HrmView from '@/components/admin/views/HrmView';
 import PosView from '@/components/admin/views/PosView';
@@ -40,6 +43,12 @@ import ProductFormModal from '@/components/admin/ui/ProductFormModal';
 import CustomerFormModal from '@/components/admin/ui/CustomerFormModal';
 import SellerFormModal from '@/components/admin/ui/SellerFormModal';
 import InvoiceMemoModal from '@/components/invoice-memo-modal';
+import {
+  VendorDetailModal,
+  CustomerDetailModal,
+  ProductDetailModal,
+  OrderDetailModal
+} from '@/components/admin/DetailModals';
 
 import {
   Lock,
@@ -91,6 +100,12 @@ export default function AdminDashboardPage() {
   const [viewingCustomer, setViewingCustomer] = useState<any | null>(null);
   const [viewingVendor, setViewingVendor] = useState<any | null>(null);
   const [selectedDrawerSeller, setSelectedDrawerSeller] = useState<any | null>(null);
+
+  // Dedicated Multi-Tab Dossier Modals State
+  const [detailedModalVendor, setDetailedModalVendor] = useState<any | null>(null);
+  const [detailedModalCustomer, setDetailedModalCustomer] = useState<any | null>(null);
+  const [detailedModalProduct, setDetailedModalProduct] = useState<any | null>(null);
+  const [detailedModalOrder, setDetailedModalOrder] = useState<any | null>(null);
 
   // Form Modals State
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
@@ -893,7 +908,13 @@ export default function AdminDashboardPage() {
       case 'dashboard':
         return [{ label: 'Main' }, { label: 'Dashboard Overview' }];
       case 'marketplace':
-        return [{ label: 'Marketplace' }, { label: 'Products & Categories' }];
+        return [{ label: 'Marketplace' }, { label: 'Product Catalog' }];
+      case 'categories':
+        return [{ label: 'Marketplace' }, { label: 'Categories & Brands' }];
+      case 'commerce':
+        return [{ label: 'Commerce' }, { label: 'Commerce & Financial Ledger' }];
+      case 'marketing':
+        return [{ label: 'Marketing' }, { label: 'Campaigns & Coupons' }];
       case 'orders':
         return [{ label: 'Marketplace' }, { label: 'Orders & Shipments' }];
       case 'reviews':
@@ -1025,6 +1046,16 @@ export default function AdminDashboardPage() {
         />
       )}
 
+      {/* 3.1 CATEGORIES & BRANDS */}
+      {activeModule === 'categories' && (
+        <CategoriesBrandsView
+          categories={categories}
+          onRefresh={fetchHomepage}
+          isLight={isLight}
+          token={token}
+        />
+      )}
+
       {/* 4. CUSTOMER HUB */}
       {activeModule === 'customers' && (
         <CustomersView
@@ -1076,7 +1107,22 @@ export default function AdminDashboardPage() {
         />
       )}
 
-      {/* 7. FINANCE & WALLETS */}
+      {/* 7. COMMERCE, PAYMENTS & REFUNDS */}
+      {activeModule === 'commerce' && (
+        <CommerceView
+          orders={localOrders}
+          withdrawals={adminWithdrawals}
+          totalRevenue={totalGmvComputed}
+          platformCommission={platformCommissionComputed}
+          onUpdateWithdrawalStatus={handleUpdateWithdrawalStatus}
+          gateways={gateways}
+          onToggleGateway={handleToggleGateway}
+          isLight={isLight}
+          onInspectOrder={(ord) => setViewingOrder(ord)}
+        />
+      )}
+
+      {/* 7.1 FINANCE & WALLETS */}
       {(activeModule === 'finance' || activeModule === 'wallet' || activeModule === 'erp') && (
         <FinanceView
           totalRevenue={totalGmvComputed}
@@ -1111,6 +1157,14 @@ export default function AdminDashboardPage() {
           resellers={adminResellers}
           onUpdateStatus={handleUpdateResellerStatus}
           isLight={isLight}
+        />
+      )}
+
+      {/* 9.1 MARKETING, CAMPAIGNS & COUPONS */}
+      {activeModule === 'marketing' && (
+        <MarketingView
+          isLight={isLight}
+          token={token}
         />
       )}
 
@@ -1210,6 +1264,18 @@ export default function AdminDashboardPage() {
         isLight={isLight}
         footerActions={
           <>
+            <button
+              onClick={() => {
+                if (viewingOrder) {
+                  setDetailedModalOrder(viewingOrder);
+                  setViewingOrder(null);
+                }
+              }}
+              className="px-3.5 py-2 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/30 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>Full Lifecycle Dossier</span>
+            </button>
             <button
               onClick={() => {
                 if (viewingOrder) {
@@ -1352,6 +1418,18 @@ export default function AdminDashboardPage() {
             <button
               onClick={() => {
                 if (viewingProduct) {
+                  setDetailedModalProduct(viewingProduct);
+                  setViewingProduct(null);
+                }
+              }}
+              className="px-3.5 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>Full 9-Tab Dossier</span>
+            </button>
+            <button
+              onClick={() => {
+                if (viewingProduct) {
                   setEditingProductData(viewingProduct);
                   setViewingProduct(null);
                   setIsProductModalOpen(true);
@@ -1445,6 +1523,18 @@ export default function AdminDashboardPage() {
             <button
               onClick={() => {
                 if (viewingCustomer) {
+                  setDetailedModalCustomer(viewingCustomer);
+                  setViewingCustomer(null);
+                }
+              }}
+              className="px-3.5 py-2 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/30 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>Full 6-Tab Dossier</span>
+            </button>
+            <button
+              onClick={() => {
+                if (viewingCustomer) {
                   setEditingCustomerData(viewingCustomer);
                   setViewingCustomer(null);
                   setIsCustomerModalOpen(true);
@@ -1532,6 +1622,18 @@ export default function AdminDashboardPage() {
         isLight={isLight}
         footerActions={
           <>
+            <button
+              onClick={() => {
+                if (viewingVendor) {
+                  setDetailedModalVendor(viewingVendor);
+                  setViewingVendor(null);
+                }
+              }}
+              className="px-3.5 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>Full 8-Tab Dossier</span>
+            </button>
             <button
               onClick={() => {
                 if (viewingVendor) {
@@ -1694,6 +1796,105 @@ export default function AdminDashboardPage() {
           </div>
         )}
       </DetailsDrawer>
+
+      {/* --------------------------------------------------------------- */}
+      {/* ENTERPRISE TABBED DETAIL MODALS                                 */}
+      {/* --------------------------------------------------------------- */}
+      <VendorDetailModal
+        vendor={detailedModalVendor}
+        isOpen={Boolean(detailedModalVendor)}
+        onClose={() => setDetailedModalVendor(null)}
+        onApproveToggle={handleToggleSellerApproval}
+        onUpdateCommission={async (vendorId, newRate) => {
+          await handleSaveSellerForm({ id: vendorId, commissionRate: newRate });
+          if (detailedModalVendor) {
+            setDetailedModalVendor((prev: any) => ({ ...prev, commissionRate: newRate }));
+          }
+        }}
+        isLight={isLight}
+      />
+
+      <CustomerDetailModal
+        customer={detailedModalCustomer}
+        isOpen={Boolean(detailedModalCustomer)}
+        onClose={() => setDetailedModalCustomer(null)}
+        onUpdateStatus={async (userId, newStatus) => {
+          await handleToggleCustomerStatus({ id: userId, status: newStatus === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE' });
+          if (detailedModalCustomer) {
+            setDetailedModalCustomer((prev: any) => ({ ...prev, status: newStatus }));
+          }
+        }}
+        onAdjustBalance={async (userId, newBalance) => {
+          const activeToken = getActiveToken();
+          try {
+            const res = await fetch(`/api/admin/users/${userId}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${activeToken}` },
+              body: JSON.stringify({ walletBalance: newBalance })
+            });
+            if (res.ok) {
+              await fetchAdminCustomers();
+              if (detailedModalCustomer) {
+                setDetailedModalCustomer((prev: any) => ({ ...prev, walletBalance: newBalance }));
+              }
+              alert('Customer wallet balance updated.');
+            }
+          } catch (_) {}
+        }}
+        isLight={isLight}
+      />
+
+      <ProductDetailModal
+        product={detailedModalProduct}
+        isOpen={Boolean(detailedModalProduct)}
+        onClose={() => setDetailedModalProduct(null)}
+        onUpdateStatus={async (prodId, status) => {
+          await handleSaveProductForm({ id: prodId, status });
+          if (detailedModalProduct) {
+            setDetailedModalProduct((prev: any) => ({ ...prev, status }));
+          }
+        }}
+        onSaveProduct={async (prodId, data) => {
+          await handleSaveProductForm({ id: prodId, ...data });
+          if (detailedModalProduct) {
+            setDetailedModalProduct((prev: any) => ({ ...prev, ...data }));
+          }
+        }}
+        isLight={isLight}
+      />
+
+      <OrderDetailModal
+        order={detailedModalOrder}
+        isOpen={Boolean(detailedModalOrder)}
+        onClose={() => setDetailedModalOrder(null)}
+        onUpdateStatus={async (orderId, newStatus) => {
+          const activeToken = getActiveToken();
+          try {
+            const res = await fetch(`/api/orders/${orderId}/status`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${activeToken}` },
+              body: JSON.stringify({ status: newStatus, reason: `Admin update to ${newStatus}` })
+            });
+            if (res.ok) {
+              await fetchOrders();
+              if (detailedModalOrder) {
+                setDetailedModalOrder((prev: any) => ({ ...prev, status: newStatus }));
+              }
+              alert(`Order status updated to ${newStatus}`);
+            } else {
+              const err = await res.json();
+              alert(err.error || 'Failed to update order status');
+            }
+          } catch (e: any) {
+            alert('Error updating order status: ' + e.message);
+          }
+        }}
+        onPrintInvoice={(ord) => {
+          setInvoiceModalOrders([ord]);
+          setIsInvoiceModalOpen(true);
+        }}
+        isLight={isLight}
+      />
 
       {/* --------------------------------------------------------------- */}
       {/* STRUCTURED FORM MODALS                                          */}

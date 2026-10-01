@@ -34,27 +34,30 @@ import {
 export type AdminModuleType =
   | 'dashboard'
   | 'marketplace'
+  | 'categories'
   | 'orders'
   | 'customers'
   | 'sellers'
+  | 'reviews'
+  | 'pos'
   | 'resellers'
   | 'delivery'
-  | 'inventory'
-  | 'warehouse'
-  | 'pos'
-  | 'crm'
-  | 'erp'
-  | 'hrm'
+  | 'commerce'
   | 'wallet'
   | 'finance'
+  | 'inventory'
+  | 'warehouse'
+  | 'erp'
+  | 'marketing'
   | 'reports'
-  | 'notifications'
-  | 'rbac'
-  | 'settings'
-  | 'audit'
-  | 'reviews'
   | 'accounts'
-  | 'security';
+  | 'rbac'
+  | 'security'
+  | 'audit'
+  | 'crm'
+  | 'hrm'
+  | 'settings'
+  | 'notifications';
 
 interface NavItem {
   id: AdminModuleType;
@@ -100,66 +103,69 @@ export default function AdminSidebar({
 }: AdminSidebarProps) {
   const [navSearch, setNavSearch] = useState('');
 
-  // Structured grouped taxonomy matching Prompt Section 4
+  // Structured enterprise 8-section taxonomy matching Prompt Section 5
   const navSections: NavSection[] = [
     {
-      title: 'Main',
+      title: 'Dashboard',
       items: [
-        { id: 'dashboard', label: 'Dashboard Overview', icon: LayoutDashboard }
+        { id: 'dashboard', label: 'Overview', icon: LayoutDashboard }
       ]
     },
     {
       title: 'Marketplace',
       items: [
-        { id: 'marketplace', label: 'Products & Categories', icon: ShoppingBag },
-        { id: 'orders', label: 'Orders & Shipments', icon: CreditCard, badge: badgeCounts.orders },
-        { id: 'reviews', label: 'Customer Reviews', icon: Star, badge: badgeCounts.reviews },
-        { id: 'pos', label: 'POS Terminal Sales', icon: Monitor }
+        { id: 'sellers', label: 'Vendors & Stores', icon: Store, badge: badgeCounts.pendingSellers },
+        { id: 'customers', label: 'Customers', icon: Users },
+        { id: 'marketplace', label: 'Products', icon: ShoppingBag },
+        { id: 'categories', label: 'Categories & Brands', icon: Boxes },
+        { id: 'orders', label: 'Orders', icon: CreditCard, badge: badgeCounts.orders },
+        { id: 'reviews', label: 'Reviews', icon: Star, badge: badgeCounts.reviews },
+        { id: 'pos', label: 'POS Terminal', icon: Monitor },
+        { id: 'resellers', label: 'Resellers', icon: Handshake },
+        { id: 'delivery', label: 'Courier & Fleet', icon: MapPin, badge: badgeCounts.unassignedOrders }
       ]
     },
     {
-      title: 'Customers',
+      title: 'Commerce',
       items: [
-        { id: 'customers', label: 'Customer Hub', icon: Users }
+        { id: 'commerce', label: 'Commerce & Refunds', icon: Activity, badge: badgeCounts.withdrawals },
+        { id: 'wallet', label: 'Payouts & Wallets', icon: Wallet },
+        { id: 'finance', label: 'Financial Ledger', icon: FileText }
       ]
     },
     {
-      title: 'Sellers & Partners',
+      title: 'Inventory',
       items: [
-        { id: 'sellers', label: 'Sellers & KYC Queue', icon: Store, badge: badgeCounts.pendingSellers },
-        { id: 'resellers', label: 'Reseller Program', icon: Handshake },
-        { id: 'delivery', label: 'Courier & Logistics', icon: MapPin, badge: badgeCounts.unassignedOrders }
-      ]
-    },
-    {
-      title: 'Operations',
-      items: [
-        { id: 'inventory', label: 'Inventory & Stock Alerts', icon: Boxes },
+        { id: 'inventory', label: 'Inventory & Stock', icon: Boxes },
         { id: 'warehouse', label: 'Warehouses Log', icon: Warehouse },
-        { id: 'erp', label: 'ERP & Accounting', icon: Zap }
+        { id: 'erp', label: 'ERP Accounting', icon: Zap }
       ]
     },
     {
-      title: 'Management',
+      title: 'Marketing',
       items: [
-        { id: 'crm', label: 'CRM Sales Pipeline', icon: Contact },
-        { id: 'hrm', label: 'HRM Attendance & Staff', icon: UserCheck }
+        { id: 'marketing', label: 'Campaigns & Coupons', icon: Zap }
       ]
     },
     {
-      title: 'Finance & BI',
+      title: 'Reports',
       items: [
-        { id: 'wallet', label: 'Unified Wallets & Payouts', icon: Wallet, badge: badgeCounts.withdrawals },
-        { id: 'finance', label: 'Financial Records', icon: Activity },
         { id: 'reports', label: 'Sales Reports & BI', icon: FileText }
       ]
     },
     {
       title: 'Administration',
       items: [
-        { id: 'accounts', label: 'User & Staff Accounts', icon: UserPlus, roles: ['admin', 'superadmin'] },
-        { id: 'rbac', label: 'Roles & Permissions', icon: KeyRound, roles: ['superadmin'] },
+        { id: 'accounts', label: 'Admin Users & Staff', icon: UserPlus, roles: ['admin', 'superadmin'] },
+        { id: 'rbac', label: 'Roles & Permissions', icon: KeyRound, roles: ['admin', 'superadmin'] },
         { id: 'security', label: 'Security & Audit Logs', icon: ShieldAlert, roles: ['admin', 'superadmin'] },
+        { id: 'crm', label: 'CRM Pipeline', icon: Contact },
+        { id: 'hrm', label: 'HRM Attendance', icon: UserCheck }
+      ]
+    },
+    {
+      title: 'Settings',
+      items: [
         { id: 'settings', label: 'System Settings', icon: Settings2, roles: ['admin', 'superadmin'] },
         { id: 'notifications', label: 'Notification Hub', icon: BellRing }
       ]

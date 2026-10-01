@@ -38,14 +38,22 @@ export default function AdminLoginPage() {
             try { userRole = JSON.parse(uStr).role; } catch (_) {}
           }
         }
-        if (!isNonCustomerRole(userRole)) {
-          setError('Access Denied. You do not have platform administrator privileges.');
+        const adminAllowedRoles = ['ADMIN', 'SUPER_ADMIN', 'MARKETING'];
+        if (!adminAllowedRoles.includes(userRole)) {
+          if (userRole === 'VENDOR' || userRole === 'VENDOR_ADMIN' || userRole === 'SELLER') {
+            setError('Access Denied. Vendor merchants must sign in via the Vendor Portal at /seller/login.');
+          } else if (userRole === 'DELIVERY_MAN' || userRole === 'COURIER') {
+            setError('Access Denied. Delivery personnel must sign in via the Logistics Portal at /delivery/login.');
+          } else if (userRole === 'RESELLER') {
+            setError('Access Denied. Resellers must sign in via the Reseller Portal at /reseller/login.');
+          } else {
+            setError('Access Denied. You do not have platform administrator privileges.');
+          }
           useStore.getState().logout();
           return;
         }
 
-        const targetDashboard = getDashboardForRole(userRole);
-        router.push(targetDashboard === '/' ? '/admin' : targetDashboard);
+        router.push('/admin');
       } else {
         setError('Invalid administrative credentials or account locked.');
       }

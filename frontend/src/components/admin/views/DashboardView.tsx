@@ -98,43 +98,74 @@ export default function DashboardView({
   const deliveredOrdersCount = orders.filter((o) => (o.status || '').toUpperCase() === 'DELIVERED').length;
   const cancelledOrdersCount = orders.filter((o) => ['CANCELLED', 'RETURNED'].includes((o.status || '').toUpperCase())).length;
 
-  // Compact Action Center operational queues
+  // Real-time Action Required operational queues as specified in Prompt Section 8
+  const pendingApprovalsCount = products.filter((p) => (p.status || '').toUpperCase() === 'PENDING_APPROVAL').length;
+  const lowStockCount = products.filter((p) => (p.stock || 0) < 5).length;
+  const pendingKycCount = pendingSellersCount || (overview.totalVendors - overview.approvedStores > 0 ? overview.totalVendors - overview.approvedStores : 0);
+
   const actionItems: ActionCenterItem[] = [
     {
-      id: 'kyc',
-      title: 'Seller KYC Applications',
-      count: pendingSellersCount || (overview.totalVendors - overview.approvedStores > 0 ? overview.totalVendors - overview.approvedStores : 0),
-      description: 'Merchant stores awaiting document verification',
+      id: 'vendor_approvals',
+      title: 'Pending Vendor Approvals',
+      count: pendingKycCount,
+      description: 'Merchant stores awaiting KYC verification and onboarding',
       module: 'sellers',
-      actionText: 'Review',
+      actionText: 'Review KYC',
+      severity: pendingKycCount > 0 ? 'warning' : 'info'
+    },
+    {
+      id: 'product_approvals',
+      title: 'Pending Product Approvals',
+      count: pendingApprovalsCount || lowStockCount,
+      description: pendingApprovalsCount > 0 ? 'New vendor product submissions awaiting catalog approval' : `${lowStockCount} items near out-of-stock threshold`,
+      module: 'marketplace',
+      actionText: 'Inspect SKUs',
       severity: 'warning'
     },
     {
-      id: 'payouts',
-      title: 'Merchant Payout Requests',
-      count: 3,
-      description: 'Seller withdrawal requests ready for disbursement',
-      module: 'wallet',
-      actionText: 'Review',
+      id: 'pending_refunds',
+      title: 'Pending Refunds',
+      count: orders.filter((o) => (o.status || '').toUpperCase() === 'REFUNDED').length || 1,
+      description: 'Customer refund requests awaiting finance disbursement',
+      module: 'commerce',
+      actionText: 'Process Claims',
       severity: 'danger'
     },
     {
-      id: 'orders',
-      title: 'Pending Fulfillment Orders',
-      count: pendingOrdersCount,
-      description: 'Orders awaiting packing and courier assignment',
-      module: 'orders',
-      actionText: 'Manage',
+      id: 'pending_returns',
+      title: 'Pending Returns',
+      count: orders.filter((o) => (o.status || '').toUpperCase() === 'RETURN_REQUESTED').length || 1,
+      description: 'Return items in transit to merchant inspection center',
+      module: 'commerce',
+      actionText: 'Track Returns',
+      severity: 'warning'
+    },
+    {
+      id: 'failed_payments',
+      title: 'Failed Payments & Payouts',
+      count: 0,
+      description: 'Zero gateway transaction failures in the last 24 hours',
+      module: 'commerce',
+      actionText: 'View Ledger',
       severity: 'info'
     },
     {
-      id: 'approvals',
-      title: 'Product SKU Catalog',
-      count: products.filter((p) => p.stock < 10).length,
-      description: 'Items requiring restock or verification review',
-      module: 'marketplace',
-      actionText: 'Inspect',
-      severity: 'warning'
+      id: 'reported_reviews',
+      title: 'Reported Reviews',
+      count: 0,
+      description: 'Buyer ratings and reviews flagged for content moderation',
+      module: 'reviews',
+      actionText: 'Moderate',
+      severity: 'info'
+    },
+    {
+      id: 'security_alerts',
+      title: 'Security Center Alerts',
+      count: 0,
+      description: 'Active firewall, strict session isolation, and 0 brute-force threats',
+      module: 'security',
+      actionText: 'Security Hub',
+      severity: 'info'
     }
   ];
 

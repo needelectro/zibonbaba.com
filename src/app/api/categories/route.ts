@@ -128,3 +128,63 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: err.message || 'Internal Server Error' }, { status: 500 });
   }
 }
+
+export async function PUT(request: Request) {
+  try {
+    const auth = await requireAdminRole(request, [
+      'SUPER_ADMIN',
+      'ADMIN',
+      'MANAGER',
+      'MARKETING'
+    ]);
+    if (auth.error) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+
+    const body = await request.json();
+    const { id, name, slug } = body;
+
+    if (!id || !name) {
+      return NextResponse.json({ error: 'Category ID and name are required.' }, { status: 400 });
+    }
+
+    const generatedSlug = (slug || name)
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+
+    const existing = await prisma.category.findFirst({
+      where: {
+        AND: [
+          { id: { not: id } },
+          { OR: [{ name: name.trim() }, { slug: generatedSlug }] }
+        ]
+      }
+    });
+
+    if (existing) {
+      return NextResponse.json({ error: 'Another category with this name or slug already exists.' }, { status: 409 });
+    }
+
+    const updated = await prisma.category.update({
+      where: { id },
+      data: {
+        name: name.trim(),
+        slug: generatedSlug
+      }
+    });
+
+    await logAdminAction(auth.user?.id || null, `Updated category "${updated.name}"`);
+
+    return NextResponse.json({
+      success: true,
+      message: `Category "${updated.name}" updated successfully.`,
+      category: updated
+    });
+  } catch (err: any) {
+    console.error('Update Category Error:', err);
+    return NextResponse.json({ error: err.message || 'Internal Server Error' }, { status: 500 });
+  }
+}
+

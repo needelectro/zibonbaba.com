@@ -49,3 +49,55 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: err.message || 'Internal Server Error' }, { status: 500 });
   }
 }
+
+export async function PATCH(request: Request) {
+  try {
+    const auth = await requireAdminRole(request, ['ADMIN', 'SUPER_ADMIN', 'MANAGER']);
+    if (auth.error) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+
+    const body = await request.json();
+    const { id, active } = body;
+
+    if (!id) {
+      return NextResponse.json({ error: 'Coupon ID is required.' }, { status: 400 });
+    }
+
+    const updated = await prisma.coupon.update({
+      where: { id },
+      data: { active: !!active }
+    });
+
+    return NextResponse.json({ success: true, coupon: updated });
+  } catch (err: any) {
+    console.error('Admin Coupons PATCH Error:', err);
+    return NextResponse.json({ error: err.message || 'Internal Server Error' }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const auth = await requireAdminRole(request, ['ADMIN', 'SUPER_ADMIN']);
+    if (auth.error) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json({ error: 'Coupon ID is required.' }, { status: 400 });
+    }
+
+    await prisma.coupon.delete({
+      where: { id }
+    });
+
+    return NextResponse.json({ success: true, message: 'Coupon deleted successfully.' });
+  } catch (err: any) {
+    console.error('Admin Coupons DELETE Error:', err);
+    return NextResponse.json({ error: err.message || 'Internal Server Error' }, { status: 500 });
+  }
+}
+
